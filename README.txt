@@ -1,5 +1,13 @@
-Upload EVERY file in this folder to your GitHub repository:
+Upload EVERY file in this folder (there are no subfolders):
 
-index.html, sw.js, manifest.webmanifest, favicon.png, icons/ (folder with 3 images)
+404.html
+apple-touch-icon.png
+favicon.png
+icon-192.png
+icon-512.png
+index.html
+manifest.webmanifest
+maskable-512.png
+sw.js
 
 Do NOT rename index.html.

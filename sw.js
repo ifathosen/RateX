@@ -10,7 +10,7 @@
  *
  * Bump SHELL_VERSION to invalidate every old cache on the next visit.
  */
-const SHELL_VERSION = 'ledger-shell-v2'
+const SHELL_VERSION = 'ledger-shell-v3'
 const SHELL_PREFIX = 'ledger-shell-'
 
 self.addEventListener('install', (event) => {
