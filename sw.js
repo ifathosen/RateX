@@ -10,14 +10,16 @@
  *
  * Bump SHELL_VERSION to invalidate every old cache on the next visit.
  */
-const SHELL_VERSION = 'ledger-shell-v1'
+const SHELL_VERSION = 'ledger-shell-v2'
 const SHELL_PREFIX = 'ledger-shell-'
 
 self.addEventListener('install', (event) => {
   const base = new URL(self.registration.scope)
   event.waitUntil(
     caches.open(SHELL_VERSION).then((cache) =>
-      cache.addAll([new URL('index.html', base).toString(), new URL('manifest.webmanifest', base).toString()]).catch(() => {
+      // The manifest is deliberately NOT precached: a cached copy keeps pointing at old
+      // icon paths, and Chrome then reports "This app cannot be installed".
+      cache.addAll([new URL('index.html', base).toString()]).catch(() => {
         /* a missing optional file must not block installation */
       }),
     ),
@@ -61,8 +63,23 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // The manifest must always come from the network: a stale manifest hides new icons and
+  // silently disables installation. Falls back to the cached copy only when offline.
+  if (url.pathname.endsWith('.webmanifest')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone()
+          caches.open(SHELL_VERSION).then((cache) => cache.put(request, copy)).catch(() => {})
+          return response
+        })
+        .catch(async () => (await caches.match(request)) || Response.error()),
+    )
+    return
+  }
+
   // Built assets are content-hashed, so cache-first is safe and instant.
-  if (url.pathname.includes('/assets/') || /\.(png|svg|ico|woff2?|css|js|webmanifest)$/.test(url.pathname)) {
+  if (url.pathname.includes('/assets/') || /\.(png|svg|ico|woff2?|css|js)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
