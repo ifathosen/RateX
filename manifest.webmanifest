@@ -1,0 +1,35 @@
+{
+  "name": "SAR ↔ BDT Trading Ledger",
+  "short_name": "SAR↔BDT",
+  "id": "./",
+  "description": "Dual-currency (SAR ↔ BDT) trading ledger, partial settlement management and profit analytics.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0B3B2E",
+  "theme_color": "#0B3B2E",
+  "lang": "bn",
+  "dir": "ltr",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "New trade",
+      "short_name": "New trade",
+      "url": "./#/trades/new",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "./#/",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
