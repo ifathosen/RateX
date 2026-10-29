@@ -162,6 +162,17 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .progress{height:12px; border-radius:99px; box-shadow:var(--sh-in-sm); overflow:hidden; background:var(--surface)}
 .progress>i{display:block; height:100%; border-radius:99px; background:var(--grad); transition:width .5s cubic-bezier(.22,1,.36,1)}
 .flow-card{padding:20px; margin-top:14px}
+.bank-panel{padding:19px; margin-bottom:16px}
+.bank-panel-head{display:flex; align-items:center; gap:12px; margin-bottom:15px}
+.bank-flag{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:16px;letter-spacing:.5px;flex:none;box-shadow:0 9px 20px rgba(24,33,56,.20)}
+.bank-panel-head .bt2{flex:1;min-width:0}
+.bank-panel-head h4{font-size:17px;font-weight:900}
+.bank-panel-head p{font-size:12px;color:var(--muted);margin:3px 0 0}
+.bank-total{text-align:right}
+.bank-total .v{font-size:19px;font-weight:900}
+.bank-total .l{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:800}
+.bank-subhead{display:flex;align-items:center;justify-content:space-between;margin:15px 2px 10px;font-size:11px;font-weight:900;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}
+.bank-empty{padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55}
 .acct-grid{display:grid; grid-template-columns:1fr; gap:12px}
 @media(min-width:680px){.acct-grid{grid-template-columns:1fr 1fr}}
 .acct-card{padding:17px 18px; display:flex; gap:13px; align-items:center}
@@ -434,7 +445,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       </div>
 
       <div class="section">
-        <div class="section-head"><h3>My Accounts</h3><span><button class="link" id="setupAccountsBtn">Set up defaults</button> · <button class="link" data-open-account>＋ Add A/C</button></span></div>
+        <div class="section-head"><div><h3>Banks &amp; Accounts</h3><p style="margin:4px 0 0;color:var(--muted);font-size:12.5px">Saudi Arabia (SAR) and Bangladesh (BDT) are kept fully separate.</p></div></div>
         <div id="dashAccounts"></div>
       </div>
 
@@ -526,8 +537,13 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       </div>
 
       <div class="section"><div class="neu" style="padding:20px">
-        <div class="section-head"><h3>Account Balances</h3><small>opening + all postings</small></div>
-        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Account</th><th>Opening</th><th>In</th><th>Out</th><th>Balance</th></tr></thead><tbody id="aAccounts"></tbody></table></div>
+        <div class="section-head"><h3>Saudi Banks &amp; Cash — SAR</h3><small id="aSarTotal">—</small></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Saudi Account</th><th>Opening</th><th>In</th><th>Out</th><th>Balance SAR</th></tr></thead><tbody id="aAccountsSar"></tbody></table></div>
+      </div></div>
+
+      <div class="section"><div class="neu" style="padding:20px">
+        <div class="section-head"><h3>Bangladesh Banks &amp; Wallets — BDT</h3><small id="aBdtTotal">—</small></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Bangladesh Account</th><th>Opening</th><th>In</th><th>Out</th><th>Balance BDT</th></tr></thead><tbody id="aAccountsBdt"></tbody></table></div>
       </div></div>
 
       <div class="section"><div class="neu" style="padding:20px">
@@ -579,8 +595,8 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <div class="field"><label for="stRemitNo">Remit No. (auto)</label><input type="text" id="stRemitNo" placeholder="REM-…"></div>
     </div>
     <div class="grid2">
-      <div class="field"><label for="stSarAcc">SAR Account (Debit)</label><select id="stSarAcc"></select></div>
-      <div class="field"><label for="stBdtAcc">BD Bank Account (Credit)</label><select id="stBdtAcc"></select></div>
+      <div class="field"><label for="stSarAcc">Saudi Bank / Cash · SAR Debit</label><select id="stSarAcc"></select></div>
+      <div class="field"><label for="stBdtAcc">Bangladesh Bank · BDT Credit</label><select id="stBdtAcc"></select></div>
     </div>
     <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">Sending amount + fee will be debited from the SAR account; total BDT (incl. incentive) credited to the BD account. No A/C yet? <button type="button" class="link" data-open-account>＋ Create account</button></p>
     <div class="grid2">
@@ -622,7 +638,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <div class="field"><label for="trCustPhone">Customer Phone (optional)</label><input type="tel" id="trCustPhone" placeholder="05xxxxxxxx" autocomplete="off"></div>
     </div>
     <div class="grid2">
-      <div class="field"><label for="trSourceAcc">Deliver From BD Account</label><select id="trSourceAcc"></select><p class="hint">This A/C is debited. A trade can never exceed its balance.</p></div>
+      <div class="field"><label for="trSourceAcc">Deliver From Bangladesh Bank / Wallet</label><select id="trSourceAcc"></select><p class="hint">This A/C is debited. A trade can never exceed its balance.</p></div>
       <div class="field"><label for="trReceiver">Receiver A/C in BD (optional)</label><input type="text" id="trReceiver" placeholder="Number / account name"></div>
     </div>
 
@@ -651,7 +667,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <div class="field"><label for="trInitPay">SAR Received Now</label><input type="number" id="trInitPay" min="0" step="any" inputmode="decimal" value="0"></div>
         <div class="field"><label for="trInitMethod">Received Via</label><select id="trInitMethod"><option>Cash</option><option>Bank Transfer</option><option>STC Pay</option><option>UrPay</option><option>Other</option></select></div>
       </div>
-      <div class="field"><label for="trInitAccount">Post Received SAR To Account</label><select id="trInitAccount"></select></div>
+      <div class="field"><label for="trInitAccount">Post Received SAR To Saudi Bank / Cash</label><select id="trInitAccount"></select></div>
       <p class="hint" style="margin:8px 4px 0;font-size:12px;color:var(--muted)">Leave received amount 0 if fully on credit — the rest stays as Pending Settlement.</p>
     </div>
 
@@ -677,7 +693,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <div class="field"><label for="payMethod">Received Via</label><select id="payMethod"><option>Cash</option><option>Bank Transfer</option><option>STC Pay</option><option>UrPay</option><option>Other</option></select></div>
       <div class="field"><label for="payNote">Note (optional)</label><input type="text" id="payNote" placeholder="Any note…"></div>
     </div>
-    <div class="field"><label for="payAccount">Post This SAR To Account</label><select id="payAccount"></select><p class="hint">Choose where this money lands: Cash in Hand or your Saudi Bank A/C.</p></div>
+    <div class="field"><label for="payAccount">Post This SAR To Saudi Bank / Cash</label><select id="payAccount"></select><p class="hint">Choose where this money lands: Cash in Hand or your Saudi Bank A/C.</p></div>
     <div style="margin-top:16px;display:flex;gap:10px">
       <button type="button" class="mini-btn" id="payFullBtn">Fill full due amount</button>
     </div>
@@ -690,19 +706,20 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 <div class="overlay" id="accountOverlay" style="z-index:95">
   <form class="sheet" id="accountForm">
     <div class="grab"></div>
-    <div class="sheet-head"><div><h3 id="accTitle">Add Account</h3><p>Your money, organised: Saudi SAR, Cash SAR and BD BDT accounts.</p></div><button type="button" class="icon-btn close-x" data-close="accountOverlay">✕</button></div>
+    <div class="sheet-head"><div><h3 id="accTitle">Add Account</h3><p id="accSub">Post the bank/wallet name and its opening balance.</p></div><button type="button" class="icon-btn close-x" data-close="accountOverlay">✕</button></div>
     <input type="hidden" id="accId">
-    <div class="field"><label for="accName">Account Name</label><input type="text" id="accName" required placeholder="e.g. Al Rajhi — Main, Cash Wallet, Islami Bank"></div>
+    <div class="field"><label for="accCurrency">Country Section</label><select id="accCurrency"><option value="SAR">Saudi Arabia · SAR</option><option value="BDT">Bangladesh · BDT</option></select></div>
     <div class="grid2">
-      <div class="field"><label for="accCurrency">Currency</label><select id="accCurrency"><option>SAR</option><option>BDT</option></select></div>
-      <div class="field"><label for="accType">Type</label><select id="accType"><option>Saudi Bank</option><option>Cash</option><option>BD Bank</option><option>Mobile Wallet</option><option>Bank</option><option>Other</option></select></div>
+      <div class="field"><label for="accName">Bank / Wallet Name</label><input type="text" id="accName" required list="accBankList" placeholder="Select or type bank name"><datalist id="accBankList"></datalist></div>
+      <div class="field"><label for="accLabel">Account Label</label><input type="text" id="accLabel" placeholder="Main / Savings / •••4821"></div>
     </div>
+    <div class="field"><label for="accType">Account Type</label><select id="accType"></select><p class="hint">Use the label to separate multiple accounts at the same bank.</p></div>
     <div class="grid2">
-      <div class="field"><label for="accOpening">Opening Balance</label><input type="number" id="accOpening" step="any" inputmode="decimal" value="0"></div>
+      <div class="field"><label for="accOpening">Opening Balance · <span id="accOpeningCur">SAR</span></label><input type="number" id="accOpening" required step="any" inputmode="decimal" placeholder="0.00"></div>
       <div class="field"><label for="accOpeningDate">Opening Date</label><input type="date" id="accOpeningDate" required></div>
     </div>
-    <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">Enter the balance as it stood on the opening date, <b>before</b> the transactions you record in RateX. Later remittances/trades are posted on top of it.</p>
-    <div class="field"><label for="accNote">Note (optional)</label><input type="text" id="accNote" placeholder="Account no., branch… (private note)"></div>
+    <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">Post the balance exactly as it stood on the opening date, <b>before</b> the transactions you record in RateX. Later remittances/trades are posted on top of it.</p>
+    <div class="field"><label for="accNote">Branch / Account No. Note (optional)</label><input type="text" id="accNote" placeholder="Branch, IBAN/account hint… (private note)"></div>
     <label class="remember" style="margin-top:18px"><input type="checkbox" id="accArchived"> Archived (hide from new entries)</label>
     <div class="form-err" id="accErr"></div>
     <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="accSave">SAVE ACCOUNT</button></div>
@@ -1182,9 +1199,10 @@ document.addEventListener("click", e => {
   const g = e.target.closest("[data-goto]"); if(g) switchTab(g.dataset.goto);
   if(e.target.closest("[data-open-stock]")) openStock();
   if(e.target.closest("[data-open-trade]")) openTrade();
-  if(e.target.closest("[data-open-account]")) openAccount();
+  const bankBtn = e.target.closest("[data-open-bank-account]");
+  if(bankBtn) openAccount(null, { currency:bankBtn.dataset.currency, type:bankBtn.dataset.type || "", lockCurrency:true });
+  else if(e.target.closest("[data-open-account]")) openAccount();
   if(e.target.closest("[data-open-transfer]")) openTransfer();
-  if(e.target.closest("#setupAccountsBtn2")) setupDefaultAccounts();
 });
 
 /* ================= RENDER ================= */
@@ -1195,15 +1213,21 @@ function emptyBox(icon, title, text, btnHtml=""){
 }
 function lotLabel(l){ return `${lotDisplayNo(l)} · ${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR @ ${fmtRate(l.effective_rate)}${l.source ? " · "+l.source : ""}${l.bdt_account_id ? " · "+accountName(l.bdt_account_id) : ""}`; }
 
+function splitAccountName(name){
+  const parts = String(name || "").split(/\s+—\s+/);
+  return { bank: (parts[0] || "").trim(), label: parts.slice(1).join(" — ").trim() };
+}
+function isWalletType(t){ return t === "Cash" || t === "Mobile Wallet"; }
 function accountCard(a){
   const isSar = a.currency === "SAR";
+  const parts = splitAccountName(a.name);
   const icon = a.type === "Cash" ? "💵" : (a.type === "Mobile Wallet" ? "📱" : "🏦");
   const bg = isSar ? "linear-gradient(135deg,#19b6f5,#0a84ff)" : "linear-gradient(135deg,#12b981,#0a9d6c)";
   return `<div class="acct-card neu-sm">
     <div class="acct-ic" style="background:${bg}">${icon}</div>
     <div style="flex:1;min-width:0">
-      <b style="font-size:15px">${esc(a.name)}</b> ${a.archived?'<span class="pill pill-partial">Archived</span>':""}
-      <div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(a.type)} · ${a.currency} · Opening ${fmt(a.opening_balance)} (${dFmt(a.opening_date)}) · In ${fmt0(a.inn)} / Out ${fmt0(a.out)}</div>
+      <b style="font-size:15px">${esc(parts.bank || a.name)}</b>${parts.label ? ` <span class="pill pill-stock">${esc(parts.label)}</span>` : ""} ${a.archived?'<span class="pill pill-partial">Archived</span>':""}
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(a.type)} · ${a.currency} · Opening posted ${fmt(a.opening_balance)} on ${dFmt(a.opening_date)} · In ${fmt0(a.inn)} / Out ${fmt0(a.out)}${a.note ? " · "+esc(a.note) : ""}</div>
     </div>
     <div style="text-align:right">
       <div style="font-weight:900;font-size:17px" class="${signedCls(a.balance)}">${fmt(a.balance)}</div>
@@ -1297,6 +1321,32 @@ function lotCard(l, full=true){
   </article>`;
 }
 
+function renderBankSection(currency){
+  const isSar = currency === "SAR";
+  const all = D.accounts.filter(a=>a.currency===currency)
+    .sort((x,y)=> (x.archived-y.archived) || (isWalletType(x.type)-isWalletType(y.type)) || x.name.localeCompare(y.name));
+  const banks = all.filter(a=>!isWalletType(a.type));
+  const wallets = all.filter(a=>isWalletType(a.type));
+  const total = r2(all.reduce((sm,a)=>sm+a.balance,0));
+  const opening = r2(all.reduce((sm,a)=>sm+n(a.opening_balance),0));
+  const title = isSar ? "Saudi Banks & Cash" : "Bangladesh Banks & Wallets";
+  const addBankType = isSar ? "Saudi Bank" : "BD Bank";
+  const group = (label, list, addType) => list.length || true ? `
+    <div class="bank-subhead"><span>${label} · ${list.length}</span><button type="button" class="link" data-open-bank-account data-currency="${currency}" data-type="${addType}">＋ Add</button></div>
+    ${list.length ? `<div class="acct-grid">${list.map(accountCard).join("")}</div>`
+                  : `<div class="bank-empty neu-in">No ${label.toLowerCase()} posted yet.</div>`}` : "";
+  return `<div class="bank-panel neu">
+    <div class="bank-panel-head">
+      <div class="bank-flag" style="background:${isSar ? "linear-gradient(135deg,#0a9d6c,#087a52)" : "linear-gradient(135deg,#e5484d,#0a9d6c)"}">${isSar ? "SA" : "BD"}</div>
+      <div class="bt2"><h4>${title}</h4><p>${all.length} account(s) · Opening posted total ${fmt(opening)} ${currency}</p></div>
+      <div class="bank-total"><div class="l">Total ${currency}</div><div class="v ${signedCls(total)}">${fmt(total)}</div></div>
+    </div>
+    <button type="button" class="btn ${isSar ? "btn-neu" : "btn-grad"}" style="width:100%" data-open-bank-account data-currency="${currency}" data-type="${addBankType}">＋ Add ${isSar ? "Saudi Bank Account" : "Bangladesh Bank Account"}</button>
+    ${group(isSar ? "Saudi Bank Accounts" : "Bangladesh Bank Accounts", banks, addBankType)}
+    ${group(isSar ? "Cash & Wallets (SAR)" : "Mobile Wallets & Cash (BDT)", wallets, isSar ? "Cash" : "Mobile Wallet")}
+  </div>`;
+}
+
 /* ----- dashboard ----- */
 function renderDashboard(){
   const t = D.tot;
@@ -1310,8 +1360,8 @@ function renderDashboard(){
   if(t.hasAccounts){
     $("#dSarBalance").textContent = fmt(t.sarAccountsBalance);
     $("#dSarBalance").parentElement.className = "vl " + signedCls(t.sarAccountsBalance);
-    const parts = D.accounts.filter(a=>a.currency==="SAR").map(a=>`${a.name} ${fmt0(a.balance)}`).join(" · ");
-    $("#dSarSub").textContent = parts || "SAR accounts";
+    const sarList = D.accounts.filter(a=>a.currency==="SAR");
+    $("#dSarSub").textContent = sarList.length ? `${sarList.length} Saudi SAR account(s) — see Saudi section below` : "SAR accounts";
   } else {
     $("#dSarBalance").textContent = fmt(t.sarBalance);
     $("#dSarBalance").parentElement.className = "vl " + signedCls(t.sarBalance);
@@ -1336,11 +1386,7 @@ function renderDashboard(){
   $("#dTotalDue").textContent = `Total receivable ${fmt(t.receivableSar)} SAR`;
   $("#dTotalProfit").innerHTML = `Net profit <b class="${signedCls(t.netProfitSar)}">${signedFmt(t.netProfitSar)} SAR</b>${t.transferFeesSar>0.004 ? ` <span style="color:var(--muted)">(trade ${signedFmt(t.tradeProfitSar)} − fees ${fmt(t.transferFeesSar)})</span>` : ""}`;
 
-  $("#setupAccountsBtn").style.display = D.accounts.length ? "none" : "";
-  $("#dashAccounts").innerHTML = D.accounts.length
-    ? `<div class="acct-grid">${D.accounts.map(accountCard).join("")}</div>`
-      + (t.hasAccounts ? `<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:9px"><span>Total SAR accounts <b>${fmt(t.sarAccountsBalance)} SAR</b></span><span>Total BD accounts <b>${fmt(t.bdtAccountsBalance)} BDT</b></span></div>` : "")
-    : emptyBox("🏦","Set up your accounts first","Create your Saudi SAR bank, Cash SAR and BD BDT bank with their current opening balances. After that, every remittance will debit SAR and credit BDT automatically, and no trade can exceed an account balance.", `<button class="btn btn-grad" id="setupAccountsBtn2">Set Up Default Accounts</button>`);
+  $("#dashAccounts").innerHTML = renderBankSection("SAR") + renderBankSection("BDT");
 
   $("#dashLots").innerHTML = D.lots.length
     ? D.lots.slice(0,3).map(l=>lotCard(l,false)).join("")
@@ -1441,11 +1487,18 @@ function inCurrentPeriod(dateStr){
 }
 function periodTrades(){ return D.trades.filter(t => inCurrentPeriod(t.txn_date)); }
 function renderAnalytics(){
-  $("#aAccounts").innerHTML = D.accounts.length ? D.accounts.map(a=>`
-    <tr><td><b>${esc(a.name)}</b><br><small>${esc(a.type)} · ${a.currency}${a.archived?" · archived":""}</small></td>
+  const acctRows = cur => {
+    const list = D.accounts.filter(a=>a.currency===cur);
+    return list.length ? list.map(a=>{ const p=splitAccountName(a.name); return `
+    <tr><td><b>${esc(p.bank || a.name)}</b>${p.label ? ` <small>(${esc(p.label)})</small>` : ""}<br><small>${esc(a.type)}${a.archived?" · archived":""}</small></td>
     <td>${fmt(a.opening_balance)}</td><td class="pos">+${fmt(a.inn)}</td><td class="neg">−${fmt(a.out)}</td>
-    <td class="${signedCls(a.balance)}"><b>${fmt(a.balance)}</b> <small>${a.currency}</small></td></tr>`).join("")
-    : `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No accounts yet — set them up from the Dashboard.</td></tr>`;
+    <td class="${signedCls(a.balance)}"><b>${fmt(a.balance)}</b></td></tr>`; }).join("")
+    : `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No ${cur==="SAR" ? "Saudi" : "Bangladesh"} accounts yet.</td></tr>`;
+  };
+  $("#aAccountsSar").innerHTML = acctRows("SAR");
+  $("#aAccountsBdt").innerHTML = acctRows("BDT");
+  $("#aSarTotal").textContent = "Total " + fmt(D.tot.sarAccountsBalance) + " SAR";
+  $("#aBdtTotal").textContent = "Total " + fmt(D.tot.bdtAccountsBalance) + " BDT";
   const ts = periodTrades();
   const tfs = D.transfers.filter(tf => inCurrentPeriod(tf.txn_date));
   const fees = r2(tfs.reduce((sm,tf)=>sm + transferFeeSar(tf, D.tot.allBuyRate), 0));
@@ -1533,11 +1586,25 @@ function accountUsed(id){
       || S.pays.some(p=>p.account_id===id)
       || S.transfers.some(tf=>tf.from_account_id===id||tf.to_account_id===id);
 }
+function accountOptionHtml(a, selected=""){
+  return `<option value="${a.id}" ${a.id===selected?"selected":""}>${esc(a.name)} · ${fmt(a.balance ?? accountTotals(a).balance)} ${a.currency}</option>`;
+}
+function groupedAccountOptions(list, selected=""){
+  const groups = [
+    ["SAR", false, "Saudi Banks · SAR"],
+    ["SAR", true,  "Saudi Cash & Wallets · SAR"],
+    ["BDT", false, "Bangladesh Banks · BDT"],
+    ["BDT", true,  "Bangladesh Wallets & Cash · BDT"]
+  ];
+  return groups.map(([cur,wallet,label])=>{
+    const items = list.filter(a=>a.currency===cur && isWalletType(a.type)===wallet);
+    return items.length ? `<optgroup label="${label}">${items.map(a=>accountOptionHtml(a,selected)).join("")}</optgroup>` : "";
+  }).join("");
+}
 function accountOptions({currency="", selected="", blank="— Select account —"}={}){
   const list = (D?.accounts || S.accounts).filter(a =>
     (!currency || a.currency===currency) && (!a.archived || a.id===selected));
-  return `<option value="">${blank}</option>` + list.map(a =>
-    `<option value="${a.id}" ${a.id===selected?"selected":""}>${esc(a.name)} · ${fmt(a.balance ?? accountTotals(a).balance)} ${a.currency}</option>`).join("");
+  return `<option value="">${blank}</option>` + groupedAccountOptions(list, selected);
 }
 function setAccountSelect(id, currency, blank){
   const el = $("#"+id); if(!el) return;
@@ -1566,60 +1633,76 @@ function dateBeforeOpening(accountId, dateStr){
   const a = accountById(accountId);
   return !!(a && a.opening_date && dateStr && String(dateStr) < String(a.opening_date));
 }
-function openAccount(account=null){
+const BANK_SUGGESTIONS = {
+  SAR: ["Al Rajhi Bank","Saudi National Bank (SNB AlAhli)","Riyad Bank","Alinma Bank","Bank Albilad","Saudi Awwal Bank","Arab National Bank","Banque Saudi Fransi","Saudi Investment Bank","Bank AlJazira","STC Bank","UrPay","STC Pay","Cash in Hand"],
+  BDT: ["Dutch-Bangla Bank","Islami Bank Bangladesh","BRAC Bank","Eastern Bank","Pubali Bank","Sonali Bank","City Bank","IFIC Bank","Prime Bank","Southeast Bank","Mutual Trust Bank","Bank Asia","bKash","Nagad","Rocket","Upay","Cash in Hand"]
+};
+let accLockCurrency = false;
+function refreshAccountFormForCurrency(){
+  const cur = $("#accCurrency").value || "SAR";
+  const typeEl = $("#accType");
+  const curType = typeEl.value;
+  const types = cur === "SAR" ? ["Saudi Bank","Cash","Mobile Wallet","Bank","Other"]
+                               : ["BD Bank","Mobile Wallet","Cash","Bank","Other"];
+  typeEl.innerHTML = types.map(t=>`<option>${t}</option>`).join("");
+  typeEl.value = types.includes(curType) ? curType : types[0];
+  $("#accBankList").innerHTML = (BANK_SUGGESTIONS[cur] || []).map(b=>`<option value="${esc(b)}">`).join("");
+  $("#accOpeningCur").textContent = cur;
+  $("#accName").placeholder = cur === "SAR" ? "e.g. Al Rajhi Bank / SNB AlAhli / Cash in Hand"
+                                             : "e.g. Dutch-Bangla Bank / Islami Bank / bKash";
+  $("#accSub").textContent = cur === "SAR"
+    ? "Saudi Arabia section · post bank/wallet name + opening balance in SAR."
+    : "Bangladesh section · post bank/wallet name + opening balance in BDT.";
+}
+function openAccount(account=null, preset={}){
   formErr("accErr","");
-  $("#accTitle").textContent = account ? "Edit Account" : "Add Account";
+  const currency = account?.currency || preset.currency || "SAR";
+  const parts = splitAccountName(account?.name || "");
+  $("#accTitle").textContent = account
+    ? `Edit ${currency==="SAR" ? "Saudi" : "Bangladesh"} Account`
+    : (currency==="SAR" ? "Add Saudi Bank / Cash Account" : "Add Bangladesh Bank / Wallet Account");
   $("#accId").value = account?.id || "";
-  $("#accName").value = account?.name || "";
-  $("#accCurrency").value = account?.currency || "SAR";
-  $("#accType").value = account?.type || "Saudi Bank";
-  $("#accOpening").value = account?.opening_balance ?? 0;
+  $("#accCurrency").value = currency;
+  refreshAccountFormForCurrency();
+  $("#accType").value = account?.type || preset.type || (currency==="SAR" ? "Saudi Bank" : "BD Bank");
+  refreshAccountFormForCurrency();
+  if(account?.type) $("#accType").value = account.type;
+  if(!account && preset.type) $("#accType").value = preset.type;
+  $("#accName").value = account ? (parts.bank || account.name || "") : "";
+  $("#accLabel").value = account ? parts.label : "";
+  $("#accOpening").value = account?.opening_balance ?? "";
   $("#accOpeningDate").value = account?.opening_date || todayStr();
   $("#accNote").value = account?.note || "";
   $("#accArchived").checked = !!account?.archived;
-  $("#accCurrency").disabled = !!(account && accountUsed(account.id));
+  accLockCurrency = !!preset.lockCurrency;
+  $("#accCurrency").disabled = accLockCurrency || !!(account && accountUsed(account.id));
   openSheet("accountOverlay");
 }
-function setupDefaultAccounts(){
-  const defaults = [
-    {name:"Saudi Bank",  currency:"SAR", type:"Saudi Bank"},
-    {name:"Cash in Hand", currency:"SAR", type:"Cash"},
-    {name:"BD Bank",     currency:"BDT", type:"BD Bank"}
-  ];
-  let made = 0;
-  defaults.forEach(d=>{
-    if(!S.accounts.some(a=>a.name.toLowerCase()===d.name.toLowerCase() && a.currency===d.currency)){
-      saveLocalRow("accounts", "ratex_accounts", { user_id:S.user.id, ...d, opening_balance:0, opening_date:todayStr(), note:"", archived:false });
-      made++;
-    }
-  });
-  toast(made ? "Default accounts created ✅ Now tap ✎ on each account to set its real name and opening balance." : "Default accounts already exist.", made ? "success" : "");
-  afterLocalChange(); populateAccountSelects();
-}
-$("#setupAccountsBtn").addEventListener("click", setupDefaultAccounts);
-$("#accCurrency").addEventListener("change", e=>{
-  if(e.target.value==="BDT" && $("#accType").value==="Saudi Bank") $("#accType").value = "BD Bank";
-  if(e.target.value==="SAR" && $("#accType").value==="BD Bank") $("#accType").value = "Saudi Bank";
-});
+$("#accCurrency").addEventListener("change", refreshAccountFormForCurrency);
 $("#accountForm").addEventListener("submit", e=>{
   e.preventDefault(); formErr("accErr","");
-  const name = $("#accName").value.trim();
-  if(!name) return formErr("accErr","Account name is required.");
+  const bank = $("#accName").value.trim();
+  const label = $("#accLabel").value.trim();
+  if(!bank) return formErr("accErr","Bank / wallet name is required — post the actual bank name (or Cash in Hand).");
+  if($("#accOpening").value === "") return formErr("accErr","Opening balance is required. Enter 0 only if the account truly starts empty.");
+  const name = label ? `${bank} — ${label}` : bank;
   const id = $("#accId").value;
-  if(S.accounts.some(a=>a.id!==id && a.name.toLowerCase()===name.toLowerCase() && a.currency===$("#accCurrency").value))
-    return formErr("accErr","An account with this name and currency already exists.");
-  const payload = { user_id:S.user.id, name, currency:$("#accCurrency").value, type:$("#accType").value,
+  const currency = $("#accCurrency").value;
+  if(S.accounts.some(a=>a.id!==id && a.name.toLowerCase()===name.toLowerCase() && a.currency===currency))
+    return formErr("accErr","This bank + label already exists in this section. Use a different label for another account at the same bank.");
+  const payload = { user_id:S.user.id, name, currency, type:$("#accType").value,
     opening_balance:r2(n($("#accOpening").value)), opening_date:$("#accOpeningDate").value,
     note:$("#accNote").value.trim(), archived:$("#accArchived").checked };
   if(id) payload.id = id;
   const saved = saveLocalRow("accounts", "ratex_accounts", payload);
   closeSheet("accountOverlay");
-  toast(id ? "Account updated ✅" : "Account created ✅", "success");
+  toast(id ? "Account updated ✅" : `${saved.currency==="SAR" ? "Saudi" : "Bangladesh"} account posted with opening balance ✅`, "success");
   afterLocalChange(); populateAccountSelects();
   // if another form is open underneath, preselect the new account there
   if($("#stockOverlay").classList.contains("open")){ if(saved.currency==="SAR") $("#stSarAcc").value = saved.id; else $("#stBdtAcc").value = saved.id; stockCalc(false); }
   if($("#tradeOverlay").classList.contains("open")){ if(saved.currency==="BDT") $("#trSourceAcc").value = saved.id; else $("#trInitAccount").value = saved.id; tradePreview(); }
   if($("#payOverlay").classList.contains("open") && saved.currency==="SAR"){ $("#payAccount").value = saved.id; payDuePreview(); }
+  if($("#transferOverlay").classList.contains("open")){ populateAccountSelects(); }
 });
 
 function refreshTransferTo(){
@@ -1628,8 +1711,7 @@ function refreshTransferTo(){
   const cur = toEl.value;
   const list = (D?.accounts || []).filter(a =>
     a.id !== fromEl.value && (!from || a.currency===from.currency) && (!a.archived || a.id===cur));
-  toEl.innerHTML = `<option value="">— To account —</option>` + list.map(a =>
-    `<option value="${a.id}" ${a.id===cur?"selected":""}>${esc(a.name)} · ${fmt(a.balance)} ${a.currency}</option>`).join("");
+  toEl.innerHTML = `<option value="">— To account —</option>` + groupedAccountOptions(list, cur);
   toEl.value = cur;
   transferPreview();
 }
