@@ -1,7 +1,7 @@
-/* RateX — Service Worker v2 (offline app shell; Supabase API is never cached)
+/* RateX — Service Worker v4 (offline app shell; Supabase API is never cached)
    Files are cached one-by-one so a single missing file can NEVER
    break installation/offline mode again. */
-const CACHE = "ratex-v2";
+const CACHE = "ratex-v4";
 const SHELL = [
   "./",
   "./index.html",

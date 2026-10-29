@@ -155,13 +155,23 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .section-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:13px}
 .section-head h3{font-size:17.5px; font-weight:900}
 .section-head .link{font-size:12.5px}
-.quick{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px}
+.quick{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px}
 .quick button{padding:16px 8px; border-radius:20px; background:var(--surface); box-shadow:var(--sh-out-sm); font-weight:800; font-size:13px; color:var(--ink2); display:flex; flex-direction:column; align-items:center; gap:8px}
 .quick button:active{box-shadow:var(--sh-in-sm)}
 .quick .qic{width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px; color:#fff}
 .progress{height:12px; border-radius:99px; box-shadow:var(--sh-in-sm); overflow:hidden; background:var(--surface)}
 .progress>i{display:block; height:100%; border-radius:99px; background:var(--grad); transition:width .5s cubic-bezier(.22,1,.36,1)}
 .flow-card{padding:20px; margin-top:14px}
+.acct-grid{display:grid; grid-template-columns:1fr; gap:12px}
+@media(min-width:680px){.acct-grid{grid-template-columns:1fr 1fr}}
+.acct-card{padding:17px 18px; display:flex; gap:13px; align-items:center}
+.acct-ic{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;color:#fff;flex:none;box-shadow:0 8px 18px rgba(10,110,255,.28)}
+.cf-summary{display:none; margin:14px 0 4px; padding:13px 15px; border-radius:14px; box-shadow:var(--sh-in-sm); font-size:13px; line-height:1.55}
+.cf-summary.show{display:block}
+.cf-summary .row{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
+.cf-understand{display:none; align-items:flex-start; gap:9px; margin:16px 0 20px; font-size:13px; color:var(--ink2); cursor:pointer; user-select:none}
+.cf-understand.show{display:flex}
+.cf-understand input{width:20px;height:20px;margin-top:1px;flex:none}
 .flow-rows{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:6px}
 @media(max-width:560px){.flow-rows{grid-template-columns:1fr 1fr 1fr; gap:8px}}
 .flow-rows .fl .v{font-weight:900; font-size:16px; margin-top:4px}
@@ -401,7 +411,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <div class="stat-grid">
         <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--blue)"></i>SAR Balance</div><div class="vl"><span id="dSarBalance">0.00</span> <small>SAR</small></div><div class="sb" id="dSarSub">Collected − invested</div></div>
         <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--amber)"></i>Pending Settlement</div><div class="vl"><span id="dPendingSar">0.00</span> <small>SAR</small></div><div class="sb" id="dPendingSub">No dues</div></div>
-        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Actual Profit</div><div class="vl pos"><span id="dActualProfit">0.00</span> <small>SAR</small></div><div class="sb">Realised from payments received</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Actual Profit</div><div class="vl pos"><span id="dActualProfit">0.00</span> <small>SAR</small></div><div class="sb" id="dActualSub">Realised from payments received</div></div>
         <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:#8b5cf6"></i>Pending Profit</div><div class="vl"><span id="dPendingProfit">0.00</span> <small>SAR</small></div><div class="sb">Locked in unpaid trades</div></div>
       </div>
 
@@ -409,6 +419,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <button data-open-stock><span class="qic" style="background:linear-gradient(135deg,#19b6f5,#0a84ff)">⇩</span>Stock In<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">Remittance sent</span></button>
         <button data-open-trade><span class="qic" style="background:linear-gradient(135deg,#f59e0b,#d97706)">⇄</span>Sell BDT<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">New trade</span></button>
         <button data-goto="settlement"><span class="qic" style="background:linear-gradient(135deg,#12b981,#0a9d6c)">✓</span>Collect<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">Add payment</span></button>
+        <button data-open-transfer><span class="qic" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">⇪</span>Transfer<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">Cash → Bank</span></button>
       </div>
 
       <div class="flow-card neu">
@@ -420,6 +431,11 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         </div>
         <div class="progress" style="margin-top:15px"><i id="dCollectBar" style="width:0%"></i></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px"><span id="dTotalDue">Total receivable 0 SAR</span><span id="dTotalProfit">Total profit 0 SAR</span></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3>My Accounts</h3><span><button class="link" id="setupAccountsBtn">Set up defaults</button> · <button class="link" data-open-account>＋ Add A/C</button></span></div>
+        <div id="dashAccounts"></div>
       </div>
 
       <div class="section">
@@ -458,6 +474,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <button class="chip active" data-typefilter="all">All</button>
         <button class="chip" data-typefilter="sell">Sell Trades</button>
         <button class="chip" data-typefilter="stock">Stock In</button>
+        <button class="chip" data-typefilter="transfer">Transfers</button>
         <span style="flex:1"></span><small id="tradeCount"></small>
       </div>
       <div id="tradeList"></div>
@@ -502,14 +519,19 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       </div>
 
       <div class="stat-grid" style="margin-top:0">
-        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Total Profit</div><div class="vl"><span id="aProfit">0.00</span> <small>SAR</small></div><div class="sb" id="aProfitSub">—</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Total Net Profit</div><div class="vl"><span id="aProfit">0.00</span> <small>SAR</small></div><div class="sb" id="aProfitSub">—</div></div>
         <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--blue)"></i>Profit Margin</div><div class="vl" id="aMargin">0%</div><div class="sb">Profit ÷ cost of BDT sold</div></div>
         <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:#8b5cf6"></i>Avg Buy vs Sell Rate</div><div class="vl" style="font-size:17px" id="aRates">—</div><div class="sb" id="aSpread">Spread —</div></div>
         <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--amber)"></i>Trades</div><div class="vl" id="aTrades">0</div><div class="sb" id="aTradesSub">—</div></div>
       </div>
 
       <div class="section"><div class="neu" style="padding:20px">
-        <div class="section-head"><h3>Monthly Profit (SAR)</h3><small>by trade date</small></div>
+        <div class="section-head"><h3>Account Balances</h3><small>opening + all postings</small></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Account</th><th>Opening</th><th>In</th><th>Out</th><th>Balance</th></tr></thead><tbody id="aAccounts"></tbody></table></div>
+      </div></div>
+
+      <div class="section"><div class="neu" style="padding:20px">
+        <div class="section-head"><h3>Monthly Net Profit (SAR)</h3><small>by trade date, transfer fees deducted</small></div>
         <div id="aMonthly"></div>
       </div></div>
 
@@ -553,12 +575,21 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
     <div class="sheet-head"><div><h3 id="stockTitle">Stock In — Remittance Sent</h3><p>SAR you sent → BDT deposited in Bangladesh (with incentive).</p></div><button type="button" class="icon-btn close-x" data-close="stockOverlay">✕</button></div>
     <input type="hidden" id="stId">
     <div class="grid2">
-      <div class="field"><label for="stDate">Date</label><input type="date" id="stDate" required></div>
-      <div class="field"><label for="stSource">Sent Via (optional)</label><input type="text" id="stSource" placeholder="e.g. ENJAZ, SNB, UrPay"></div>
+      <div class="field"><label for="stKind">Entry Type</label><select id="stKind"><option value="remittance">Remittance — post to A/Cs</option><option value="opening">Historical Lot — already in opening balances</option></select></div>
+      <div class="field"><label for="stRemitNo">Remit No. (auto)</label><input type="text" id="stRemitNo" placeholder="REM-…"></div>
     </div>
     <div class="grid2">
-      <div class="field"><label for="stSar">SAR Sent</label><input type="number" id="stSar" required min="0.01" step="any" inputmode="decimal" placeholder="3000"></div>
-      <div class="field"><label for="stFee">Sending Fee · SAR</label><input type="number" id="stFee" min="0" step="any" inputmode="decimal" value="0"></div>
+      <div class="field"><label for="stSarAcc">SAR Account (Debit)</label><select id="stSarAcc"></select></div>
+      <div class="field"><label for="stBdtAcc">BD Bank Account (Credit)</label><select id="stBdtAcc"></select></div>
+    </div>
+    <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">Sending amount + fee will be debited from the SAR account; total BDT (incl. incentive) credited to the BD account. No A/C yet? <button type="button" class="link" data-open-account>＋ Create account</button></p>
+    <div class="grid2">
+      <div class="field"><label for="stDate">Date</label><input type="date" id="stDate" required></div>
+      <div class="field"><label for="stSource">Sent Via</label><input type="text" id="stSource" list="sendViaList" placeholder="e.g. Al Rajhi"><datalist id="sendViaList"><option>Al Rajhi</option><option>SNB AlAhli</option><option>Enjaz</option><option>UrPay</option><option>STC Pay</option><option>Western Union</option><option>MoneyGram</option></datalist></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="stSar">Sending Amount · SAR</label><input type="number" id="stSar" required min="0.01" step="any" inputmode="decimal" placeholder="3000"></div>
+      <div class="field"><label for="stFee">Fee · SAR (extra debit)</label><input type="number" id="stFee" min="0" step="any" inputmode="decimal" value="0"></div>
     </div>
     <div class="grid2">
       <div class="field"><label for="stRate">Exchange Rate · BDT/SAR</label><input type="number" id="stRate" required min="0.0001" step="any" inputmode="decimal" placeholder="32.97878"></div>
@@ -584,13 +615,16 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
     <input type="hidden" id="trId">
     <div class="grid2">
       <div class="field"><label for="trDate">Date</label><input type="date" id="trDate" required></div>
-      <div class="field"><label for="trMethod">Delivery Method</label><select id="trMethod"><option>bKash</option><option>Nagad</option><option>Bank</option><option>Cash</option><option>Other</option></select></div>
+      <div class="field"><label for="trMethod">Delivery Method</label><input type="text" id="trMethod" required list="deliveryMethodList" value="bKash" placeholder="bKash / bank name / …"><datalist id="deliveryMethodList"><option>bKash</option><option>Nagad</option><option>Rocket</option><option>Bank Transfer</option><option>Cash</option></datalist><p class="hint">Type any bank/channel name — custom names are saved as typed.</p></div>
     </div>
     <div class="grid2">
       <div class="field"><label for="trCustName">Customer Name</label><input type="text" id="trCustName" required list="customerList" placeholder="Who pays you the SAR?" autocomplete="off"><datalist id="customerList"></datalist></div>
-      <div class="field"><label for="trCustPhone">Customer Phone</label><input type="tel" id="trCustPhone" placeholder="05xxxxxxxx" autocomplete="off"></div>
+      <div class="field"><label for="trCustPhone">Customer Phone (optional)</label><input type="tel" id="trCustPhone" placeholder="05xxxxxxxx" autocomplete="off"></div>
     </div>
-    <div class="field"><label for="trReceiver">Receiver in BD (optional)</label><input type="text" id="trReceiver" placeholder="bKash / bank account number or name"></div>
+    <div class="grid2">
+      <div class="field"><label for="trSourceAcc">Deliver From BD Account</label><select id="trSourceAcc"></select><p class="hint">This A/C is debited. A trade can never exceed its balance.</p></div>
+      <div class="field"><label for="trReceiver">Receiver A/C in BD (optional)</label><input type="text" id="trReceiver" placeholder="Number / account name"></div>
+    </div>
 
     <div class="seg" role="group" aria-label="Input mode">
       <button type="button" id="modeBdt" class="active">Customer needs BDT</button>
@@ -617,7 +651,8 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <div class="field"><label for="trInitPay">SAR Received Now</label><input type="number" id="trInitPay" min="0" step="any" inputmode="decimal" value="0"></div>
         <div class="field"><label for="trInitMethod">Received Via</label><select id="trInitMethod"><option>Cash</option><option>Bank Transfer</option><option>STC Pay</option><option>UrPay</option><option>Other</option></select></div>
       </div>
-      <p class="hint" style="margin:8px 4px 0;font-size:12px;color:var(--muted)">Leave 0 if fully on credit — the rest stays as Pending Settlement.</p>
+      <div class="field"><label for="trInitAccount">Post Received SAR To Account</label><select id="trInitAccount"></select></div>
+      <p class="hint" style="margin:8px 4px 0;font-size:12px;color:var(--muted)">Leave received amount 0 if fully on credit — the rest stays as Pending Settlement.</p>
     </div>
 
     <div class="field"><label for="trNote">Note (optional)</label><textarea id="trNote" placeholder="Any note…"></textarea></div>
@@ -642,11 +677,57 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <div class="field"><label for="payMethod">Received Via</label><select id="payMethod"><option>Cash</option><option>Bank Transfer</option><option>STC Pay</option><option>UrPay</option><option>Other</option></select></div>
       <div class="field"><label for="payNote">Note (optional)</label><input type="text" id="payNote" placeholder="Any note…"></div>
     </div>
-    <div style="margin-top:14px;display:flex;gap:10px">
+    <div class="field"><label for="payAccount">Post This SAR To Account</label><select id="payAccount"></select><p class="hint">Choose where this money lands: Cash in Hand or your Saudi Bank A/C.</p></div>
+    <div style="margin-top:16px;display:flex;gap:10px">
       <button type="button" class="mini-btn" id="payFullBtn">Fill full due amount</button>
     </div>
     <div class="form-err" id="payErr"></div>
     <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="paySave">SAVE PAYMENT</button></div>
+  </form>
+</div>
+
+<!-- ================= ACCOUNT MODAL ================= -->
+<div class="overlay" id="accountOverlay" style="z-index:95">
+  <form class="sheet" id="accountForm">
+    <div class="grab"></div>
+    <div class="sheet-head"><div><h3 id="accTitle">Add Account</h3><p>Your money, organised: Saudi SAR, Cash SAR and BD BDT accounts.</p></div><button type="button" class="icon-btn close-x" data-close="accountOverlay">✕</button></div>
+    <input type="hidden" id="accId">
+    <div class="field"><label for="accName">Account Name</label><input type="text" id="accName" required placeholder="e.g. Al Rajhi — Main, Cash Wallet, Islami Bank"></div>
+    <div class="grid2">
+      <div class="field"><label for="accCurrency">Currency</label><select id="accCurrency"><option>SAR</option><option>BDT</option></select></div>
+      <div class="field"><label for="accType">Type</label><select id="accType"><option>Saudi Bank</option><option>Cash</option><option>BD Bank</option><option>Mobile Wallet</option><option>Bank</option><option>Other</option></select></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="accOpening">Opening Balance</label><input type="number" id="accOpening" step="any" inputmode="decimal" value="0"></div>
+      <div class="field"><label for="accOpeningDate">Opening Date</label><input type="date" id="accOpeningDate" required></div>
+    </div>
+    <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">Enter the balance as it stood on the opening date, <b>before</b> the transactions you record in RateX. Later remittances/trades are posted on top of it.</p>
+    <div class="field"><label for="accNote">Note (optional)</label><input type="text" id="accNote" placeholder="Account no., branch… (private note)"></div>
+    <label class="remember" style="margin-top:18px"><input type="checkbox" id="accArchived"> Archived (hide from new entries)</label>
+    <div class="form-err" id="accErr"></div>
+    <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="accSave">SAVE ACCOUNT</button></div>
+  </form>
+</div>
+
+<!-- ================= TRANSFER MODAL ================= -->
+<div class="overlay" id="transferOverlay">
+  <form class="sheet" id="transferForm">
+    <div class="grab"></div>
+    <div class="sheet-head"><div><h3 id="tfTitle">Transfer Between Accounts</h3><p>Example: deposit hand cash (SAR) into your Saudi Bank to remit again.</p></div><button type="button" class="icon-btn close-x" data-close="transferOverlay">✕</button></div>
+    <input type="hidden" id="tfId">
+    <div class="field"><label for="tfDate">Date</label><input type="date" id="tfDate" required></div>
+    <div class="grid2">
+      <div class="field"><label for="tfFrom">From Account (Debit)</label><select id="tfFrom" required></select></div>
+      <div class="field"><label for="tfTo">To Account (Credit)</label><select id="tfTo" required></select></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="tfAmount">Amount</label><input type="number" id="tfAmount" required min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
+      <div class="field"><label for="tfFee">Fee / Charge (extra from source)</label><input type="number" id="tfFee" min="0" step="any" inputmode="decimal" value="0"></div>
+    </div>
+    <div class="calc-box neu-in" id="tfPreview"></div>
+    <div class="field"><label for="tfNote">Note (optional)</label><input type="text" id="tfNote" placeholder="Any note…"></div>
+    <div class="form-err" id="tfErr"></div>
+    <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="tfSave">SAVE TRANSFER</button></div>
   </form>
 </div>
 
@@ -655,7 +736,9 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
   <div class="sheet" style="max-width:440px">
     <div class="grab"></div>
     <h3 id="cfTitle" style="font-size:19px;font-weight:900">Are you sure?</h3>
-    <p id="cfText" style="color:var(--muted);font-size:14px;line-height:1.6;margin:10px 0 22px"></p>
+    <p id="cfText" style="color:var(--muted);font-size:14px;line-height:1.6;margin:10px 0 4px"></p>
+    <div class="cf-summary" id="cfSummary"></div>
+    <label class="cf-understand" id="cfCheckWrap"><input type="checkbox" id="cfCheck"> I understand this will permanently change my balances and cannot be undone.</label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <button class="btn btn-ghost" id="cfNo">Cancel</button>
       <button class="btn btn-danger" id="cfYes" style="background:linear-gradient(120deg,#ff7a7e,#e5484d);color:#fff;box-shadow:0 12px 24px rgba(229,72,77,.3)">Delete</button>
@@ -708,11 +791,25 @@ async function busy(btn, fn, label){
   try { return await fn(); } finally { btn.disabled = false; btn.textContent = old; }
 }
 let cfResolve = null;
-function confirmBox(title, text, yes="Delete"){
+function confirmBox(title, text, yes="Delete", opts={}){
   $("#cfTitle").textContent = title; $("#cfText").textContent = text; $("#cfYes").textContent = yes;
+  const sum = $("#cfSummary"), wrap = $("#cfCheckWrap"), chk = $("#cfCheck"), yesBtn = $("#cfYes");
+  if(opts.summary?.length){
+    sum.innerHTML = opts.summary.map(r=>`<div class="row"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join("");
+    sum.classList.add("show");
+  } else { sum.innerHTML=""; sum.classList.remove("show"); }
+  if(opts.understand){
+    wrap.classList.add("show"); chk.checked = false; yesBtn.disabled = true; yesBtn.style.opacity = .45;
+  } else { wrap.classList.remove("show"); yesBtn.disabled = false; yesBtn.style.opacity = 1; }
   $("#confirmOverlay").classList.add("open");
   return new Promise(res => cfResolve = res);
 }
+function deleteConfirm(title, text, summary){
+  return confirmBox(title, text, "Yes, delete it", { summary, understand:true });
+}
+$("#cfCheck").addEventListener("change", e=>{
+  const b=$("#cfYes"); b.disabled = !e.target.checked; b.style.opacity = e.target.checked ? 1 : .45;
+});
 $("#cfYes").addEventListener("click", ()=>{ $("#confirmOverlay").classList.remove("open"); cfResolve && cfResolve(true); });
 $("#cfNo").addEventListener("click",  ()=>{ $("#confirmOverlay").classList.remove("open"); cfResolve && cfResolve(false); });
 
@@ -733,7 +830,7 @@ try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:
 catch(e){ console.error(e); }
 
 /* ---------- state ---------- */
-const S = { user:null, customers:[], lots:[], trades:[], allocs:[], pays:[] };
+const S = { user:null, customers:[], lots:[], trades:[], allocs:[], pays:[], accounts:[], transfers:[] };
 let D = null; // derived
 let ui = { tab:"dashboard", typeFilter:"all", statusFilter:"all", search:"", period:"all", tradeMode:"bdt" };
 
@@ -756,10 +853,12 @@ const queueKey  = uid => "ratex_queue_v2_" + uid;
 
 const TABLE_COLS = {
   ratex_customers:   ["id","user_id","name","phone","note","created_at","updated_at"],
-  ratex_stock_lots:  ["id","user_id","txn_date","sar_amount","fee_sar","base_rate","incentive_pct","total_bdt","effective_rate","source","note","created_at","updated_at"],
-  ratex_trades:      ["id","user_id","customer_id","txn_date","delivery_method","receiver_info","bdt_amount","delivery_charge_bdt","sell_rate","sar_due","note","created_at","updated_at"],
+  ratex_stock_lots:  ["id","user_id","txn_date","sar_amount","fee_sar","base_rate","incentive_pct","total_bdt","effective_rate","source","note","remit_no","kind","sar_account_id","bdt_account_id","created_at","updated_at"],
+  ratex_trades:      ["id","user_id","customer_id","txn_date","delivery_method","receiver_info","source_account_id","bdt_amount","delivery_charge_bdt","sell_rate","sar_due","note","created_at","updated_at"],
   ratex_trade_lots:  ["id","user_id","trade_id","lot_id","bdt_allocated","cost_rate","cost_sar","created_at"],
-  ratex_settlements: ["id","user_id","trade_id","txn_date","sar_amount","method","note","created_at","updated_at"]
+  ratex_settlements: ["id","user_id","trade_id","account_id","txn_date","sar_amount","method","note","created_at","updated_at"],
+  ratex_accounts:    ["id","user_id","name","currency","type","opening_balance","opening_date","note","archived","created_at","updated_at"],
+  ratex_transfers:   ["id","user_id","txn_date","from_account_id","to_account_id","amount","fee","note","created_at","updated_at"]
 };
 function cleanRow(table, row){
   const cols = TABLE_COLS[table] || Object.keys(row||{});
@@ -771,7 +870,7 @@ function persistLocal(){
   if(!S.user) return;
   try{
     localStorage.setItem(localKey(S.user.id), JSON.stringify({
-      customers:S.customers, lots:S.lots, trades:S.trades, allocs:S.allocs, pays:S.pays, savedAt: nowIso()
+      customers:S.customers, lots:S.lots, trades:S.trades, allocs:S.allocs, pays:S.pays, accounts:S.accounts, transfers:S.transfers, savedAt: nowIso()
     }));
     localStorage.setItem(queueKey(S.user.id), JSON.stringify(Q));
   }catch(e){ console.warn("Local save failed (storage full?)", e); }
@@ -783,10 +882,11 @@ function loadLocal(userId){
     const d = JSON.parse(localStorage.getItem(localKey(userId)) || "null");
     S.customers = d?.customers||[]; S.lots = d?.lots||[]; S.trades = d?.trades||[];
     S.allocs = d?.allocs||[]; S.pays = d?.pays||[];
+    S.accounts = d?.accounts||[]; S.transfers = d?.transfers||[];
     Q = JSON.parse(localStorage.getItem(queueKey(userId)) || "[]");
     if(!Array.isArray(Q)) Q = [];
   }catch(e){
-    S.customers=[]; S.lots=[]; S.trades=[]; S.allocs=[]; S.pays=[]; Q=[];
+    S.customers=[]; S.lots=[]; S.trades=[]; S.allocs=[]; S.pays=[]; S.accounts=[]; S.transfers=[]; Q=[];
   }
 }
 function updateSyncUI(){
@@ -850,15 +950,17 @@ async function applyOp(op){
 }
 async function pullServer(){
   const q = (t, col="txn_date") => sb.from(t).select("*").order(col, {ascending:false});
-  const [c,l,t,a,p] = await Promise.all([
+  const [c,l,t,a,p,ac,tf] = await Promise.all([
     sb.from("ratex_customers").select("*").order("name"),
     q("ratex_stock_lots"), q("ratex_trades"),
-    sb.from("ratex_trade_lots").select("*"), q("ratex_settlements")
+    sb.from("ratex_trade_lots").select("*"), q("ratex_settlements"),
+    sb.from("ratex_accounts").select("*").order("name"), q("ratex_transfers")
   ]);
-  const bad = [c,l,t,a,p].find(x=>x.error);
+  const bad = [c,l,t,a,p,ac,tf].find(x=>x.error);
   if(bad) throw bad.error;
   if(Q.length) return false; // new local changes arrived during pull — don't overwrite them
   S.customers=c.data||[]; S.lots=l.data||[]; S.trades=t.data||[]; S.allocs=a.data||[]; S.pays=p.data||[];
+  S.accounts=ac.data||[]; S.transfers=tf.data||[];
   $("#setupBanner").innerHTML = "";
   persistLocal(); renderAll();
   return true;
@@ -885,10 +987,16 @@ async function syncNow({ pull=false, manual=false } = {}){
     console.error("Sync failed", err);
     const msg = String(err.message || err);
     syncState.error = msg;
-    if(/ratex_|relation|schema cache|could not find/i.test(msg)){
-      $("#setupBanner").innerHTML = `<div class="banner"><b>⚠ One-time database setup needed.</b><br>
-        Open <b>Supabase → SQL Editor</b>, paste the full content of <code>supabase-setup.sql</code> and click <b>Run</b>, then reload this page.
-        Your data on this phone is safe and will back up after setup.
+    const code = String(err.code || "");
+    if(/row-level security/i.test(msg) || code === "42501"){
+      $("#setupBanner").innerHTML = `<div class="banner"><b>⚠ Backup blocked by database permissions (RLS).</b><br>
+        Your entries are <b>safe on this phone</b> — do not clear browser data. To fix: open
+        <b>Supabase → SQL Editor</b>, run the full <code>supabase-v3-migration.sql</code>, then tap the ☁ chip above to back up.
+        <br><small>Details: ${esc(msg)}</small></div>`;
+    } else if(/ratex_accounts|ratex_transfers|remit_no|source_account_id|account_id|schema cache|could not find|does not exist/i.test(msg)){
+      $("#setupBanner").innerHTML = `<div class="banner"><b>⚠ One-time v3 database update needed.</b><br>
+        Open <b>Supabase → SQL Editor</b>, paste the full content of <code>supabase-v3-migration.sql</code> and click <b>Run</b>, then reload this page.
+        Your data on this phone is safe and will back up after the update.
         <br><small>Details: ${esc(msg)}</small></div>`;
     }
     if(manual) toast("Sync failed: " + msg + " — data is safe on this phone, tap ☁ to retry.", "error");
@@ -902,6 +1010,72 @@ window.addEventListener("online",  () => { updateSyncUI(); if(S.user){ toast("Ba
 window.addEventListener("offline", () => { updateSyncUI(); toast("Offline mode — everything is saved on this phone and will back up when internet returns."); });
 setTimeout(()=>{ const b=$("#syncStatus"); if(b) b.addEventListener("click", ()=> syncNow({pull:true, manual:true})); updateSyncUI(); }, 0);
 
+
+/* ---------- account ledger ----------
+   Balance = opening balance + postings on/after opening date.
+   Lots of kind "opening" (historical) do NOT post again — their
+   money is already inside the opening balances. */
+function accountTotals(a, exclude={}){
+  let inn=0, out=0;
+  const afterOpen = d => !a.opening_date || !d || String(d) >= String(a.opening_date);
+  S.lots.forEach(l=>{
+    if(l.id===exclude.lotId || (l.kind||"remittance")==="opening" || !afterOpen(l.txn_date)) return;
+    if(a.currency==="SAR" && l.sar_account_id===a.id) out += n(l.sar_amount)+n(l.fee_sar); // fee = extra debit
+    if(a.currency==="BDT" && l.bdt_account_id===a.id) inn += n(l.total_bdt);
+  });
+  if(a.currency==="BDT"){
+    const rawLot = id => S.lots.find(x=>x.id===id);
+    S.trades.forEach(t=>{
+      if(t.id===exclude.tradeId || !afterOpen(t.txn_date)) return;
+      if(t.source_account_id){
+        if(t.source_account_id===a.id) out += n(t.bdt_amount)+n(t.delivery_charge_bdt);
+      } else {
+        S.allocs.filter(x=>x.trade_id===t.id).forEach(x=>{
+          if(rawLot(x.lot_id)?.bdt_account_id===a.id) out += n(x.bdt_allocated);
+        });
+      }
+    });
+  }
+  if(a.currency==="SAR"){
+    S.pays.forEach(pay=>{
+      if(pay.id===exclude.payId || !afterOpen(pay.txn_date)) return;
+      if(pay.account_id===a.id) inn += n(pay.sar_amount);
+    });
+  }
+  S.transfers.forEach(tf=>{
+    if(tf.id===exclude.transferId || !afterOpen(tf.txn_date)) return;
+    if(tf.to_account_id===a.id)   inn += n(tf.amount);
+    if(tf.from_account_id===a.id) out += n(tf.amount)+n(tf.fee); // fee = extra from source
+  });
+  inn=r2(inn); out=r2(out);
+  return { inn, out, balance: r2(n(a.opening_balance)+inn-out) };
+}
+function transferFeeSar(tf, convRate){
+  const fee = n(tf.fee); if(!(fee > 0)) return 0;
+  const src = S.accounts.find(a=>a.id===tf.from_account_id) || S.accounts.find(a=>a.id===tf.to_account_id);
+  const cur = src?.currency || "SAR";
+  if(cur === "SAR") return fee;
+  return convRate > 0 ? fee / convRate : 0; // BDT fee valued at avg buy (effective) rate
+}
+function accountBalance(accountId, exclude={}){
+  const a = (D?.accountMap?.get(accountId)) || S.accounts.find(x=>x.id===accountId);
+  if(!a) return 0;
+  return (exclude && Object.keys(exclude).length) ? accountTotals(a, exclude).balance : (a.balance ?? accountTotals(a).balance);
+}
+function accountById(id){ return D?.accountMap?.get(id) || S.accounts.find(x=>x.id===id) || null; }
+function accountName(id){ return accountById(id)?.name || "—"; }
+function genRemitNo(dateStr, currentId=""){
+  const base = "REM-" + String(dateStr||todayStr()).replaceAll("-","");
+  const used = new Set(S.lots.filter(l=>l.id!==currentId).map(l=>l.remit_no||""));
+  let seq = S.lots.filter(l=>l.id!==currentId && l.txn_date===dateStr).length + 1;
+  let candidate = `${base}-${String(seq).padStart(3,"0")}`;
+  while(used.has(candidate)){ seq++; candidate = `${base}-${String(seq).padStart(3,"0")}`; }
+  return candidate;
+}
+function lotDisplayNo(l){
+  if(l.remit_no) return l.remit_no;
+  return "REM-" + String(l.txn_date||"").replaceAll("-","") + "-" + String(l.id||"").slice(0,4).toUpperCase();
+}
 
 function rebuild(){
   const lotMap = new Map(S.lots.map(l => [l.id, l]));
@@ -930,7 +1104,7 @@ function rebuild(){
     const profit = dueTotal - costSar;
     const ratio = dueTotal > 0 ? Math.min(1, paid/dueTotal) : 0;
     const dueLeft = Math.max(0, dueTotal - paid);
-    return { ...t, allocs, pays, customer: custMap.get(t.customer_id) || null,
+    return { ...t, allocs, pays, customer: custMap.get(t.customer_id) || null, sourceAccount: S.accounts.find(a=>a.id===t.source_account_id) || null,
       totalOutBdt: r2(n(t.bdt_amount)+n(t.delivery_charge_bdt)),
       costSar:r2(costSar), paidSar:r2(paid), dueLeft:r2(dueLeft), profitSar:r2(profit),
       actualProfit:r2(profit*ratio), pendingProfit:r2(profit*(1-ratio)), ratio,
@@ -963,11 +1137,24 @@ function rebuild(){
     costSoldSar:r2(trades.reduce((s,t)=>s+t.costSar,0)),
   };
   tot.sarBalance = r2(tot.collectedSar - tot.investedSar);
+  tot.allBuyRate = tot.investedSar > 0 ? tot.bdtBought / tot.investedSar : 0;
+  tot.transferFeesSar = r2(S.transfers.reduce((sm,tf)=>sm + transferFeeSar(tf, tot.allBuyRate), 0));
+  tot.tradeProfitSar = tot.profitSar;
+  tot.netProfitSar = r2(tot.profitSar - tot.transferFeesSar);
+  tot.netActualProfit = r2(tot.actualProfit - tot.transferFeesSar);
   const remainLots = lots.filter(l=>l.remainingBdt > 0.005);
   const remainSarCost = remainLots.reduce((s,l)=> s + (n(l.effective_rate) ? l.remainingBdt / n(l.effective_rate) : 0), 0);
   tot.avgCostRate = remainSarCost > 0 ? tot.bdtBalance / remainSarCost : 0;
 
-  D = { lotMap, custMap, tradeMap, lots, trades, customers, tot, allocByLot };
+  const accounts = S.accounts.map(a => ({ ...a, ...accountTotals(a) }))
+    .sort((x,y)=> (x.currency||"").localeCompare(y.currency||"") || (x.name||"").localeCompare(y.name||""));
+  const accountMap = new Map(accounts.map(a=>[a.id,a]));
+  const transfers = [...S.transfers].sort((a,b)=> String(b.txn_date||"").localeCompare(String(a.txn_date||"")) || String(b.created_at||"").localeCompare(String(a.created_at||"")));
+  tot.sarAccountsBalance = r2(accounts.filter(a=>a.currency==="SAR").reduce((sm,a)=>sm+a.balance,0));
+  tot.bdtAccountsBalance = r2(accounts.filter(a=>a.currency==="BDT").reduce((sm,a)=>sm+a.balance,0));
+  tot.hasAccounts = accounts.length > 0;
+
+  D = { lotMap, custMap, tradeMap, lots, trades, customers, tot, allocByLot, accounts, accountMap, transfers };
   return D;
 }
 
@@ -976,7 +1163,7 @@ async function loadData(showSpin=true){
   if(!S.user) return;
   loadLocal(S.user.id);          // instant: show what's saved on this phone
   renderAll(); updateSyncUI();
-  const hasLocal = S.lots.length || S.trades.length || S.customers.length || Q.length;
+  const hasLocal = S.lots.length || S.trades.length || S.customers.length || S.accounts.length || S.transfers.length || Q.length;
   if(showSpin && !hasLocal) setLoading(true);
   try{
     if(sb && navigator.onLine) await syncNow({ pull:true });  // backup queue, then refresh from server
@@ -995,6 +1182,9 @@ document.addEventListener("click", e => {
   const g = e.target.closest("[data-goto]"); if(g) switchTab(g.dataset.goto);
   if(e.target.closest("[data-open-stock]")) openStock();
   if(e.target.closest("[data-open-trade]")) openTrade();
+  if(e.target.closest("[data-open-account]")) openAccount();
+  if(e.target.closest("[data-open-transfer]")) openTransfer();
+  if(e.target.closest("#setupAccountsBtn2")) setupDefaultAccounts();
 });
 
 /* ================= RENDER ================= */
@@ -1003,14 +1193,55 @@ function renderAll(){ rebuild(); renderDashboard(); renderTradePage(); renderSet
 function emptyBox(icon, title, text, btnHtml=""){
   return `<div class="empty neu"><div class="eic">${icon}</div><h4>${title}</h4><p>${text}</p>${btnHtml}</div>`;
 }
-function lotLabel(l){ return `${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR @ ${fmtRate(l.effective_rate)}${l.source ? " · "+esc(l.source) : ""}`; }
+function lotLabel(l){ return `${lotDisplayNo(l)} · ${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR @ ${fmtRate(l.effective_rate)}${l.source ? " · "+l.source : ""}${l.bdt_account_id ? " · "+accountName(l.bdt_account_id) : ""}`; }
+
+function accountCard(a){
+  const isSar = a.currency === "SAR";
+  const icon = a.type === "Cash" ? "💵" : (a.type === "Mobile Wallet" ? "📱" : "🏦");
+  const bg = isSar ? "linear-gradient(135deg,#19b6f5,#0a84ff)" : "linear-gradient(135deg,#12b981,#0a9d6c)";
+  return `<div class="acct-card neu-sm">
+    <div class="acct-ic" style="background:${bg}">${icon}</div>
+    <div style="flex:1;min-width:0">
+      <b style="font-size:15px">${esc(a.name)}</b> ${a.archived?'<span class="pill pill-partial">Archived</span>':""}
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">${esc(a.type)} · ${a.currency} · Opening ${fmt(a.opening_balance)} (${dFmt(a.opening_date)}) · In ${fmt0(a.inn)} / Out ${fmt0(a.out)}</div>
+    </div>
+    <div style="text-align:right">
+      <div style="font-weight:900;font-size:17px" class="${signedCls(a.balance)}">${fmt(a.balance)}</div>
+      <small>${a.currency}</small>
+      <div style="margin-top:6px;display:flex;gap:6px;justify-content:flex-end">
+        <button class="mini-btn" data-action="edit-account" data-id="${a.id}">✎</button>
+        <button class="mini-btn red" data-action="del-account" data-id="${a.id}">🗑</button>
+      </div>
+    </div></div>`;
+}
+function transferCard(tf){
+  const from = accountById(tf.from_account_id), to = accountById(tf.to_account_id);
+  const cur = from?.currency || to?.currency || "";
+  return `<article class="card neu">
+    <div class="card-top">
+      <div class="avatar-c" style="color:#fff;background:linear-gradient(135deg,#8b5cf6,#6d28d9)">⇪</div>
+      <div class="tt"><div class="t1">${esc(from?.name||"Account")} → ${esc(to?.name||"Account")}</div>
+      <div class="t2">${dFmt(tf.txn_date)} · Internal transfer${tf.note ? " · "+esc(tf.note) : ""}</div></div>
+      <span class="pill" style="background:#ede9fe;color:#6d28d9">Transfer</span>
+    </div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">Amount</div><div class="v">${fmt(tf.amount)} <small>${cur}</small></div></div>
+      <div class="kv"><div class="l">Fee (from source)</div><div class="v">${fmt(tf.fee)} <small>${cur}</small></div></div>
+      <div class="kv"><div class="l">Source Debited</div><div class="v">${fmt(n(tf.amount)+n(tf.fee))}</div></div>
+      <div class="kv"><div class="l">Destination Credited</div><div class="v pos">+${fmt(tf.amount)}</div></div>
+    </div>
+    <div class="card-actions">
+      <button class="mini-btn" data-action="edit-transfer" data-id="${tf.id}">✎ Edit</button>
+      <button class="mini-btn red" data-action="del-transfer" data-id="${tf.id}">🗑 Delete</button>
+    </div></article>`;
+}
 
 function statusPill(t){ return `<span class="pill pill-${t.status.toLowerCase()}">${t.status}</span>`; }
 
 function tradeCard(t, compact=false){
   const cName = t.customer ? t.customer.name : "Unknown customer";
   const allocTxt = t.allocs.map(a => { const l=D.lotMap.get(a.lot_id); return `<div class="row"><span>${l ? esc(lotLabel(l)) : "Lot"}</span><b>${fmt(a.bdt_allocated)} BDT · cost ${fmt(a.cost_sar)} SAR</b></div>`; }).join("") || `<div class="row"><span>No lot allocated</span></div>`;
-  const payTxt = t.pays.map(p=>`<div class="row"><span>${dFmt(p.txn_date)} · ${esc(p.method)}${p.note?" · "+esc(p.note):""}</span><b class="pos">+${fmt(p.sar_amount)} SAR</b></div>`).join("") || `<div class="row"><span>No payments yet</span></div>`;
+  const payTxt = t.pays.map(p=>`<div class="row"><span>${dFmt(p.txn_date)} · ${esc(p.method)}${p.account_id?" → "+esc(accountName(p.account_id)):""}${p.note?" · "+esc(p.note):""}</span><b class="pos">+${fmt(p.sar_amount)} SAR</b></div>`).join("") || `<div class="row"><span>No payments yet</span></div>`;
   return `<article class="card neu">
     <div class="card-top">
       <div class="avatar-c">${esc(initials(cName))}</div>
@@ -1031,7 +1262,8 @@ function tradeCard(t, compact=false){
     <div class="progress" style="margin-top:13px"><i style="width:${Math.round(t.ratio*100)}%"></i></div>
     ${t.note ? `<p style="font-size:12.5px;color:var(--muted);margin:10px 2px 0">📝 ${esc(t.note)}</p>` : ""}
     <div class="detail" id="detail-${t.id}">
-      <h5>Stock used (manual lots)</h5>${allocTxt}
+      <div class="row"><span>Delivered from BD account</span><b>${esc(t.sourceAccount?.name || (t.allocs[0] ? accountName(D.lotMap.get(t.allocs[0].lot_id)?.bdt_account_id) : "—"))}</b></div>
+      <h5 style="margin-top:12px">Stock used (manual lots)</h5>${allocTxt}
       <h5 style="margin-top:14px">Payments received</h5>${payTxt}
       <div class="row" style="margin-top:6px"><span>Pending profit (unpaid part)</span><b class="${signedCls(t.pendingProfit)}">${signedFmt(t.pendingProfit)} SAR</b></div>
     </div>
@@ -1048,8 +1280,8 @@ function lotCard(l, full=true){
   return `<article class="card neu">
     <div class="card-top">
       <div class="avatar-c" style="color:#fff;background:var(--grad)">⇩</div>
-      <div class="tt"><div class="t1">Stock In — ${fmt0(l.sar_amount)} SAR${l.source ? " via "+esc(l.source) : ""}</div>
-      <div class="t2">${dFmt(l.txn_date)} · Rate ${fmtRate(l.base_rate)} + ${fmt(l.incentive_pct,2)}% incentive${n(l.fee_sar) ? " · Fee "+fmt(l.fee_sar)+" SAR" : ""}</div></div>
+      <div class="tt"><div class="t1">${esc(lotDisplayNo(l))} — ${fmt0(l.sar_amount)} SAR${l.source ? " via "+esc(l.source) : ""}</div>
+      <div class="t2">${dFmt(l.txn_date)} · Rate ${fmtRate(l.base_rate)} + ${fmt(l.incentive_pct,2)}% incentive${n(l.fee_sar) ? " · Fee "+fmt(l.fee_sar)+" SAR" : ""}${l.kind==="opening" ? " · Historical lot" : ""}<br>${l.sar_account_id ? "SAR debit: "+esc(accountName(l.sar_account_id)) : "SAR A/C not assigned"} → ${l.bdt_account_id ? "BDT credit: "+esc(accountName(l.bdt_account_id)) : "BD A/C not assigned"}</div></div>
       <span class="pill pill-stock">${l.remainingBdt > 0.005 ? "In Stock" : "Sold Out"}</span>
     </div>
     <div class="kv-grid">
@@ -1075,14 +1307,24 @@ function renderDashboard(){
   $("#dLotCount").textContent = D.lots.filter(l=>l.remainingBdt>0.005).length;
   $("#dAvgCost").textContent = fmtRate(t.avgCostRate);
   $("#dBought").textContent = fmt0(t.bdtBought);
-  $("#dSarBalance").textContent = fmt(t.sarBalance);
-  $("#dSarBalance").parentElement.className = "vl " + signedCls(t.sarBalance);
-  $("#dSarSub").textContent = `Collected ${fmt(t.collectedSar)} − Invested ${fmt(t.investedSar)} SAR`;
+  if(t.hasAccounts){
+    $("#dSarBalance").textContent = fmt(t.sarAccountsBalance);
+    $("#dSarBalance").parentElement.className = "vl " + signedCls(t.sarAccountsBalance);
+    const parts = D.accounts.filter(a=>a.currency==="SAR").map(a=>`${a.name} ${fmt0(a.balance)}`).join(" · ");
+    $("#dSarSub").textContent = parts || "SAR accounts";
+  } else {
+    $("#dSarBalance").textContent = fmt(t.sarBalance);
+    $("#dSarBalance").parentElement.className = "vl " + signedCls(t.sarBalance);
+    $("#dSarSub").textContent = `Collected ${fmt(t.collectedSar)} − Invested ${fmt(t.investedSar)} SAR (set up A/Cs below)`;
+  }
   const openN = D.trades.filter(x=>x.status!=="Settled").length;
   $("#dPendingSar").textContent = fmt(t.pendingSar);
   $("#dPendingSub").textContent = openN ? `${openN} open trade${openN>1?"s":""} unpaid` : "All settled 🎉";
-  $("#dActualProfit").textContent = fmt(t.actualProfit);
-  $("#dActualProfit").parentElement.className = "vl " + signedCls(t.actualProfit);
+  $("#dActualProfit").textContent = fmt(t.netActualProfit);
+  $("#dActualProfit").parentElement.className = "vl " + signedCls(t.netActualProfit);
+  $("#dActualSub").textContent = t.transferFeesSar > 0.004
+    ? `Trade realised ${fmt(t.actualProfit)} − transfer fees ${fmt(t.transferFeesSar)} SAR`
+    : "Realised from payments received (net of fees)";
   $("#dPendingProfit").textContent = fmt(t.pendingProfit);
   $("#dPendingProfit").parentElement.className = "vl " + signedCls(t.pendingProfit);
   const ratioPct = t.receivableSar > 0 ? Math.round(t.collectedSar / t.receivableSar * 100) : 0;
@@ -1092,7 +1334,13 @@ function renderDashboard(){
   $("#dSoldBdt").textContent = fmt0(t.soldBdt);
   $("#dCollected").textContent = fmt0(t.collectedSar);
   $("#dTotalDue").textContent = `Total receivable ${fmt(t.receivableSar)} SAR`;
-  $("#dTotalProfit").innerHTML = `Total profit <b class="${signedCls(t.profitSar)}">${signedFmt(t.profitSar)} SAR</b>`;
+  $("#dTotalProfit").innerHTML = `Net profit <b class="${signedCls(t.netProfitSar)}">${signedFmt(t.netProfitSar)} SAR</b>${t.transferFeesSar>0.004 ? ` <span style="color:var(--muted)">(trade ${signedFmt(t.tradeProfitSar)} − fees ${fmt(t.transferFeesSar)})</span>` : ""}`;
+
+  $("#setupAccountsBtn").style.display = D.accounts.length ? "none" : "";
+  $("#dashAccounts").innerHTML = D.accounts.length
+    ? `<div class="acct-grid">${D.accounts.map(accountCard).join("")}</div>`
+      + (t.hasAccounts ? `<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:9px"><span>Total SAR accounts <b>${fmt(t.sarAccountsBalance)} SAR</b></span><span>Total BD accounts <b>${fmt(t.bdtAccountsBalance)} BDT</b></span></div>` : "")
+    : emptyBox("🏦","Set up your accounts first","Create your Saudi SAR bank, Cash SAR and BD BDT bank with their current opening balances. After that, every remittance will debit SAR and credit BDT automatically, and no trade can exceed an account balance.", `<button class="btn btn-grad" id="setupAccountsBtn2">Set Up Default Accounts</button>`);
 
   $("#dashLots").innerHTML = D.lots.length
     ? D.lots.slice(0,3).map(l=>lotCard(l,false)).join("")
@@ -1105,8 +1353,9 @@ function renderDashboard(){
 
   const acts = [
     ...D.trades.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇄","#d97706", `Sold ${fmt0(x.bdt_amount)} BDT to ${esc(x.customer?.name||"customer")}`, `${fmt(x.sar_due)} SAR @ ${fmtRate(x.sell_rate)}`, x.status)})),
-    ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇩","var(--blue2)", `Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
-    ...S.pays.map(p=>{ const tr=D.tradeMap.get(p.trade_id); return {date:p.txn_date, sort:(p.created_at||p.txn_date), html:activityRow("✓","var(--green)", `Received ${fmt(p.sar_amount)} SAR${tr? " from "+esc(tr.customer?.name||"customer"):""}`, esc(p.method), dFmt(p.txn_date))}; })
+    ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇩","var(--blue2)", `${esc(lotDisplayNo(x))} · Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
+    ...S.pays.map(p=>{ const tr=D.tradeMap.get(p.trade_id); return {date:p.txn_date, sort:(p.created_at||p.txn_date), html:activityRow("✓","var(--green)", `Received ${fmt(p.sar_amount)} SAR${tr? " from "+esc(tr.customer?.name||"customer"):""}`, esc(p.method) + (p.account_id ? " → "+esc(accountName(p.account_id)) : ""), dFmt(p.txn_date))}; }),
+    ...D.transfers.map(tf=>({date:tf.txn_date, sort:(tf.created_at||tf.txn_date), html:activityRow("⇪","#6d28d9", `Transferred ${fmt(tf.amount)}`, `${esc(accountName(tf.from_account_id))} → ${esc(accountName(tf.to_account_id))}`, dFmt(tf.txn_date))}))
   ].sort((a,b)=> String(b.sort).localeCompare(String(a.sort))).slice(0,7);
   $("#dashRecent").innerHTML = acts.length ? acts.map(a=>a.html).join("") : `<div class="list-row neu-sm"><div class="tt" style="color:var(--muted);font-size:13.5px">No activity yet. Your trades, stock and payments will appear here.</div></div>`;
 }
@@ -1127,15 +1376,17 @@ function customerDueRow(c){
 function renderTradePage(){
   const q = ui.search.trim().toLowerCase();
   const matchTrade = t => (ui.statusFilter==="all" || t.status===ui.statusFilter) &&
-    (!q || [t.customer?.name, t.customer?.phone, t.delivery_method, t.receiver_info, t.note].join(" ").toLowerCase().includes(q));
-  const matchLot = l => !q || [l.source, l.note].join(" ").toLowerCase().includes(q);
+    (!q || [t.customer?.name, t.customer?.phone, t.delivery_method, t.receiver_info, t.note, t.allocs.map(a=>lotDisplayNo(D.lotMap.get(a.lot_id)||{})).join(" ")].join(" ").toLowerCase().includes(q));
+  const matchLot = l => !q || [l.source, l.note, l.remit_no, lotDisplayNo(l), accountName(l.sar_account_id), accountName(l.bdt_account_id)].join(" ").toLowerCase().includes(q);
+  const matchTf = tf => !q || [accountName(tf.from_account_id), accountName(tf.to_account_id), tf.note].join(" ").toLowerCase().includes(q);
   let items = [];
-  if(ui.typeFilter !== "stock") items.push(...D.trades.filter(matchTrade).map(t=>({type:"sell", date:t.txn_date, sort:t.created_at||t.txn_date, obj:t})));
-  if(ui.typeFilter !== "sell" && ui.statusFilter==="all") items.push(...D.lots.filter(matchLot).map(l=>({type:"stock", date:l.txn_date, sort:l.created_at||l.txn_date, obj:l})));
+  if(ui.typeFilter === "all" || ui.typeFilter === "sell") items.push(...D.trades.filter(matchTrade).map(t=>({type:"sell", date:t.txn_date, sort:t.created_at||t.txn_date, obj:t})));
+  if((ui.typeFilter === "all" || ui.typeFilter === "stock") && ui.statusFilter==="all") items.push(...D.lots.filter(matchLot).map(l=>({type:"stock", date:l.txn_date, sort:l.created_at||l.txn_date, obj:l})));
+  if((ui.typeFilter === "all" || ui.typeFilter === "transfer") && ui.statusFilter==="all") items.push(...D.transfers.filter(matchTf).map(tf=>({type:"transfer", date:tf.txn_date, sort:tf.created_at||tf.txn_date, obj:tf})));
   items.sort((a,b)=> String(b.date).localeCompare(String(a.date)) || String(b.sort).localeCompare(String(a.sort)));
   $("#tradeCount").textContent = items.length + " record" + (items.length===1?"":"s");
   $("#tradeList").innerHTML = items.length
-    ? items.map(i => i.type==="sell" ? tradeCard(i.obj) : lotCard(i.obj)).join("")
+    ? items.map(i => i.type==="sell" ? tradeCard(i.obj) : (i.type==="transfer" ? transferCard(i.obj) : lotCard(i.obj))).join("")
     : emptyBox("⇄","Nothing here yet","No records match this filter. Add a Stock In (remittance you sent) or a Sell Trade (BDT delivered to a customer) to get started.",
       `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-neu" data-open-stock>＋ Stock In</button><button class="btn btn-grad" data-open-trade>＋ Sell Trade</button></div>`);
 }
@@ -1172,7 +1423,7 @@ function renderSettlementPage(){
     const tr = D.tradeMap.get(p.trade_id);
     return `<div class="list-row neu-sm"><div class="avatar-c" style="color:var(--green)">✓</div>
       <div class="tt"><b style="font-size:14.5px">${esc(tr?.customer?.name || "Customer")}</b>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">${dFmt(p.txn_date)} · ${esc(p.method)}${tr? " · trade of "+fmt0(tr.bdt_amount)+" BDT":""}${p.note?" · "+esc(p.note):""}</div></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">${dFmt(p.txn_date)} · ${esc(p.method)}${p.account_id?" → "+esc(accountName(p.account_id)):""}${tr? " · trade of "+fmt0(tr.bdt_amount)+" BDT":""}${p.note?" · "+esc(p.note):""}</div></div>
       <div class="rv pos">+${fmt(p.sar_amount)} SAR</div>
       <button class="mini-btn" data-action="edit-pay" data-id="${p.id}">✎</button>
       <button class="mini-btn red" data-action="del-pay" data-id="${p.id}">🗑</button></div>`;
@@ -1180,26 +1431,34 @@ function renderSettlementPage(){
 }
 
 /* ----- analytics ----- */
-function periodTrades(){
+function inCurrentPeriod(dateStr){
+  if(ui.period==="all") return true;
   const now = new Date(todayStr());
-  return D.trades.filter(t=>{
-    if(ui.period==="all") return true;
-    const d = new Date(t.txn_date+"T12:00:00");
-    if(ui.period==="month") return monthKey(t.txn_date) === monthKey(todayStr());
-    if(ui.period==="year") return d.getFullYear() === now.getFullYear();
-    return (now - d)/864e5 <= n(ui.period);
-  });
+  const d = new Date(dateStr+"T12:00:00");
+  if(ui.period==="month") return monthKey(dateStr) === monthKey(todayStr());
+  if(ui.period==="year") return d.getFullYear() === now.getFullYear();
+  return (now - d)/864e5 <= n(ui.period);
 }
+function periodTrades(){ return D.trades.filter(t => inCurrentPeriod(t.txn_date)); }
 function renderAnalytics(){
+  $("#aAccounts").innerHTML = D.accounts.length ? D.accounts.map(a=>`
+    <tr><td><b>${esc(a.name)}</b><br><small>${esc(a.type)} · ${a.currency}${a.archived?" · archived":""}</small></td>
+    <td>${fmt(a.opening_balance)}</td><td class="pos">+${fmt(a.inn)}</td><td class="neg">−${fmt(a.out)}</td>
+    <td class="${signedCls(a.balance)}"><b>${fmt(a.balance)}</b> <small>${a.currency}</small></td></tr>`).join("")
+    : `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No accounts yet — set them up from the Dashboard.</td></tr>`;
   const ts = periodTrades();
-  const profit = ts.reduce((s,t)=>s+t.profitSar,0), actual = ts.reduce((s,t)=>s+t.actualProfit,0);
+  const tfs = D.transfers.filter(tf => inCurrentPeriod(tf.txn_date));
+  const fees = r2(tfs.reduce((sm,tf)=>sm + transferFeeSar(tf, D.tot.allBuyRate), 0));
+  const tradeProfit = ts.reduce((s,t)=>s+t.profitSar,0);
+  const profit = r2(tradeProfit - fees);                       // NET profit
+  const actual = r2(ts.reduce((s,t)=>s+t.actualProfit,0) - fees); // fees are money already spent
   const cost = ts.reduce((s,t)=>s+t.costSar,0);
   const sellBdt = ts.reduce((s,t)=>s+n(t.bdt_amount),0), sellSar = ts.reduce((s,t)=>s+n(t.sar_due),0);
   const avgSell = sellSar ? sellBdt/sellSar : 0;
   const avgBuy = cost ? ts.reduce((s,t)=>s+t.totalOutBdt,0)/cost : 0;
   $("#aProfit").textContent = fmt(profit);
   $("#aProfit").parentElement.className = "vl " + signedCls(profit);
-  $("#aProfitSub").innerHTML = `Actual <b class="${signedCls(actual)}">${fmt(actual)}</b> · Pending ${fmt(profit-actual)} SAR`;
+  $("#aProfitSub").innerHTML = `Trade profit ${fmt(tradeProfit)}${fees>0.004 ? ` − transfer fees ${fmt(fees)}` : ""} · Net actual <b class="${signedCls(actual)}">${fmt(actual)}</b> · Pending ${fmt(tradeProfit - (actual+fees))} SAR`;
   $("#aMargin").textContent = cost ? fmt(profit/cost*100,1)+"%" : "—";
   $("#aRates").textContent = avgBuy||avgSell ? `${fmtRate(avgBuy)} / ${fmtRate(avgSell)}` : "—";
   $("#aSpread").textContent = avgBuy&&avgSell ? `Spread ${fmtRate(avgBuy-avgSell)} BDT per SAR (higher = better)` : "Buy effective vs sell rate";
@@ -1209,6 +1468,7 @@ function renderAnalytics(){
   // monthly profit bars
   const byM = new Map();
   ts.forEach(t=>{ const k=monthKey(t.txn_date); byM.set(k,(byM.get(k)||0)+t.profitSar); });
+  tfs.forEach(tf=>{ const k=monthKey(tf.txn_date); byM.set(k,(byM.get(k)||0) - transferFeeSar(tf, D.tot.allBuyRate)); });
   const months = [...byM.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
   const maxAbs = Math.max(1, ...months.map(m=>Math.abs(m[1])));
   $("#aMonthly").innerHTML = months.length ? months.map(([k,v])=>`
@@ -1232,7 +1492,7 @@ function renderAnalytics(){
     const allocs = D.allocByLot.get(l.id)||[];
     let lprofit = 0;
     allocs.forEach(a=>{ const tr=D.tradeMap.get(a.trade_id); if(tr && tr.totalOutBdt>0) lprofit += n(tr.sar_due)*(n(a.bdt_allocated)/tr.totalOutBdt) - n(a.cost_sar); });
-    return `<tr><td><b>${dFmt(l.txn_date)}</b><br><small>${fmt0(l.sar_amount)} SAR${l.source?" · "+esc(l.source):""}</small></td>
+    return `<tr><td><b>${esc(lotDisplayNo(l))}</b><br><small>${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR${l.source?" · "+esc(l.source):""}${l.bdt_account_id?" · "+esc(accountName(l.bdt_account_id)):""}</small></td>
       <td>${fmtRate(l.effective_rate)}</td><td>${fmt0(l.total_bdt)}</td><td>${fmt0(l.usedBdt)}</td><td>${fmt0(l.remainingBdt)}</td>
       <td class="${signedCls(lprofit)}">${signedFmt(lprofit)}</td></tr>`;
   }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No stock lots yet.</td></tr>`;
@@ -1266,30 +1526,215 @@ $("#trCustName").addEventListener("change", e=>{
   if(c && !$("#trCustPhone").value) $("#trCustPhone").value = c.phone || "";
 });
 
+/* ================= ACCOUNTS & TRANSFERS ================= */
+function accountUsed(id){
+  return S.lots.some(l=>l.sar_account_id===id||l.bdt_account_id===id)
+      || S.trades.some(t=>t.source_account_id===id)
+      || S.pays.some(p=>p.account_id===id)
+      || S.transfers.some(tf=>tf.from_account_id===id||tf.to_account_id===id);
+}
+function accountOptions({currency="", selected="", blank="— Select account —"}={}){
+  const list = (D?.accounts || S.accounts).filter(a =>
+    (!currency || a.currency===currency) && (!a.archived || a.id===selected));
+  return `<option value="">${blank}</option>` + list.map(a =>
+    `<option value="${a.id}" ${a.id===selected?"selected":""}>${esc(a.name)} · ${fmt(a.balance ?? accountTotals(a).balance)} ${a.currency}</option>`).join("");
+}
+function setAccountSelect(id, currency, blank){
+  const el = $("#"+id); if(!el) return;
+  const cur = el.value;
+  el.innerHTML = accountOptions({currency, selected:cur, blank});
+  el.value = cur;
+}
+function populateAccountSelects(){
+  setAccountSelect("stSarAcc", "SAR", "— SAR debit account —");
+  setAccountSelect("stBdtAcc", "BDT", "— BD credit account —");
+  setAccountSelect("trSourceAcc", "BDT", "— Deliver from (BD A/C) —");
+  setAccountSelect("trInitAccount", "SAR", "— SAR account —");
+  setAccountSelect("payAccount", "SAR", "— SAR account —");
+  setAccountSelect("tfFrom", "", "— From account —");
+  refreshTransferTo();
+}
+function firstAccountId(currency, type=""){
+  const list = (D?.accounts || []).filter(a=>a.currency===currency && !a.archived);
+  return (list.find(a=>a.type===type) || list[0])?.id || "";
+}
+function defaultSarAccountForMethod(method){
+  return method==="Cash" ? (firstAccountId("SAR","Cash") || firstAccountId("SAR"))
+                         : (firstAccountId("SAR","Saudi Bank") || firstAccountId("SAR"));
+}
+function dateBeforeOpening(accountId, dateStr){
+  const a = accountById(accountId);
+  return !!(a && a.opening_date && dateStr && String(dateStr) < String(a.opening_date));
+}
+function openAccount(account=null){
+  formErr("accErr","");
+  $("#accTitle").textContent = account ? "Edit Account" : "Add Account";
+  $("#accId").value = account?.id || "";
+  $("#accName").value = account?.name || "";
+  $("#accCurrency").value = account?.currency || "SAR";
+  $("#accType").value = account?.type || "Saudi Bank";
+  $("#accOpening").value = account?.opening_balance ?? 0;
+  $("#accOpeningDate").value = account?.opening_date || todayStr();
+  $("#accNote").value = account?.note || "";
+  $("#accArchived").checked = !!account?.archived;
+  $("#accCurrency").disabled = !!(account && accountUsed(account.id));
+  openSheet("accountOverlay");
+}
+function setupDefaultAccounts(){
+  const defaults = [
+    {name:"Saudi Bank",  currency:"SAR", type:"Saudi Bank"},
+    {name:"Cash in Hand", currency:"SAR", type:"Cash"},
+    {name:"BD Bank",     currency:"BDT", type:"BD Bank"}
+  ];
+  let made = 0;
+  defaults.forEach(d=>{
+    if(!S.accounts.some(a=>a.name.toLowerCase()===d.name.toLowerCase() && a.currency===d.currency)){
+      saveLocalRow("accounts", "ratex_accounts", { user_id:S.user.id, ...d, opening_balance:0, opening_date:todayStr(), note:"", archived:false });
+      made++;
+    }
+  });
+  toast(made ? "Default accounts created ✅ Now tap ✎ on each account to set its real name and opening balance." : "Default accounts already exist.", made ? "success" : "");
+  afterLocalChange(); populateAccountSelects();
+}
+$("#setupAccountsBtn").addEventListener("click", setupDefaultAccounts);
+$("#accCurrency").addEventListener("change", e=>{
+  if(e.target.value==="BDT" && $("#accType").value==="Saudi Bank") $("#accType").value = "BD Bank";
+  if(e.target.value==="SAR" && $("#accType").value==="BD Bank") $("#accType").value = "Saudi Bank";
+});
+$("#accountForm").addEventListener("submit", e=>{
+  e.preventDefault(); formErr("accErr","");
+  const name = $("#accName").value.trim();
+  if(!name) return formErr("accErr","Account name is required.");
+  const id = $("#accId").value;
+  if(S.accounts.some(a=>a.id!==id && a.name.toLowerCase()===name.toLowerCase() && a.currency===$("#accCurrency").value))
+    return formErr("accErr","An account with this name and currency already exists.");
+  const payload = { user_id:S.user.id, name, currency:$("#accCurrency").value, type:$("#accType").value,
+    opening_balance:r2(n($("#accOpening").value)), opening_date:$("#accOpeningDate").value,
+    note:$("#accNote").value.trim(), archived:$("#accArchived").checked };
+  if(id) payload.id = id;
+  const saved = saveLocalRow("accounts", "ratex_accounts", payload);
+  closeSheet("accountOverlay");
+  toast(id ? "Account updated ✅" : "Account created ✅", "success");
+  afterLocalChange(); populateAccountSelects();
+  // if another form is open underneath, preselect the new account there
+  if($("#stockOverlay").classList.contains("open")){ if(saved.currency==="SAR") $("#stSarAcc").value = saved.id; else $("#stBdtAcc").value = saved.id; stockCalc(false); }
+  if($("#tradeOverlay").classList.contains("open")){ if(saved.currency==="BDT") $("#trSourceAcc").value = saved.id; else $("#trInitAccount").value = saved.id; tradePreview(); }
+  if($("#payOverlay").classList.contains("open") && saved.currency==="SAR"){ $("#payAccount").value = saved.id; payDuePreview(); }
+});
+
+function refreshTransferTo(){
+  const fromEl = $("#tfFrom"), toEl = $("#tfTo"); if(!fromEl || !toEl) return;
+  const from = accountById(fromEl.value);
+  const cur = toEl.value;
+  const list = (D?.accounts || []).filter(a =>
+    a.id !== fromEl.value && (!from || a.currency===from.currency) && (!a.archived || a.id===cur));
+  toEl.innerHTML = `<option value="">— To account —</option>` + list.map(a =>
+    `<option value="${a.id}" ${a.id===cur?"selected":""}>${esc(a.name)} · ${fmt(a.balance)} ${a.currency}</option>`).join("");
+  toEl.value = cur;
+  transferPreview();
+}
+function transferPreview(){
+  const box = $("#tfPreview"); if(!box) return;
+  const editingId = $("#tfId").value;
+  const from = accountById($("#tfFrom").value), to = accountById($("#tfTo").value);
+  const amount = n($("#tfAmount").value), fee = n($("#tfFee").value);
+  const fromBal = from ? accountBalance(from.id, {transferId:editingId}) : 0;
+  const toBal = to ? accountBalance(to.id, {transferId:editingId}) : 0;
+  const enough = !from || amount+fee <= fromBal + 0.005;
+  box.innerHTML = `
+    <div class="row"><span>${from?esc(from.name):"From"} balance now → after</span><b class="${enough?"":"neg"}">${from?fmt(fromBal):"—"} → ${from?fmt(fromBal-amount-fee):"—"} ${from?.currency||""}</b></div>
+    <div class="row"><span>${to?esc(to.name):"To"} balance now → after</span><b>${to?fmt(toBal):"—"} → ${to?fmt(toBal+amount):"—"} ${to?.currency||""}</b></div>
+    ${fee>0 ? `<div class="row"><span>Profit impact</span><b class="neg">−${fmt(fee)} ${from?.currency||""} fee reduces Net Profit (already debited above)</b></div>` : ""}
+    ${from && amount>0 && !enough ? `<div class="row total"><span class="neg">⚠ Exceeds source balance by ${fmt(amount+fee-fromBal)} ${from.currency}</span></div>` : ""}`;
+  return {from, to, amount, fee, fromBal, enough};
+}
+function openTransfer(tf=null){
+  if((D?.accounts||[]).filter(a=>!a.archived).length < 2){
+    toast("Create at least two accounts first (e.g. Cash in Hand + Saudi Bank).", "error");
+    openAccount(); return;
+  }
+  formErr("tfErr","");
+  $("#tfTitle").textContent = tf ? "Edit Transfer" : "Transfer Between Accounts";
+  $("#tfId").value = tf?.id || "";
+  $("#tfDate").value = tf?.txn_date || todayStr();
+  populateAccountSelects();
+  $("#tfFrom").value = tf?.from_account_id || firstAccountId("SAR","Cash") || firstAccountId("SAR") || (D.accounts.find(a=>!a.archived)?.id || "");
+  refreshTransferTo();
+  $("#tfTo").value = tf?.to_account_id || firstAccountId("SAR","Saudi Bank") || "";
+  if($("#tfTo").value === $("#tfFrom").value) $("#tfTo").value = "";
+  $("#tfAmount").value = tf?.amount ?? "";
+  $("#tfFee").value = tf?.fee ?? 0;
+  $("#tfNote").value = tf?.note || "";
+  transferPreview();
+  openSheet("transferOverlay");
+}
+$("#tfFrom").addEventListener("change", refreshTransferTo);
+["tfTo","tfAmount","tfFee","tfDate"].forEach(id=> $("#"+id).addEventListener("input", transferPreview));
+$("#tfTo").addEventListener("change", transferPreview);
+$("#transferForm").addEventListener("submit", e=>{
+  e.preventDefault(); formErr("tfErr","");
+  const pv = transferPreview();
+  if(!pv.from || !pv.to) return formErr("tfErr","Select both From and To accounts.");
+  if(pv.from.id === pv.to.id) return formErr("tfErr","From and To accounts must be different.");
+  if(pv.from.currency !== pv.to.currency) return formErr("tfErr","Transfers are between accounts of the same currency. For SAR→BDT use a Remittance (Stock In).");
+  if(!(pv.amount > 0)) return formErr("tfErr","Enter the transfer amount.");
+  if(!pv.enough) return formErr("tfErr",`Not enough balance in ${pv.from.name}: available ${fmt(pv.fromBal)} ${pv.from.currency}, needed ${fmt(pv.amount+pv.fee)} (amount + fee). A transfer can never exceed the account balance.`);
+  const dateStr = $("#tfDate").value;
+  if(dateBeforeOpening(pv.from.id, dateStr) || dateBeforeOpening(pv.to.id, dateStr))
+    return formErr("tfErr","Date is before an account's opening date. Change the date or the account opening date.");
+  const id = $("#tfId").value;
+  const payload = { user_id:S.user.id, txn_date:dateStr, from_account_id:pv.from.id, to_account_id:pv.to.id,
+    amount:r2(pv.amount), fee:r2(pv.fee), note:$("#tfNote").value.trim() };
+  if(id) payload.id = id;
+  saveLocalRow("transfers", "ratex_transfers", payload);
+  closeSheet("transferOverlay");
+  toast(id ? "Transfer updated ✅" : `Transferred ${fmt(pv.amount)} ${pv.from.currency} ✅`, "success");
+  afterLocalChange();
+});
+
 /* ================= STOCK FORM ================= */
 let stockManualTotal = false;
+let remitManual = false;
 function stockCalc(updateTotal=true){
   const sar=n($("#stSar").value), fee=n($("#stFee").value), rate=n($("#stRate").value), inc=n($("#stIncentive").value);
   const base = sar*rate, auto = r2(base*(1+inc/100));
   if(updateTotal && !stockManualTotal && auto>0) $("#stTotalBdt").value = auto;
   const total = n($("#stTotalBdt").value);
   const eff = (sar+fee)>0 && total>0 ? total/(sar+fee) : 0;
+  const kind = $("#stKind").value || "remittance";
+  const editingId = $("#stId").value;
+  const sarAcc = accountById($("#stSarAcc").value);
+  const bdtAcc = accountById($("#stBdtAcc").value);
+  const sarAvail = sarAcc ? accountBalance(sarAcc.id, {lotId:editingId}) : null;
+  const bdtAvail = bdtAcc ? accountBalance(bdtAcc.id, {lotId:editingId}) : null;
+  const diffPct = auto>0 && total>0 ? Math.abs(total-auto)/auto*100 : 0;
   $("#stPreview").innerHTML = `
-    <div class="row"><span>BDT before incentive (${fmt(sar)} × ${fmtRate(rate)})</span><b>${fmt(base)} BDT</b></div>
-    <div class="row"><span>+ Govt. incentive ${fmt(inc,2)}%</span><b>${fmt(Math.max(0,total-base))} BDT</b></div>
-    <div class="row"><span>Total SAR cost (incl. fee)</span><b>${fmt(sar+fee)} SAR</b></div>
-    <div class="row total"><span>Effective cost rate</span><span>${fmtRate(eff)} BDT/SAR</span></div>`;
-  return {sar, fee, rate, inc, total, eff};
+    <div class="row"><span>BDT before incentive (${fmt(sar)} SAR × ${fmtRate(rate)})</span><b>${fmt(base)} BDT</b></div>
+    <div class="row"><span>+ Govt. incentive ${fmt(inc,2)}%</span><b>${fmt(Math.max(0, (stockManualTotal? total: auto)-base))} BDT</b></div>
+    ${diffPct > 1 ? `<div class="row"><span style="color:var(--amber)"><b>⚠ Check entries:</b> the Total BDT you typed differs by ${fmt(diffPct,1)}% from SAR × Rate × (1+incentive) = ${fmt(auto)} BDT. One of SAR / Rate / Fee / Total may be typed wrong.</span></div>` : ""}
+    <div class="row"><span>${kind==="opening" ? "Historical SAR cost (no posting now)" : `Debit ${sarAcc? esc(sarAcc.name) : "SAR account"} (amount + fee)`}</span><b>${fmt(sar+fee)} SAR${kind==="remittance" && sarAcc ? ` · bal. after ${fmt(sarAvail-sar-fee)}` : ""}</b></div>
+    ${kind==="remittance" && sarAcc && sar+fee > sarAvail + 0.005 ? `<div class="row"><span class="neg"><b>⚠ Exceeds ${esc(sarAcc.name)} balance (${fmt(sarAvail)} SAR)</b> — reduce amount/fee or top up the account first.</span></div>` : ""}
+    <div class="row"><span>${kind==="opening" ? "BDT already inside opening balance of" : `Credit ${bdtAcc? esc(bdtAcc.name) : "BD account"}`}</span><b>${kind==="remittance" ? fmt(total) : fmt(total)} BDT${kind==="remittance" && bdtAcc ? ` · bal. after ${fmt(bdtAvail+total)}` : ""}</b></div>
+    <div class="row total"><span>Effective cost rate (incl. fee + incentive)</span><span>${fmtRate(eff)} BDT/SAR</span></div>`;
+  return {sar, fee, rate, inc, total, eff, auto, kind, sarAcc, bdtAcc, sarAvail};
 }
 ["stSar","stFee","stRate","stIncentive"].forEach(id=> $("#"+id).addEventListener("input", ()=>stockCalc(true)));
+["stKind","stSarAcc","stBdtAcc"].forEach(id=> $("#"+id).addEventListener("change", ()=>stockCalc(false)));
 $("#stTotalBdt").addEventListener("input", ()=>{ stockManualTotal = true; stockCalc(false); });
 $("#stRecalc").addEventListener("click", ()=>{ stockManualTotal=false; stockCalc(true); });
+$("#stRemitNo").addEventListener("input", ()=>{ remitManual = true; });
+$("#stDate").addEventListener("change", ()=>{ if(!remitManual) $("#stRemitNo").value = genRemitNo($("#stDate").value, $("#stId").value); });
 
 function openStock(lot=null){
-  formErr("stErr",""); stockManualTotal = !!lot;
-  $("#stockTitle").textContent = lot ? "Edit Stock In" : "Stock In — Remittance Sent";
+  formErr("stErr",""); stockManualTotal = !!lot; remitManual = !!(lot && lot.remit_no);
+  populateAccountSelects();
+  $("#stockTitle").textContent = lot ? "Edit Remittance / Stock In" : "Remittance Sent — Stock In";
   $("#stId").value = lot?.id || "";
   $("#stDate").value = lot?.txn_date || todayStr();
+  $("#stKind").value = lot?.kind || "remittance";
+  $("#stRemitNo").value = lot?.remit_no || genRemitNo($("#stDate").value, lot?.id || "");
+  $("#stSarAcc").value = lot?.sar_account_id || firstAccountId("SAR","Saudi Bank") || firstAccountId("SAR") || "";
+  $("#stBdtAcc").value = lot?.bdt_account_id || firstAccountId("BDT","BD Bank") || firstAccountId("BDT") || "";
   $("#stSource").value = lot?.source || "";
   $("#stSar").value = lot?.sar_amount ?? "";
   $("#stFee").value = lot?.fee_sar ?? 0;
@@ -1302,21 +1747,41 @@ function openStock(lot=null){
 }
 $("#stockForm").addEventListener("submit", async e=>{
   e.preventDefault(); formErr("stErr","");
-  const {sar,fee,rate,inc,total,eff} = stockCalc(false);
-  if(!(sar>0 && rate>0 && total>0 && eff>0)) return formErr("stErr","Please enter SAR sent, exchange rate and total BDT deposited.");
+  const c = stockCalc(false);
+  const {sar,fee,rate,inc,total,eff,kind} = c;
+  if(!(sar>0 && rate>0 && total>0 && eff>0)) return formErr("stErr","Please enter sending amount (SAR), exchange rate and total BDT deposited.");
   const id = $("#stId").value;
+  const dateStr = $("#stDate").value;
+  const remitNo = $("#stRemitNo").value.trim().toUpperCase() || genRemitNo(dateStr, id);
+  if(S.lots.some(l=>l.id!==id && (l.remit_no||"").toUpperCase()===remitNo))
+    return formErr("stErr",`Remit No. ${remitNo} is already used by another lot — change it.`);
   if(id){
     const lot = D.lotMap.get(id);
     if(lot && total < lot.usedBdt - 0.005) return formErr("stErr",`Already ${fmt(lot.usedBdt)} BDT from this lot is sold — total BDT cannot be less than that.`);
   }
-  const payload = { user_id:S.user.id, txn_date:$("#stDate").value, source:$("#stSource").value.trim(),
+  const sarAccId = $("#stSarAcc").value || null;
+  const bdtAccId = $("#stBdtAcc").value || null;
+  if(kind === "remittance"){
+    if(D.accounts.some(a=>a.currency==="SAR" && !a.archived) && !sarAccId)
+      return formErr("stErr","Select the SAR account to debit (Saudi Bank / Cash).");
+    if(D.accounts.some(a=>a.currency==="BDT" && !a.archived) && !bdtAccId)
+      return formErr("stErr","Select the BD bank account to credit.");
+    if(sarAccId && dateBeforeOpening(sarAccId, dateStr))
+      return formErr("stErr","Date is before the SAR account's opening date. Use Entry Type = Historical Lot, or fix the opening date.");
+    if(bdtAccId && dateBeforeOpening(bdtAccId, dateStr))
+      return formErr("stErr","Date is before the BD account's opening date. Use Entry Type = Historical Lot, or fix the opening date.");
+    if(sarAccId && sar+fee > c.sarAvail + 0.005)
+      return formErr("stErr",`Not enough balance: ${accountName(sarAccId)} has ${fmt(c.sarAvail)} SAR but amount + fee needs ${fmt(sar+fee)} SAR. A remittance can never exceed the account balance.`);
+  }
+  const payload = { user_id:S.user.id, txn_date:dateStr, source:$("#stSource").value.trim(),
     sar_amount:r2(sar), fee_sar:r2(fee), base_rate:rate, incentive_pct:inc, total_bdt:r2(total),
-    effective_rate: Math.round(eff*1e6)/1e6, note:$("#stNote").value.trim() };
+    effective_rate: Math.round(eff*1e6)/1e6, note:$("#stNote").value.trim(),
+    remit_no:remitNo, kind, sar_account_id:sarAccId, bdt_account_id:bdtAccId };
   if(id) payload.id = id;
-  saveLocalRow("lots", "ratex_stock_lots", payload);       // saved on phone instantly
+  saveLocalRow("lots", "ratex_stock_lots", payload);
   closeSheet("stockOverlay");
-  toast(id ? "Stock updated ✅" : "Stock added — BDT balance updated ✅", "success");
-  afterLocalChange();                                      // renders + backs up if online
+  toast(id ? "Remittance updated ✅" : `${remitNo} saved — SAR debited, BDT credited ✅`, "success");
+  afterLocalChange();
 });
 
 /* ================= SELL TRADE FORM ================= */
@@ -1377,7 +1842,16 @@ function refreshAllocRows(autoFillRow=null){
   tradePreview();
 }
 $("#allocRows").addEventListener("change", e=>{
-  if(e.target.classList.contains("alloc-lot")) refreshAllocRows(e.target.closest(".alloc-row"));
+  if(e.target.classList.contains("alloc-lot")){
+    const lot = D?.lotMap.get(e.target.value);
+    if(lot?.bdt_account_id && !$("#trSourceAcc").value) $("#trSourceAcc").value = lot.bdt_account_id;
+    refreshAllocRows(e.target.closest(".alloc-row"));
+  }
+});
+$("#trSourceAcc").addEventListener("change", tradePreview);
+$("#trInitMethod").addEventListener("change", ()=>{
+  const v = defaultSarAccountForMethod($("#trInitMethod").value);
+  if(v) $("#trInitAccount").value = v;
 });
 $("#allocRows").addEventListener("input", e=>{ if(e.target.classList.contains("alloc-amt")) tradePreview(); });
 $("#allocRows").addEventListener("click", e=>{
@@ -1399,13 +1873,17 @@ function tradePreview(){
   const profit = r2(sarDue - cost);
   const left = r2(needed - allocated);
   const margin = cost>0 ? fmt(profit/cost*100,1) : "—";
+  const srcAcc = accountById($("#trSourceAcc").value);
+  const srcAvail = srcAcc ? accountBalance(srcAcc.id, {tradeId: $("#trId").value}) : null;
+  const srcEnough = !srcAcc || needed <= srcAvail + 0.005;
   $("#trPreview").innerHTML = `
     <div class="row"><span>Stock going out (delivered + charge)</span><b>${fmt(needed)} BDT</b></div>
     <div class="row"><span>Allocated from lots</span><b class="${Math.abs(left)<=0.009 && needed>0 ? "pos":"neg"}">${fmt(allocated)} BDT ${needed>0 ? (Math.abs(left)<=0.009 ? "✓" : `· ${left>0? fmt(left)+" left" : fmt(-left)+" extra"}`) : ""}</b></div>
-    <div class="row"><span>Your cost of this BDT</span><b>${fmt(cost)} SAR</b></div>
+    <div class="row"><span>BD account ${srcAcc? "("+esc(srcAcc.name)+")" : ""} balance → after</span><b class="${srcEnough?"":"neg"}">${srcAcc? fmt(srcAvail)+" → "+fmt(srcAvail-needed)+" BDT" + (srcEnough?"":" ⚠ not enough") : "not selected"}</b></div>
+    <div class="row"><span>Your cost of this BDT (at lot rates)</span><b>${fmt(cost)} SAR</b></div>
     <div class="row"><span>Customer pays you</span><b>${fmt(sarDue)} SAR</b></div>
-    <div class="row total"><span>Estimated profit (${margin}${cost>0?"%":""})</span><span class="${signedCls(profit)}">${sarDue>0&&allocated>0 ? signedFmt(profit)+" SAR" : "—"}</span></div>`;
-  return {needed, allocated, left, cost, profit, allocs, sarDue};
+    <div class="row total"><span>Estimated trade profit (${margin}${cost>0?"%":""}) — after remit cost + delivery charge</span><span class="${signedCls(profit)}">${sarDue>0&&allocated>0 ? signedFmt(profit)+" SAR" : "—"}</span></div>`;
+  return {needed, allocated, left, cost, profit, allocs, sarDue, srcAcc, srcAvail, srcEnough};
 }
 
 function openTrade(trade=null){
@@ -1423,8 +1901,12 @@ function openTrade(trade=null){
   $("#trSarDue").value = trade?.sar_due ?? "";
   $("#trCharge").value = trade?.delivery_charge_bdt ?? 0;
   $("#trNote").value = trade?.note || "";
+  populateAccountSelects();
+  const firstLotAcc = trade?.allocs?.length ? D.lotMap.get(trade.allocs[0].lot_id)?.bdt_account_id : "";
+  $("#trSourceAcc").value = trade?.source_account_id || firstLotAcc || firstAccountId("BDT","BD Bank") || firstAccountId("BDT") || "";
   $("#initialPayWrap").classList.toggle("hidden", !!trade);
   $("#trInitPay").value = 0;
+  $("#trInitAccount").value = defaultSarAccountForMethod($("#trInitMethod").value);
   setTradeMode("bdt");
   $("#allocRows").innerHTML = trade?.allocs?.length
     ? trade.allocs.map(a=>allocRowHtml(a.lot_id, a.bdt_allocated)).join("")
@@ -1462,13 +1944,26 @@ $("#tradeForm").addEventListener("submit", async e=>{
     if(a.bdt > av + 0.005) return formErr("trErr",`A lot has only ${fmt(av)} BDT available, but you allocated ${fmt(a.bdt)} BDT. Reduce it or add another lot.`);
   }
   if(Math.abs(pv.left) > 0.009) return formErr("trErr",`Allocated ${fmt(pv.allocated)} BDT but this trade needs ${fmt(pv.needed)} BDT (delivered + delivery charge). ${pv.left>0 ? "Allocate "+fmt(pv.left)+" BDT more." : "Remove "+fmt(-pv.left)+" BDT."}`);
+  const sourceAccId = $("#trSourceAcc").value || null;
+  if(D.accounts.some(a=>a.currency==="BDT" && !a.archived) && !sourceAccId)
+    return formErr("trErr","Select the BD account this money is delivered from.");
+  if(sourceAccId){
+    if(dateBeforeOpening(sourceAccId, $("#trDate").value))
+      return formErr("trErr","Trade date is before the BD account's opening date. Change the date or the opening date.");
+    if(!pv.srcEnough)
+      return formErr("trErr",`Not enough balance in ${accountName(sourceAccId)}: available ${fmt(pv.srcAvail)} BDT but this trade needs ${fmt(pv.needed)} BDT (delivered + delivery charge). A trade can never exceed the account balance.`);
+  }
   const initPay = editingId ? 0 : n($("#trInitPay").value);
   if(initPay > sarDue + 0.005) return formErr("trErr","SAR received now cannot be more than the total SAR due.");
+  const initAccountId = initPay > 0 ? ($("#trInitAccount").value || null) : null;
+  if(initPay > 0 && D.accounts.some(a=>a.currency==="SAR" && !a.archived) && !initAccountId)
+    return formErr("trErr","Select which SAR account the received money goes to (Cash or Saudi Bank).");
 
   try{
     const customer_id = ensureCustomer(custName, $("#trCustPhone").value);
     const payload = { user_id:S.user.id, customer_id, txn_date:$("#trDate").value,
-      delivery_method:$("#trMethod").value, receiver_info:$("#trReceiver").value.trim(),
+      delivery_method:$("#trMethod").value.trim() || "bKash", receiver_info:$("#trReceiver").value.trim(),
+      source_account_id: sourceAccId,
       bdt_amount:r2(bdt), delivery_charge_bdt:r2(charge), sell_rate:rate, sar_due:r2(sarDue),
       note:$("#trNote").value.trim() };
     if(editingId) payload.id = editingId;
@@ -1487,7 +1982,7 @@ $("#tradeForm").addEventListener("submit", async e=>{
     if(initPay > 0){
       saveLocalRow("pays", "ratex_settlements", {
         user_id:S.user.id, trade_id:tradeId, txn_date:$("#trDate").value,
-        sar_amount:r2(initPay), method:$("#trInitMethod").value, note:"Paid at trade time" });
+        sar_amount:r2(initPay), method:$("#trInitMethod").value, account_id:initAccountId, note:"Paid at trade time" });
     }
 
     closeSheet("tradeOverlay");
@@ -1504,13 +1999,21 @@ function payDuePreview(){
   const ownOld = editingPayId ? n(S.pays.find(p=>p.id===editingPayId)?.sar_amount) : 0;
   const dueBefore = r2(t.dueLeft + ownOld);
   const amt = n($("#payAmount").value);
+  const destAcc = accountById($("#payAccount").value);
+  const destBal = destAcc ? accountBalance(destAcc.id, {payId: editingPayId}) : null;
   $("#payPreview").innerHTML = `
     <div class="row"><span>${esc(t.customer?.name||"Customer")} · ${fmt0(t.bdt_amount)} BDT · ${dFmt(t.txn_date)}</span></div>
     <div class="row"><span>Total / Paid / Due before</span><b>${fmt(t.sar_due)} / ${fmt(r2(t.paidSar-ownOld))} / ${fmt(dueBefore)} SAR</b></div>
+    <div class="row"><span>Posts to ${destAcc? esc(destAcc.name) : "—"} (balance after)</span><b>${destAcc? fmt(destBal+amt)+" SAR" : "select account"}</b></div>
     <div class="row total"><span>Due after this payment</span><span class="${dueBefore-amt>0.005?"neg":"pos"}">${fmt(Math.max(0,dueBefore-amt))} SAR</span></div>`;
   return {trade:t, dueBefore};
 }
 $("#payTradeSel").addEventListener("change", payDuePreview);
+$("#payAccount").addEventListener("change", payDuePreview);
+$("#payMethod").addEventListener("change", ()=>{
+  if(!$("#payId").value){ const v=defaultSarAccountForMethod($("#payMethod").value); if(v) $("#payAccount").value=v; }
+  payDuePreview();
+});
 $("#payAmount").addEventListener("input", payDuePreview);
 $("#payFullBtn").addEventListener("click", ()=>{ const pv=payDuePreview(); if(pv){ $("#payAmount").value = pv.dueBefore; payDuePreview(); } });
 
@@ -1528,6 +2031,8 @@ function openPay(tradeId=null, payment=null){
   $("#payAmount").value = payment?.sar_amount ?? "";
   $("#payMethod").value = payment?.method || "Cash";
   $("#payNote").value = payment?.note || "";
+  populateAccountSelects();
+  $("#payAccount").value = payment?.account_id || defaultSarAccountForMethod($("#payMethod").value);
   payDuePreview();
   openSheet("payOverlay");
 }
@@ -1542,9 +2047,14 @@ $("#payForm").addEventListener("submit", async e=>{
   if(!pv) return formErr("payErr","Select a trade first.");
   if(!(amt>0)) return formErr("payErr","Enter the SAR amount received.");
   if(amt > pv.dueBefore + 0.005) return formErr("payErr",`This is more than the due amount (${fmt(pv.dueBefore)} SAR). Reduce it — extra advance against a future trade should be recorded on that trade.`);
+  const destAccountId = $("#payAccount").value || null;
+  if(D.accounts.some(a=>a.currency==="SAR" && !a.archived) && !destAccountId)
+    return formErr("payErr","Select which SAR account this money goes to (Cash in Hand or Saudi Bank).");
+  if(destAccountId && dateBeforeOpening(destAccountId, $("#payDate").value))
+    return formErr("payErr","Payment date is before that account's opening date. Change the date or the opening date.");
   const id = $("#payId").value;
   const payload = { user_id:S.user.id, trade_id:$("#payTradeSel").value, txn_date:$("#payDate").value,
-    sar_amount:r2(amt), method:$("#payMethod").value, note:$("#payNote").value.trim() };
+    sar_amount:r2(amt), method:$("#payMethod").value, account_id:destAccountId, note:$("#payNote").value.trim() };
   if(id) payload.id = id;
   saveLocalRow("pays", "ratex_settlements", payload);
   closeSheet("payOverlay");
@@ -1561,29 +2071,72 @@ document.addEventListener("click", async e=>{
   if(action==="edit-trade"){ const t=D.tradeMap.get(id); if(t) openTrade(t); }
   if(action==="edit-lot"){ const l=D.lotMap.get(id); if(l) openStock(l); }
   if(action==="edit-pay"){ const p=S.pays.find(x=>x.id===id); if(p) openPay(p.trade_id, p); }
+  if(action==="edit-account"){ const a=S.accounts.find(x=>x.id===id); if(a) openAccount(a); }
+  if(action==="edit-transfer"){ const tf=S.transfers.find(x=>x.id===id); if(tf) openTransfer(tf); }
 
   if(action==="del-trade"){
-    const t=D.tradeMap.get(id);
-    if(await confirmBox("Delete this trade?", `The sell trade of ${fmt0(t?.bdt_amount)} BDT (${t?.customer?.name||""}) will be deleted with all its payments. The BDT returns to your stock lots. This cannot be undone.`)){
-      S.allocs = S.allocs.filter(a => a.trade_id !== id);   // local cascade
+    const t=D.tradeMap.get(id); if(!t) return;
+    if(await deleteConfirm("⚠ Delete this sell trade?",
+      "This permanently deletes the trade AND every payment recorded against it. Review the impact before you continue:",
+      [["Customer", t.customer?.name || "—"],
+       ["BDT returned to stock lots", fmt(t.totalOutBdt)+" BDT"],
+       ["Payments deleted", `${t.pays.length} payment(s) · ${fmt(t.paidSar)} SAR (removed from their accounts)`],
+       ["Profit reversed", signedFmt(t.profitSar)+" SAR"],
+       ["BD account credited back", (t.sourceAccount?.name || "lot account")+" +"+fmt(t.totalOutBdt)+" BDT"]])){
+      S.allocs = S.allocs.filter(a => a.trade_id !== id);
       S.pays   = S.pays.filter(p2 => p2.trade_id !== id);
-      deleteLocalRow("trades", "ratex_trades", id);          // server cascade handles the rest
-      toast("Trade deleted. Stock restored."); afterLocalChange();
+      deleteLocalRow("trades", "ratex_trades", id);
+      toast("Trade deleted. Stock and balances restored."); afterLocalChange();
     }
   }
   if(action==="del-lot"){
-    const l=D.lotMap.get(id);
-    if(l && l.usedBdt > 0.005) return toast(`This lot already supplied ${fmt(l.usedBdt)} BDT to sell trades — delete/edit those trades first.`, "error");
-    if(await confirmBox("Delete this stock lot?", `Stock of ${fmt0(l?.total_bdt)} BDT (${dFmt(l?.txn_date)}) will be removed from your balance. This cannot be undone.`)){
+    const l=D.lotMap.get(id); if(!l) return;
+    if(l.usedBdt > 0.005) return toast(`This lot already supplied ${fmt(l.usedBdt)} BDT to sell trades — delete/edit those trades first.`, "error");
+    if(await deleteConfirm("⚠ Delete this remittance lot?",
+      "The lot and its account postings will be reversed permanently:",
+      [["Remit No.", lotDisplayNo(l)],
+       ["BDT removed from stock", fmt(l.total_bdt)+" BDT"],
+       ["SAR account credited back", (l.kind==="opening" ? "no posting (historical)" : `${accountName(l.sar_account_id)} +${fmt(n(l.sar_amount)+n(l.fee_sar))} SAR`)],
+       ["BD account debited back", (l.kind==="opening" ? "no posting (historical)" : `${accountName(l.bdt_account_id)} −${fmt(l.total_bdt)} BDT`)]])){
       deleteLocalRow("lots", "ratex_stock_lots", id);
       toast("Stock lot deleted."); afterLocalChange();
     }
   }
   if(action==="del-pay"){
-    const p=S.pays.find(x=>x.id===id);
-    if(await confirmBox("Delete this payment?", `${fmt(p?.sar_amount)} SAR received on ${dFmt(p?.txn_date)} will be removed and that amount becomes due again.`)){
+    const p=S.pays.find(x=>x.id===id); if(!p) return;
+    const tr=D.tradeMap.get(p.trade_id);
+    if(await deleteConfirm("⚠ Delete this payment?",
+      "The amount becomes due again and the posted account balance goes down:",
+      [["Customer", tr?.customer?.name || "—"],
+       ["Amount", fmt(p.sar_amount)+" SAR · "+dFmt(p.txn_date)],
+       ["Account debited back", `${accountName(p.account_id)} −${fmt(p.sar_amount)} SAR`],
+       ["Trade due becomes", fmt((tr?.dueLeft||0)+n(p.sar_amount))+" SAR"]])){
       deleteLocalRow("pays", "ratex_settlements", id);
-      toast("Payment deleted. Due updated."); afterLocalChange();
+      toast("Payment deleted. Due and balances updated."); afterLocalChange();
+    }
+  }
+  if(action==="del-transfer"){
+    const tf=S.transfers.find(x=>x.id===id); if(!tf) return;
+    const cur = accountById(tf.from_account_id)?.currency || "";
+    if(await deleteConfirm("⚠ Delete this transfer?",
+      "Both account balances will be reversed:",
+      [["Transfer", `${accountName(tf.from_account_id)} → ${accountName(tf.to_account_id)}`],
+       ["Source gets back", `+${fmt(n(tf.amount)+n(tf.fee))} ${cur}`],
+       ["Destination loses", `−${fmt(tf.amount)} ${cur}`]])){
+      deleteLocalRow("transfers", "ratex_transfers", id);
+      toast("Transfer deleted. Balances reversed."); afterLocalChange();
+    }
+  }
+  if(action==="del-account"){
+    const a=accountById(id); if(!a) return;
+    if(accountUsed(id)) return toast("This account is used by existing remittances/trades/payments/transfers. Edit it and tick 'Archived' instead — history stays correct.", "error");
+    if(await deleteConfirm("⚠ Delete this account?",
+      "This account has no transactions. Deleting it is permanent:",
+      [["Account", `${a.name} (${a.currency})`],
+       ["Opening balance", fmt(a.opening_balance)+" "+a.currency],
+       ["Current balance", fmt(a.balance)+" "+a.currency]])){
+      deleteLocalRow("accounts", "ratex_accounts", id);
+      toast("Account deleted."); afterLocalChange(); populateAccountSelects();
     }
   }
 });
@@ -1659,7 +2212,7 @@ function onSignedIn(user){
   loadData();
 }
 function onSignedOut(){
-  S.user = null; S.customers=[];S.lots=[];S.trades=[];S.allocs=[];S.pays=[]; Q=[]; localLoadedFor="";
+  S.user = null; S.customers=[];S.lots=[];S.trades=[];S.allocs=[];S.pays=[]; S.accounts=[]; S.transfers=[]; Q=[]; localLoadedFor="";
   $("#appScreen").classList.add("hidden");
   $("#authScreen").classList.remove("hidden");
   showAuth("login");

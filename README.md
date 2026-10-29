@@ -18,7 +18,9 @@ A mobile-first, installable web app (PWA) for tracking a personal remittance-tra
 2. Paste the entire content of [`supabase-setup.sql`](./supabase-setup.sql)
 3. Click **Run**. You should see *Success. No rows returned.*
 
-This creates 5 tables (`ratex_customers`, `ratex_stock_lots`, `ratex_trades`, `ratex_trade_lots`, `ratex_settlements`) with Row-Level Security, so every signed-in user can only ever see **their own** data. Existing tables in the project are untouched.
+This creates 7 tables (customers, stock lots, trades, trade-lots, settlements, **accounts** and **transfers**) with Row-Level Security, so every signed-in user can only ever see **their own** data. Existing tables in the project are untouched.
+
+> **Already running v1/v2?** Don't re-run the full setup — run only [`supabase-v3-migration.sql`](./supabase-v3-migration.sql) once. It adds the accounts/transfers tables, the new columns (Remit No., account links) and rebuilds every RLS policy (this also fixes "new row violates row-level security policy"). Your existing data — including entries saved offline on your phone — is kept and will back up afterwards.
 
 ### Step B — Email auth settings (optional but recommended)
 Supabase → **Authentication**:
@@ -37,7 +39,8 @@ sw.js                 ← service worker (offline app shell, cache v2)
 icon-192.png          ← app icons — ALL files sit flat in the repo root (no subfolders!)
 icon-512.png
 maskable-512.png
-supabase-setup.sql    ← database setup (run once in Supabase, see Step A)
+supabase-setup.sql    ← full database setup for a fresh project (includes v3)
+supabase-v3-migration.sql ← run ONCE when upgrading an existing v1/v2 database
 .nojekyll
 README.md
 ```
@@ -59,6 +62,16 @@ Open the live site in Chrome (Android) → menu **⋮ → Install app** (or use 
 
 ## 2. How the accounting works
 
+### Accounts first (opening balances)
+Create your real accounts — e.g. **Saudi Bank (SAR)**, **Cash in Hand (SAR)**, **BD Bank (BDT)** — each with the balance it had on its **opening date** (before the transactions you record). Account balances are then derived:
+
+- **SAR account:** opening − remittances (amount + fee) + settlements posted to it ± transfers
+- **BD account:** opening + remittance credits − sell deliveries (incl. delivery charge) ± transfers
+
+**No transaction can exceed the source account's balance.** All charges (remittance fee, delivery charge, transfer fee) are extra debits from the source account — they never reduce the amount the receiver gets.
+
+Old stock bought before you started: add it as **Historical Lots** (Entry Type on the Stock In form) — each old remittance as its own lot with its own rate. Historical lots give you saleable stock and a cost rate, but do **not** post to accounts again (that money is already inside your opening balances). Every lot gets an auto-generated **Remit No.** (e.g. `REM-20261029-001`), shown on sell trades and searchable.
+
 ### Stock In (remittance you send)
 | You enter | RateX computes |
 |---|---|
@@ -69,14 +82,17 @@ Open the live site in Chrome (Android) → menu **⋮ → Install app** (or use 
 
 ### Sell Trade (BDT delivered to a customer)
 - Two input modes: **Customer needs BDT** (SAR = BDT ÷ your sell rate) or **Customer pays SAR** (BDT = SAR × your sell rate).
+- You pick the **BD account the money is delivered from** (its balance is debited and can never go negative), the delivery method is free text (bKash, any bank name, ...), customer **name is mandatory**, phone and receiver account are optional.
 - You **manually choose the stock lot(s)** the BDT comes from; a trade can be split across several lots. Allocated BDT = delivered BDT + optional delivery charge you bear.
 - **Cost (SAR)** = allocated BDT ÷ lot effective rate (snapshotted at sale time).
-- **Profit (SAR)** = SAR receivable − Cost. A *lower* sell rate than your effective cost rate ⇒ profit.
+- **Trade Profit (SAR)** = SAR receivable − Cost. A *lower* sell rate than your effective cost rate ⇒ profit.
+  All trading fees are inside this number: the remittance fee is part of the lot's effective rate, and the delivery charge is part of the allocated BDT.
+- **Net Profit (SAR)** = Trade Profit − standalone transfer fees (e.g. Cash → Bank charge). Those fees are debited from the source account *and* deducted from Actual/Net profit in Dashboard & Analytics. Remittance fees are never double-counted.
 
 *Example: deliver 20,000 BDT @ 32.50 → customer pays 615.38 SAR; cost @ 33.80325 = 591.72 SAR → **profit 23.66 SAR**.*
 
 ### Settlements & profit recognition
-- Each SAR payment from the customer is a settlement (partial payments fully supported).
+- Each SAR payment from the customer is a settlement (partial payments fully supported). Every payment is **posted to the SAR account you choose** (Cash in Hand or Saudi Bank), and cash can later be moved with **Transfer → Cash to Saudi Bank** when you deposit it for the next remittance.
 - **Actual Profit** = trade profit × (SAR collected ÷ SAR due). The unpaid share stays **Pending Profit**.
 - A trade is **Pending → Partial → Settled** automatically.
 
@@ -84,14 +100,15 @@ Open the live site in Chrome (Android) → menu **⋮ → Install app** (or use 
 | Card | Meaning |
 |---|---|
 | BDT Balance | Unsold BDT stock across all lots |
-| SAR Balance | SAR collected from customers − SAR invested in remittances |
+| SAR Balance | Total of your SAR accounts (Saudi Bank + Cash); falls back to collected − invested before accounts are set up |
 | Pending Settlement | Total SAR still due from all open trades |
 | Actual / Pending Profit | Realised vs. locked-in-unpaid profit (SAR) |
 
 ### Editing & deleting
-- Any lot, trade or payment can be edited; everything (balances, stock, dues, profit) recalculates automatically.
-- Deleting a **trade** also deletes its payments and returns its BDT to stock.
-- A **lot** that already supplied BDT to trades cannot be deleted (edit those trades first), and its total cannot be reduced below the amount already sold.
+- Any account, lot, trade, payment or transfer can be edited; everything (balances, stock, dues, profit) recalculates automatically.
+- **Deleting anything opens an advanced warning popup** showing the exact balance/stock/profit impact, and you must tick "I understand…" before the delete button activates.
+- Deleting a **trade** also deletes its payments and returns its BDT to stock and to the BD account.
+- A **lot** that already supplied BDT to trades cannot be deleted (edit those trades first), and its total cannot be reduced below the amount already sold. Accounts used by history cannot be deleted — archive them instead.
 
 ---
 
