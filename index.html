@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RateX — SAR ⇄ BDT Trading Ledger</title>
+<meta name="description" content="RateX — SAR ⇄ BDT remittance trading ledger: stock, sell trades, settlements and profit analytics.">
+<meta name="theme-color" content="#0a84ff">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RateX">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ============================ RateX · Embossed / Neumorphic UI ============================ */
+:root{
+  --bg:#e8ecf3; --surface:#edf0f7; --surface2:#eef1f8;
+  --ink:#182138; --ink2:#3c4763; --muted:#7a8499;
+  --blue:#0a84ff; --blue2:#0057d9; --cyan:#22b8f0;
+  --green:#0a9d6c; --red:#e5484d; --amber:#d97706;
+  --sh-out: 10px 10px 24px rgba(163,176,199,.55), -10px -10px 24px rgba(255,255,255,.95);
+  --sh-out-sm: 6px 6px 14px rgba(163,176,199,.5), -6px -6px 14px rgba(255,255,255,.95);
+  --sh-in: inset 6px 6px 12px rgba(163,176,199,.55), inset -6px -6px 12px rgba(255,255,255,.95);
+  --sh-in-sm: inset 4px 4px 9px rgba(163,176,199,.5), inset -4px -4px 9px rgba(255,255,255,.95);
+  --grad: linear-gradient(120deg,#19b6f5 0%,#0a84ff 48%,#0057d9 100%);
+  --r:22px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0; font-family:ui-sans-system,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; background:radial-gradient(1200px 600px at 85% -10%,#f5f8ff 0%,transparent 60%),radial-gradient(900px 520px at -10% 20%,#f2f5fc 0%,transparent 55%),var(--bg); color:var(--ink); min-height:100dvh}
+button{font:inherit; cursor:pointer; border:none; background:none; color:inherit}
+input,select,textarea{font:inherit; color:var(--ink)}
+::placeholder{color:#a3acc0}
+h1,h2,h3,h4{margin:0}
+small{color:var(--muted)}
+.hidden{display:none !important}
+
+/* ---------- embossed primitives ---------- */
+.neu{background:var(--surface); border-radius:var(--r); box-shadow:var(--sh-out)}
+.neu-sm{background:var(--surface); border-radius:18px; box-shadow:var(--sh-out-sm)}
+.neu-in{background:var(--surface); border-radius:18px; box-shadow:var(--sh-in)}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 22px; border-radius:16px; font-weight:700; letter-spacing:.4px; transition:transform .12s, box-shadow .12s, filter .12s; font-size:14.5px; white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-neu{background:var(--surface); color:var(--blue2); box-shadow:var(--sh-out-sm)}
+.btn-neu:active{box-shadow:var(--sh-in-sm)}
+.btn-grad{background:var(--grad); color:#fff; box-shadow:0 12px 26px rgba(10,110,255,.35), inset 0 1px 0 rgba(255,255,255,.35)}
+.btn-grad:active{filter:brightness(.94)}
+.btn-ghost{color:var(--ink2); box-shadow:var(--sh-out-sm); background:var(--surface)}
+.btn-danger{background:var(--surface); color:var(--red); box-shadow:var(--sh-out-sm)}
+.btn[disabled]{opacity:.55; pointer-events:none}
+.btn-wide{width:100%; padding:17px; font-size:15.5px; letter-spacing:1.6px}
+.icon-btn{width:44px; height:44px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--surface); box-shadow:var(--sh-out-sm); font-size:19px; color:var(--blue2); flex:none; transition:transform .12s}
+.icon-btn:active{box-shadow:var(--sh-in-sm); transform:scale(.94)}
+.chip{padding:9px 16px; border-radius:999px; background:var(--surface); box-shadow:var(--sh-out-sm); font-size:13px; font-weight:700; color:var(--ink2)}
+.chip.active{box-shadow:var(--sh-in-sm); color:var(--blue2)}
+.pill{font-size:11px; font-weight:800; letter-spacing:.6px; padding:5px 11px; border-radius:999px; text-transform:uppercase}
+.pill-settled{background:#d9f5e9; color:var(--green)}
+.pill-partial{background:#fdf0d8; color:var(--amber)}
+.pill-pending{background:#fbe3e4; color:var(--red)}
+.pill-stock{background:#dbeafe; color:var(--blue2)}
+.pos{color:var(--green)} .neg{color:var(--red)}
+
+/* inset inputs with floating edge label (as in reference UI) */
+.field{position:relative; margin-top:20px}
+.field>label{position:absolute; top:-8px; left:18px; z-index:2; font-size:11px; font-weight:800; letter-spacing:.5px; color:var(--blue2); background:var(--surface2); padding:1px 8px; border-radius:6px; text-transform:uppercase}
+.field input,.field select,.field textarea{width:100%; padding:17px 18px; border:none; outline:none; border-radius:16px; background:var(--surface); box-shadow:var(--sh-in); font-size:15.5px; transition:box-shadow .15s}
+.field textarea{resize:vertical; min-height:64px; padding-top:15px}
+.field input:focus,.field select:focus,.field textarea:focus{box-shadow:var(--sh-in), 0 0 0 2px rgba(10,132,255,.35)}
+.field input[readonly]{color:var(--blue2); font-weight:800}
+.eye-btn{position:absolute; right:10px; top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; color:#8a94ab; z-index:3}
+.field .hint{font-size:12px; color:var(--muted); margin:7px 6px 0}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:0 14px}
+@media(max-width:520px){.grid2.g2m{grid-template-columns:1fr 1fr} .grid2{grid-template-columns:1fr}}
+
+/* ============================ AUTH (embossed, as reference) ============================ */
+#authScreen{min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:26px 16px 40px; position:relative; overflow:hidden}
+.blob{position:absolute; border-radius:50%; background:var(--surface); box-shadow:var(--sh-out); opacity:.7; pointer-events:none}
+.auth-brand{display:flex; align-items:center; gap:11px; margin-bottom:22px; z-index:2}
+.logo-mark{width:46px; height:46px; border-radius:14px; background:var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:900; box-shadow:0 10px 22px rgba(10,110,255,.35)}
+.auth-brand .bn{font-size:26px; font-weight:900; letter-spacing:.5px}
+.auth-brand .bt{font-size:11.5px; color:var(--muted); letter-spacing:1.6px; text-transform:uppercase; margin-top:1px}
+.auth-card{width:100%; max-width:430px; background:var(--surface2); border-radius:38px; box-shadow:18px 18px 40px rgba(163,176,199,.6), -18px -18px 40px rgba(255,255,255,1); padding:38px 32px 34px; position:relative; z-index:2}
+.auth-orb{width:96px; height:96px; margin:0 auto 10px; border-radius:50%; background:var(--surface2); box-shadow:var(--sh-out); display:flex; align-items:center; justify-content:center}
+.auth-orb svg{width:46px; height:46px}
+.auth-card h1{text-align:center; font-size:31px; font-weight:900; letter-spacing:.2px; margin-top:12px}
+.auth-sub{text-align:center; color:var(--muted); font-size:14px; margin:8px 0 8px}
+.auth-form{animation:authIn .45s cubic-bezier(.22,1,.36,1)}
+@keyframes authIn{from{opacity:0; transform:translateX(26px) scale(.985)} to{opacity:1; transform:none}}
+@keyframes authInL{from{opacity:0; transform:translateX(-26px) scale(.985)} to{opacity:1; transform:none}}
+.auth-form.from-left{animation-name:authInL}
+.auth-links{display:flex; justify-content:space-between; align-items:center; margin:16px 2px 22px; font-size:13px; color:var(--ink2)}
+.remember{display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none}
+.remember input{appearance:none; width:21px; height:21px; border-radius:6px; background:var(--surface); box-shadow:var(--sh-in-sm); position:relative; cursor:pointer; flex:none}
+.remember input:checked{background:var(--grad)}
+.remember input:checked::after{content:"✓"; position:absolute; inset:0; color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center; font-weight:900}
+.link{color:var(--blue2); font-weight:700; font-size:13px}
+.auth-switch{display:flex; align-items:center; justify-content:center; gap:14px; margin-top:26px; font-size:13.5px; color:var(--ink2)}
+.socials{display:flex; justify-content:center; gap:18px; margin-top:22px}
+.socials button{width:50px; height:50px; border-radius:50%; background:var(--surface2); box-shadow:var(--sh-out-sm); font-weight:800; font-size:16px; color:var(--ink2)}
+.socials button:active{box-shadow:var(--sh-in-sm)}
+.auth-msg{display:none; margin-top:16px; padding:12px 15px; border-radius:14px; font-size:13.5px; line-height:1.45; box-shadow:var(--sh-in-sm)}
+.auth-msg.show{display:block}
+.auth-msg.err{color:var(--red)} .auth-msg.ok{color:var(--green)}
+.or-row{display:flex; align-items:center; gap:14px; margin-top:24px; color:#a3acc0; font-size:11.5px; letter-spacing:1.5px}
+.or-row::before,.or-row::after{content:""; flex:1; height:2px; border-radius:2px; box-shadow:var(--sh-in-sm)}
+
+/* ============================ APP FRAME ============================ */
+#appScreen{min-height:100dvh}
+.topbar{position:sticky; top:0; z-index:40; backdrop-filter:blur(14px); background:rgba(232,236,243,.82); border-bottom:1px solid rgba(255,255,255,.7)}
+.topbar-in{max-width:1120px; margin:0 auto; padding:12px 16px; display:flex; align-items:center; gap:12px}
+.topbar .logo-mark{width:40px; height:40px; font-size:22px; border-radius:12px}
+.topbar .bn{font-size:21px; font-weight:900}
+.topbar .bt{font-size:10px; color:var(--muted); letter-spacing:1.8px; text-transform:uppercase}
+.topbar .sp{flex:1}
+.user-chip{display:flex; align-items:center; gap:9px; padding:6px 12px 6px 6px; border-radius:999px; background:var(--surface); box-shadow:var(--sh-out-sm); font-size:12.5px; font-weight:700; color:var(--ink2); max-width:46vw}
+.user-chip .avatar{width:30px; height:30px; border-radius:50%; background:var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex:none}
+.user-chip span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
+.page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px}
+.page-head h2{font-size:25px; font-weight:900}
+.page-head p{margin:5px 0 0; color:var(--muted); font-size:13.5px}
+.head-actions{display:flex; gap:10px; flex-wrap:wrap}
+
+.bottom-nav{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(12px + env(safe-area-inset-bottom)); z-index:50; width:min(560px,calc(100% - 20px)); background:var(--surface2); border-radius:26px; box-shadow:12px 12px 30px rgba(163,176,199,.65), -8px -8px 22px rgba(255,255,255,1); display:grid; grid-template-columns:repeat(4,1fr); padding:9px}
+.bottom-nav button{display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 2px 7px; border-radius:18px; font-size:11px; font-weight:800; letter-spacing:.4px; color:var(--muted)}
+.bottom-nav button svg{width:22px; height:22px}
+.bottom-nav button.active{color:var(--blue2); box-shadow:var(--sh-in-sm)}
+
+/* ---------- dashboard ---------- */
+.hero-card{background:var(--grad); color:#fff; border-radius:26px; padding:24px 24px 20px; box-shadow:0 18px 38px rgba(10,110,255,.35), inset 0 1px 0 rgba(255,255,255,.4); position:relative; overflow:hidden}
+.hero-card::after{content:""; position:absolute; width:240px; height:240px; border-radius:50%; background:rgba(255,255,255,.13); right:-80px; top:-110px}
+.hero-card::before{content:""; position:absolute; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,.1); right:60px; bottom:-100px}
+.hero-label{font-size:11.5px; font-weight:800; letter-spacing:2px; text-transform:uppercase; opacity:.85}
+.hero-value{font-size:clamp(30px,7vw,42px); font-weight:900; margin-top:8px; letter-spacing:.3px}
+.hero-value small{color:#fff; opacity:.8; font-size:15px; font-weight:700}
+.hero-meta{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-size:12.5px; opacity:.94; position:relative; z-index:2}
+.hero-meta b{font-size:13.5px}
+.stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px}
+@media(min-width:860px){.stat-grid{grid-template-columns:repeat(4,1fr)}}
+.stat{padding:18px}
+.stat .lb{font-size:10.5px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:7px}
+.stat .lb .dot{width:8px; height:8px; border-radius:50%; flex:none}
+.stat .vl{font-size:clamp(19px,5vw,24px); font-weight:900; margin-top:9px}
+.stat .vl small{font-size:12px; font-weight:700}
+.stat .sb{font-size:12px; color:var(--muted); margin-top:5px; line-height:1.45}
+.section{margin-top:28px}
+.section-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:13px}
+.section-head h3{font-size:17.5px; font-weight:900}
+.section-head .link{font-size:12.5px}
+.quick{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px}
+.quick button{padding:16px 8px; border-radius:20px; background:var(--surface); box-shadow:var(--sh-out-sm); font-weight:800; font-size:13px; color:var(--ink2); display:flex; flex-direction:column; align-items:center; gap:8px}
+.quick button:active{box-shadow:var(--sh-in-sm)}
+.quick .qic{width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:19px; color:#fff}
+.progress{height:12px; border-radius:99px; box-shadow:var(--sh-in-sm); overflow:hidden; background:var(--surface)}
+.progress>i{display:block; height:100%; border-radius:99px; background:var(--grad); transition:width .5s cubic-bezier(.22,1,.36,1)}
+.flow-card{padding:20px; margin-top:14px}
+.flow-rows{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:6px}
+@media(max-width:560px){.flow-rows{grid-template-columns:1fr 1fr 1fr; gap:8px}}
+.flow-rows .fl .v{font-weight:900; font-size:16px; margin-top:4px}
+.flow-rows .fl .l{font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); font-weight:800}
+
+/* ---------- cards / lists ---------- */
+.card{padding:18px; margin-bottom:14px; animation:cardIn .35s cubic-bezier(.22,1,.36,1)}
+@keyframes cardIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+.card-top{display:flex; align-items:flex-start; gap:12px}
+.avatar-c{width:44px; height:44px; border-radius:50%; background:var(--surface); box-shadow:var(--sh-out-sm); display:flex; align-items:center; justify-content:center; font-weight:900; color:var(--blue2); flex:none; font-size:16px}
+.card-top .tt{flex:1; min-width:0}
+.card-top .t1{font-weight:900; font-size:15.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.card-top .t2{font-size:12px; color:var(--muted); margin-top:3px}
+.kv-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:15px}
+@media(max-width:640px){.kv-grid{grid-template-columns:1fr 1fr}}
+.kv{box-shadow:var(--sh-in-sm); border-radius:14px; padding:10px 12px}
+.kv .l{font-size:9.5px; letter-spacing:1.1px; text-transform:uppercase; color:var(--muted); font-weight:800}
+.kv .v{font-weight:900; font-size:14.5px; margin-top:4px}
+.kv .v small{font-size:10.5px}
+.card-actions{display:flex; gap:9px; margin-top:15px; flex-wrap:wrap}
+.mini-btn{padding:9px 15px; border-radius:12px; font-size:12.5px; font-weight:800; background:var(--surface); box-shadow:var(--sh-out-sm); color:var(--ink2); display:inline-flex; gap:6px; align-items:center}
+.mini-btn:active{box-shadow:var(--sh-in-sm)}
+.mini-btn.blue{color:#fff; background:var(--grad); box-shadow:0 8px 18px rgba(10,110,255,.3)}
+.mini-btn.red{color:var(--red)}
+.detail{display:none; margin-top:14px; box-shadow:var(--sh-in-sm); border-radius:16px; padding:14px 16px; font-size:13px}
+.detail.open{display:block}
+.detail h5{margin:6px 0 8px; font-size:11px; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted)}
+.detail .row{display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed #ccd3e2}
+.detail .row:last-child{border:none}
+.empty{padding:44px 22px; text-align:center; color:var(--muted)}
+.empty .eic{width:78px; height:78px; margin:0 auto 14px; border-radius:50%; box-shadow:var(--sh-out-sm); display:flex; align-items:center; justify-content:center; font-size:32px; background:var(--surface)}
+.empty h4{color:var(--ink); font-size:17px; margin-bottom:6px}
+.empty p{font-size:13.5px; line-height:1.55; max-width:420px; margin:0 auto 16px}
+.toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px}
+.search-box{flex:1; min-width:200px; position:relative}
+.search-box input{width:100%; padding:14px 18px 14px 44px; border:none; outline:none; border-radius:16px; background:var(--surface); box-shadow:var(--sh-in); font-size:14.5px}
+.search-box::before{content:"⌕"; position:absolute; left:16px; top:50%; transform:translateY(-54%); font-size:21px; color:#9aa5bb}
+.select-neu{padding:13px 16px; border:none; outline:none; border-radius:16px; background:var(--surface); box-shadow:var(--sh-out-sm); font-weight:700; font-size:13.5px; color:var(--ink2)}
+.list-row{display:flex; align-items:center; gap:12px; padding:15px 18px; margin-bottom:12px}
+.list-row .tt{flex:1; min-width:0}
+.list-row .rv{font-weight:900; text-align:right}
+.list-row .rv small{display:block; font-weight:600; margin-top:2px}
+
+/* ---------- analytics ---------- */
+.bar-row{display:grid; grid-template-columns:64px 1fr 108px; gap:10px; align-items:center; margin:11px 0; font-size:12.5px}
+.bar-row .bl{color:var(--muted); font-weight:700}
+.bar-track{height:20px; border-radius:99px; box-shadow:var(--sh-in-sm); overflow:hidden; background:var(--surface)}
+.bar-fill{height:100%; border-radius:99px; background:var(--grad); min-width:3px; transition:width .6s cubic-bezier(.22,1,.36,1)}
+.bar-fill.negf{background:linear-gradient(120deg,#ff7a7e,#e5484d)}
+.bar-row .bv{font-weight:900; text-align:right}
+.donut-wrap{display:flex; align-items:center; gap:22px; flex-wrap:wrap}
+.donut{width:150px; height:150px; border-radius:50%; box-shadow:var(--sh-out-sm); position:relative; flex:none}
+.donut::after{content:""; position:absolute; inset:22px; border-radius:50%; background:var(--surface); box-shadow:var(--sh-in-sm)}
+.donut .dc{position:absolute; inset:0; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center}
+.donut .dc b{font-size:24px}
+.donut .dc span{font-size:10px; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted); font-weight:800}
+.legend{font-size:13.5px; line-height:2}
+.legend .dot{display:inline-block; width:11px; height:11px; border-radius:4px; margin-right:8px}
+table.tbl{width:100%; border-collapse:collapse; font-size:13px}
+.tbl th{font-size:10px; letter-spacing:1.1px; text-transform:uppercase; color:var(--muted); text-align:right; padding:9px 8px; border-bottom:2px solid #d3dae8}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:10px 8px; border-bottom:1px dashed #ccd3e2; text-align:right; font-weight:700; white-space:nowrap}
+.tbl-wrap{overflow-x:auto; box-shadow:var(--sh-in-sm); border-radius:16px; padding:6px 10px}
+
+/* ---------- modals (bottom sheet) ---------- */
+.overlay{position:fixed; inset:0; z-index:80; background:rgba(24,33,56,.45); backdrop-filter:blur(4px); display:none; align-items:flex-end; justify-content:center}
+.overlay.open{display:flex}
+.sheet{width:100%; max-width:620px; max-height:92dvh; overflow-y:auto; background:var(--surface2); border-radius:30px 30px 0 0; padding:14px 22px calc(26px + env(safe-area-inset-bottom)); animation:sheetUp .35s cubic-bezier(.22,1,.36,1); box-shadow:0 -18px 50px rgba(24,33,56,.3)}
+@media(min-width:700px){.overlay{align-items:center; padding:22px} .sheet{border-radius:30px}}
+@keyframes sheetUp{from{transform:translateY(50px); opacity:.4} to{transform:none; opacity:1}}
+.sheet .grab{width:48px; height:5px; border-radius:9px; background:#c4ccdd; margin:2px auto 16px}
+.sheet-head{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.sheet-head h3{font-size:20px; font-weight:900}
+.sheet-head p{font-size:12.5px; color:var(--muted); margin:4px 0 0}
+.close-x{width:38px; height:38px; font-size:15px; color:var(--ink2)}
+.calc-box{margin-top:20px; padding:16px 18px; font-size:13.5px; line-height:1.5}
+.calc-box .row{display:flex; justify-content:space-between; padding:5px 0}
+.calc-box .row.total{border-top:2px dashed #c9d2e4; margin-top:8px; padding-top:11px; font-weight:900; font-size:15px}
+.seg{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px}
+.seg button{padding:13px 8px; border-radius:15px; background:var(--surface); box-shadow:var(--sh-out-sm); font-weight:800; font-size:13px; color:var(--muted)}
+.seg button.active{box-shadow:var(--sh-in-sm); color:var(--blue2)}
+.alloc-row{display:grid; grid-template-columns:1fr 118px 38px; gap:9px; margin-top:12px; align-items:start}
+.alloc-row select,.alloc-row input{width:100%; padding:14px 12px; border:none; outline:none; border-radius:14px; background:var(--surface); box-shadow:var(--sh-in); font-size:13.5px}
+.alloc-row .av{grid-column:1/-1; font-size:11.5px; color:var(--muted); margin:-2px 4px 0}
+.alloc-del{width:38px; height:48px; border-radius:12px; color:var(--red); box-shadow:var(--sh-out-sm); background:var(--surface); font-size:16px}
+.form-err{display:none; margin-top:16px; padding:12px 15px; border-radius:14px; box-shadow:var(--sh-in-sm); color:var(--red); font-size:13.5px; line-height:1.5}
+.form-err.show{display:block}
+.sheet .save-row{margin-top:24px}
+
+/* toast + loader + banners */
+#toasts{position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:200; width:min(480px,calc(100% - 24px)); display:flex; flex-direction:column; gap:9px}
+.toast{padding:14px 18px; border-radius:16px; background:#182138; color:#fff; font-size:13.5px; font-weight:600; box-shadow:0 16px 34px rgba(24,33,56,.35); animation:cardIn .3s; line-height:1.5}
+.toast.success{background:#067a51} .toast.error{background:#c92a2d}
+#loader{position:fixed; inset:0; z-index:150; background:rgba(232,236,243,.75); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center}
+#loader.show{display:flex}
+.spinner{width:58px; height:58px; border-radius:50%; background:var(--surface); box-shadow:var(--sh-out); display:flex; align-items:center; justify-content:center}
+.spinner::after{content:""; width:26px; height:26px; border-radius:50%; border:4px solid #cfd8e8; border-top-color:var(--blue); animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.banner{padding:18px 20px; margin-bottom:18px; border-radius:20px; background:#fff4d6; color:#7a5200; box-shadow:var(--sh-out-sm); font-size:14px; line-height:1.6}
+.banner code{background:rgba(0,0,0,.08); padding:2px 7px; border-radius:6px; font-size:12.5px}
+.fade-in{animation:cardIn .4s cubic-bezier(.22,1,.36,1)}
+@media(max-width:430px){.auth-card{padding:32px 22px 30px} .kv-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<noscript><div style="padding:30px;text-align:center">RateX needs JavaScript enabled.</div></noscript>
+
+<!-- ================= AUTH ================= -->
+<section id="authScreen">
+  <div class="blob" style="width:230px;height:230px;left:-90px;top:8%"></div>
+  <div class="blob" style="width:170px;height:170px;right:-70px;top:52%"></div>
+  <div class="blob" style="width:110px;height:110px;right:12%;top:4%"></div>
+
+  <div class="auth-brand">
+    <div class="logo-mark">R</div>
+    <div><div class="bn">RateX</div><div class="bt">SAR ⇄ BDT Ledger</div></div>
+  </div>
+
+  <div class="auth-card">
+    <!-- LOGIN -->
+    <form class="auth-form" id="loginForm" autocomplete="on">
+      <div class="auth-orb">
+        <svg viewBox="0 0 48 48" fill="none"><rect x="11" y="20" width="21" height="17" rx="4" fill="#8f9a4d"/><path d="M16 20v-4a5.5 5.5 0 0 1 11 0v4" stroke="#6b7280" stroke-width="3.4" fill="none"/><circle cx="21.5" cy="27.5" r="2.6" fill="#374151"/><rect x="20.4" y="28.6" width="2.2" height="4.6" rx="1.1" fill="#374151"/><circle cx="34" cy="15" r="4.6" stroke="#d8a012" stroke-width="3" fill="none"/><path d="M31.4 18.6 27.6 26" stroke="#d8a012" stroke-width="3" stroke-linecap="round"/><path d="M28.6 22.4l3.6.6M27.7 25l3.2.5" stroke="#d8a012" stroke-width="2.6" stroke-linecap="round"/></svg>
+      </div>
+      <h1>Welcome</h1>
+      <p class="auth-sub">Login to continue your journey</p>
+
+      <div class="field">
+        <label for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" required placeholder="you@example.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="field">
+        <label for="loginPass">Password</label>
+        <input type="password" id="loginPass" required placeholder="Password" autocomplete="current-password">
+        <button type="button" class="eye-btn" data-eye="loginPass" aria-label="Show password">👁</button>
+      </div>
+
+      <div class="auth-links">
+        <label class="remember"><input type="checkbox" id="rememberMe" checked> Remember me</label>
+        <button type="button" class="link" id="forgotBtn">Forgot Password?</button>
+      </div>
+
+      <button type="submit" class="btn btn-neu btn-wide" id="loginSubmit">LOGIN</button>
+
+      <div class="auth-switch">
+        <span>Don't have an account?</span>
+        <button type="button" class="icon-btn" id="toSignup" aria-label="Create account">＋</button>
+      </div>
+
+      <div class="or-row">OR CONTINUE WITH</div>
+      <div class="socials">
+        <button type="button" data-social="Google" aria-label="Google">G</button>
+        <button type="button" data-social="Facebook" aria-label="Facebook">f</button>
+        <button type="button" data-social="LinkedIn" aria-label="LinkedIn">in</button>
+      </div>
+    </form>
+
+    <!-- SIGNUP -->
+    <form class="auth-form hidden" id="signupForm" autocomplete="on">
+      <div class="auth-orb">
+        <svg viewBox="0 0 48 48" fill="none"><path d="M27 6l2.1 6.9L36 15l-6.9 2.1L27 24l-2.1-6.9L18 15l6.9-2.1L27 6z" fill="#f2c230"/><path d="M37 25l1.3 4.2L42.5 30.5l-4.2 1.3L37 36l-1.3-4.2-4.2-1.3 4.2-1.3L37 25z" fill="#f5cf4e"/><path d="M14 27l1 3.3 3.3 1-3.3 1-1 3.3-1-3.3-3.3-1 3.3-1 1-3.3z" fill="#f7dc7a"/></svg>
+      </div>
+      <h1>Create Account</h1>
+      <p class="auth-sub">Start your journey with us</p>
+
+      <div class="field">
+        <label for="suName">Full Name</label>
+        <input type="text" id="suName" required placeholder="Your full name" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="suEmail">Email Address</label>
+        <input type="email" id="suEmail" required placeholder="you@example.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="field">
+        <label for="suPass">Password</label>
+        <input type="password" id="suPass" required minlength="6" placeholder="Min. 6 characters" autocomplete="new-password">
+        <button type="button" class="eye-btn" data-eye="suPass" aria-label="Show password">👁</button>
+      </div>
+      <div class="field">
+        <label for="suPass2">Confirm Password</label>
+        <input type="password" id="suPass2" required placeholder="Repeat password" autocomplete="new-password">
+        <button type="button" class="eye-btn" data-eye="suPass2" aria-label="Show password">👁</button>
+      </div>
+
+      <div style="margin-top:26px">
+        <button type="submit" class="btn btn-grad btn-wide" id="signupSubmit">CREATE ACCOUNT</button>
+      </div>
+
+      <div class="auth-switch">
+        <span>Already have an account?</span>
+        <button type="button" class="icon-btn" id="toLogin" aria-label="Back to login">←</button>
+      </div>
+    </form>
+
+    <div class="auth-msg" id="authMsg" role="alert"></div>
+  </div>
+  <p style="z-index:2;color:var(--muted);font-size:12px;margin-top:20px">Your trading data stays private to your own account.</p>
+</section>
+
+<!-- ================= APP ================= -->
+<section id="appScreen" class="hidden">
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="logo-mark">R</div>
+      <div><div class="bn">RateX</div><div class="bt">SAR ⇄ BDT Ledger</div></div>
+      <div class="sp"></div>
+      <button class="btn btn-neu hidden" id="installBtn" style="padding:10px 16px;font-size:12.5px">⬇ Install</button>
+      <div class="user-chip"><span class="avatar" id="userAvatar">R</span><span id="userName">—</span></div>
+      <button class="icon-btn" id="logoutBtn" title="Logout" aria-label="Logout">⎋</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="setupBanner"></div>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section class="page" id="page-dashboard">
+      <div class="page-head">
+        <div><h2 id="dashGreeting">Overview</h2><p id="dashDate"></p></div>
+        <div class="head-actions">
+          <button class="btn btn-neu" data-open-stock>＋ Stock In</button>
+          <button class="btn btn-grad" data-open-trade>＋ Sell Trade</button>
+        </div>
+      </div>
+
+      <div class="hero-card fade-in">
+        <div class="hero-label">BDT Balance · Stock in Hand</div>
+        <div class="hero-value"><span id="dBdtBalance">0.00</span> <small>BDT ৳</small></div>
+        <div class="hero-meta">
+          <span>Active lots <b id="dLotCount">0</b></span>
+          <span>Avg. cost rate <b id="dAvgCost">—</b></span>
+          <span>Total stock bought <b id="dBought">0</b> BDT</span>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--blue)"></i>SAR Balance</div><div class="vl"><span id="dSarBalance">0.00</span> <small>SAR</small></div><div class="sb" id="dSarSub">Collected − invested</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--amber)"></i>Pending Settlement</div><div class="vl"><span id="dPendingSar">0.00</span> <small>SAR</small></div><div class="sb" id="dPendingSub">No dues</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Actual Profit</div><div class="vl pos"><span id="dActualProfit">0.00</span> <small>SAR</small></div><div class="sb">Realised from payments received</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:#8b5cf6"></i>Pending Profit</div><div class="vl"><span id="dPendingProfit">0.00</span> <small>SAR</small></div><div class="sb">Locked in unpaid trades</div></div>
+      </div>
+
+      <div class="quick">
+        <button data-open-stock><span class="qic" style="background:linear-gradient(135deg,#19b6f5,#0a84ff)">⇩</span>Stock In<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">Remittance sent</span></button>
+        <button data-open-trade><span class="qic" style="background:linear-gradient(135deg,#f59e0b,#d97706)">⇄</span>Sell BDT<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">New trade</span></button>
+        <button data-goto="settlement"><span class="qic" style="background:linear-gradient(135deg,#12b981,#0a9d6c)">✓</span>Collect<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">Add payment</span></button>
+      </div>
+
+      <div class="flow-card neu">
+        <div class="section-head" style="margin-bottom:8px"><h3>Money Flow</h3><span class="pill pill-stock" id="dCollectRatio">0% collected</span></div>
+        <div class="flow-rows">
+          <div class="fl"><div class="l">Invested</div><div class="v"><span id="dInvested">0</span> <small>SAR</small></div></div>
+          <div class="fl"><div class="l">BDT Sold</div><div class="v"><span id="dSoldBdt">0</span> <small>BDT</small></div></div>
+          <div class="fl"><div class="l">Collected</div><div class="v pos"><span id="dCollected">0</span> <small>SAR</small></div></div>
+        </div>
+        <div class="progress" style="margin-top:15px"><i id="dCollectBar" style="width:0%"></i></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px"><span id="dTotalDue">Total receivable 0 SAR</span><span id="dTotalProfit">Total profit 0 SAR</span></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3>Stock Lots</h3><button class="link" data-open-stock>＋ Add remittance</button></div>
+        <div id="dashLots"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3>Customers With Dues</h3><button class="link" data-goto="settlement">View all →</button></div>
+        <div id="dashDues"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3>Recent Activity</h3><button class="link" data-goto="trade">All transactions →</button></div>
+        <div id="dashRecent"></div>
+      </div>
+    </section>
+
+    <!-- ============ TRADE ============ -->
+    <section class="page hidden" id="page-trade">
+      <div class="page-head">
+        <div><h2>Trades</h2><p>Stock-in remittances &amp; BDT sell trades — edit or delete anytime.</p></div>
+        <div class="head-actions">
+          <button class="btn btn-neu" data-open-stock>＋ Stock In</button>
+          <button class="btn btn-grad" data-open-trade>＋ Sell Trade</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="search-box"><input type="search" id="tradeSearch" placeholder="Search customer, phone, method, source…"></div>
+        <select class="select-neu" id="tradeStatusFilter" aria-label="Status filter">
+          <option value="all">All status</option><option value="Pending">Pending</option>
+          <option value="Partial">Partial</option><option value="Settled">Settled</option>
+        </select>
+      </div>
+      <div class="toolbar" role="tablist" aria-label="Type filter">
+        <button class="chip active" data-typefilter="all">All</button>
+        <button class="chip" data-typefilter="sell">Sell Trades</button>
+        <button class="chip" data-typefilter="stock">Stock In</button>
+        <span style="flex:1"></span><small id="tradeCount"></small>
+      </div>
+      <div id="tradeList"></div>
+    </section>
+
+    <!-- ============ SETTLEMENT ============ -->
+    <section class="page hidden" id="page-settlement">
+      <div class="page-head">
+        <div><h2>Settlements</h2><p>Track every due — per trade and per customer. Add partial payments anytime.</p></div>
+        <div class="head-actions"><button class="btn btn-grad" id="addPaymentBtn">＋ Add Payment</button></div>
+      </div>
+      <div class="stat-grid" style="margin-top:0">
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--red)"></i>Total Pending</div><div class="vl"><span id="sPending">0.00</span> <small>SAR</small></div><div class="sb" id="sPendingSub">—</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--blue)"></i>Customers in Due</div><div class="vl" id="sCustCount">0</div><div class="sb">With unpaid balance</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Collected This Month</div><div class="vl pos"><span id="sMonth">0.00</span> <small>SAR</small></div><div class="sb" id="sMonthSub">—</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--amber)"></i>Oldest Open Due</div><div class="vl" id="sOldest">—</div><div class="sb" id="sOldestSub">All clear</div></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h3>Customer Dues</h3></div>
+        <div id="customerDues"></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><h3>Open Trades (Unpaid / Partial)</h3></div>
+        <div id="openTrades"></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><h3>Payment History</h3></div>
+        <div id="payHistory"></div>
+      </div>
+    </section>
+
+    <!-- ============ ANALYTICS ============ -->
+    <section class="page hidden" id="page-analytics">
+      <div class="page-head">
+        <div><h2>Analytics</h2><p>Profit, rates and performance across your trades.</p></div>
+        <select class="select-neu" id="analyticsPeriod" aria-label="Period">
+          <option value="all">All time</option><option value="30">Last 30 days</option>
+          <option value="90">Last 90 days</option><option value="month">This month</option>
+          <option value="year">This year</option>
+        </select>
+      </div>
+
+      <div class="stat-grid" style="margin-top:0">
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Total Profit</div><div class="vl"><span id="aProfit">0.00</span> <small>SAR</small></div><div class="sb" id="aProfitSub">—</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--blue)"></i>Profit Margin</div><div class="vl" id="aMargin">0%</div><div class="sb">Profit ÷ cost of BDT sold</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:#8b5cf6"></i>Avg Buy vs Sell Rate</div><div class="vl" style="font-size:17px" id="aRates">—</div><div class="sb" id="aSpread">Spread —</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--amber)"></i>Trades</div><div class="vl" id="aTrades">0</div><div class="sb" id="aTradesSub">—</div></div>
+      </div>
+
+      <div class="section"><div class="neu" style="padding:20px">
+        <div class="section-head"><h3>Monthly Profit (SAR)</h3><small>by trade date</small></div>
+        <div id="aMonthly"></div>
+      </div></div>
+
+      <div class="section"><div class="neu" style="padding:20px">
+        <div class="section-head"><h3>Collection Health</h3></div>
+        <div class="donut-wrap">
+          <div class="donut" id="aDonut"><div class="dc"><b id="aDonutPct">0%</b><span>Collected</span></div></div>
+          <div class="legend" id="aDonutLegend"></div>
+        </div>
+      </div></div>
+
+      <div class="section"><div class="neu" style="padding:20px">
+        <div class="section-head"><h3>Stock Lot Performance</h3></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Lot</th><th>Eff. Rate</th><th>Bought BDT</th><th>Sold</th><th>Left</th><th>Profit SAR</th></tr></thead><tbody id="aLots"></tbody></table></div>
+      </div></div>
+
+      <div class="section"><div class="neu" style="padding:20px">
+        <div class="section-head"><h3>Monthly Rates</h3><small>weighted average, BDT / SAR</small></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Month</th><th>Buy (eff.)</th><th>Sell</th><th>Spread</th><th>BDT Sold</th><th>Profit SAR</th></tr></thead><tbody id="aRateTrend"></tbody></table></div>
+      </div></div>
+
+      <div class="section">
+        <div class="section-head"><h3>Top Customers</h3><small>by profit generated</small></div>
+        <div id="aCustomers"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Main">
+    <button data-tab="dashboard" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="2"/><rect x="3" y="15" width="7.5" height="6" rx="2"/></svg>Dashboard</button>
+    <button data-tab="trade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13M13.5 3.5 17 7l-3.5 3.5M20 17H7M10.5 13.5 7 17l3.5 3.5"/></svg>Trade</button>
+    <button data-tab="settlement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="13" rx="3"/><path d="M2.5 10.5h19M6 15.5h4"/></svg>Settlement</button>
+    <button data-tab="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Analytics</button>
+  </nav>
+</section>
+
+<!-- ================= STOCK MODAL ================= -->
+<div class="overlay" id="stockOverlay">
+  <form class="sheet" id="stockForm">
+    <div class="grab"></div>
+    <div class="sheet-head"><div><h3 id="stockTitle">Stock In — Remittance Sent</h3><p>SAR you sent → BDT deposited in Bangladesh (with incentive).</p></div><button type="button" class="icon-btn close-x" data-close="stockOverlay">✕</button></div>
+    <input type="hidden" id="stId">
+    <div class="grid2">
+      <div class="field"><label for="stDate">Date</label><input type="date" id="stDate" required></div>
+      <div class="field"><label for="stSource">Sent Via (optional)</label><input type="text" id="stSource" placeholder="e.g. ENJAZ, SNB, UrPay"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="stSar">SAR Sent</label><input type="number" id="stSar" required min="0.01" step="any" inputmode="decimal" placeholder="3000"></div>
+      <div class="field"><label for="stFee">Sending Fee · SAR</label><input type="number" id="stFee" min="0" step="any" inputmode="decimal" value="0"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="stRate">Exchange Rate · BDT/SAR</label><input type="number" id="stRate" required min="0.0001" step="any" inputmode="decimal" placeholder="32.97878"></div>
+      <div class="field"><label for="stIncentive">Govt. Incentive %</label><input type="number" id="stIncentive" min="0" step="any" inputmode="decimal" value="2.5"></div>
+    </div>
+    <div class="field">
+      <label for="stTotalBdt">Total BDT Deposited (incl. incentive)</label>
+      <input type="number" id="stTotalBdt" required min="0.01" step="any" inputmode="decimal" placeholder="Auto-calculated">
+      <p class="hint">Auto-calculated from SAR × Rate × (1 + Incentive). Edit it if the bank deposited a slightly different amount — <button type="button" class="link" id="stRecalc">recalculate</button></p>
+    </div>
+    <div class="calc-box neu-in" id="stPreview"></div>
+    <div class="field"><label for="stNote">Note (optional)</label><textarea id="stNote" placeholder="Any note…"></textarea></div>
+    <div class="form-err" id="stErr"></div>
+    <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="stSave">SAVE STOCK</button></div>
+  </form>
+</div>
+
+<!-- ================= SELL TRADE MODAL ================= -->
+<div class="overlay" id="tradeOverlay">
+  <form class="sheet" id="tradeForm">
+    <div class="grab"></div>
+    <div class="sheet-head"><div><h3 id="tradeTitle">New Sell Trade</h3><p>Deliver BDT in Bangladesh, receive SAR from the customer here.</p></div><button type="button" class="icon-btn close-x" data-close="tradeOverlay">✕</button></div>
+    <input type="hidden" id="trId">
+    <div class="grid2">
+      <div class="field"><label for="trDate">Date</label><input type="date" id="trDate" required></div>
+      <div class="field"><label for="trMethod">Delivery Method</label><select id="trMethod"><option>bKash</option><option>Nagad</option><option>Bank</option><option>Cash</option><option>Other</option></select></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="trCustName">Customer Name</label><input type="text" id="trCustName" required list="customerList" placeholder="Who pays you the SAR?" autocomplete="off"><datalist id="customerList"></datalist></div>
+      <div class="field"><label for="trCustPhone">Customer Phone</label><input type="tel" id="trCustPhone" placeholder="05xxxxxxxx" autocomplete="off"></div>
+    </div>
+    <div class="field"><label for="trReceiver">Receiver in BD (optional)</label><input type="text" id="trReceiver" placeholder="bKash / bank account number or name"></div>
+
+    <div class="seg" role="group" aria-label="Input mode">
+      <button type="button" id="modeBdt" class="active">Customer needs BDT</button>
+      <button type="button" id="modeSar">Customer pays SAR</button>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="trBdt">BDT Delivered ৳</label><input type="number" id="trBdt" required min="0.01" step="any" inputmode="decimal" placeholder="20000"></div>
+      <div class="field"><label for="trRate">Your Sell Rate · BDT/SAR</label><input type="number" id="trRate" required min="0.0001" step="any" inputmode="decimal" placeholder="32.50"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="trSarDue">Total SAR Customer Pays</label><input type="number" id="trSarDue" required min="0.01" step="any" inputmode="decimal" placeholder="Auto"></div>
+      <div class="field"><label for="trCharge">Delivery Charge · BDT (by you)</label><input type="number" id="trCharge" min="0" step="any" inputmode="decimal" value="0"><p class="hint">Optional. Deducted from stock &amp; profit.</p></div>
+    </div>
+
+    <div style="margin-top:24px;display:flex;align-items:center;justify-content:space-between">
+      <h4 style="font-size:14px">Take BDT From Stock Lot <small style="font-weight:600;text-transform:none;letter-spacing:0">(manual)</small></h4>
+      <button type="button" class="mini-btn" id="addAllocBtn">＋ Add Lot</button>
+    </div>
+    <div id="allocRows"></div>
+    <div class="calc-box neu-in" id="trPreview"></div>
+
+    <div id="initialPayWrap">
+      <div class="grid2">
+        <div class="field"><label for="trInitPay">SAR Received Now</label><input type="number" id="trInitPay" min="0" step="any" inputmode="decimal" value="0"></div>
+        <div class="field"><label for="trInitMethod">Received Via</label><select id="trInitMethod"><option>Cash</option><option>Bank Transfer</option><option>STC Pay</option><option>UrPay</option><option>Other</option></select></div>
+      </div>
+      <p class="hint" style="margin:8px 4px 0;font-size:12px;color:var(--muted)">Leave 0 if fully on credit — the rest stays as Pending Settlement.</p>
+    </div>
+
+    <div class="field"><label for="trNote">Note (optional)</label><textarea id="trNote" placeholder="Any note…"></textarea></div>
+    <div class="form-err" id="trErr"></div>
+    <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="trSave">SAVE TRADE</button></div>
+  </form>
+</div>
+
+<!-- ================= SETTLEMENT MODAL ================= -->
+<div class="overlay" id="payOverlay">
+  <form class="sheet" id="payForm">
+    <div class="grab"></div>
+    <div class="sheet-head"><div><h3 id="payTitle">Receive Payment</h3><p>SAR received from the customer against a trade.</p></div><button type="button" class="icon-btn close-x" data-close="payOverlay">✕</button></div>
+    <input type="hidden" id="payId">
+    <div class="field"><label for="payTradeSel">Trade</label><select id="payTradeSel" required></select></div>
+    <div class="calc-box neu-in" id="payPreview"></div>
+    <div class="grid2">
+      <div class="field"><label for="payDate">Date</label><input type="date" id="payDate" required></div>
+      <div class="field"><label for="payAmount">SAR Received</label><input type="number" id="payAmount" required min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="payMethod">Received Via</label><select id="payMethod"><option>Cash</option><option>Bank Transfer</option><option>STC Pay</option><option>UrPay</option><option>Other</option></select></div>
+      <div class="field"><label for="payNote">Note (optional)</label><input type="text" id="payNote" placeholder="Any note…"></div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px">
+      <button type="button" class="mini-btn" id="payFullBtn">Fill full due amount</button>
+    </div>
+    <div class="form-err" id="payErr"></div>
+    <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="paySave">SAVE PAYMENT</button></div>
+  </form>
+</div>
+
+<!-- ================= CONFIRM ================= -->
+<div class="overlay" id="confirmOverlay" style="z-index:120">
+  <div class="sheet" style="max-width:440px">
+    <div class="grab"></div>
+    <h3 id="cfTitle" style="font-size:19px;font-weight:900">Are you sure?</h3>
+    <p id="cfText" style="color:var(--muted);font-size:14px;line-height:1.6;margin:10px 0 22px"></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <button class="btn btn-ghost" id="cfNo">Cancel</button>
+      <button class="btn btn-danger" id="cfYes" style="background:linear-gradient(120deg,#ff7a7e,#e5484d);color:#fff;box-shadow:0 12px 24px rgba(229,72,77,.3)">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="loader"><div class="spinner"></div></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+/* ================================================================
+   RateX — SAR ⇄ BDT Trading Ledger
+   Buy : SAR sent → BDT stock (effective rate incl. 2.5% incentive)
+   Sell: BDT delivered in BD at YOUR sell rate → SAR receivable
+   Profit/trade = SAR due − (BDT out ÷ lot effective rate)
+   Actual profit = total profit × (SAR collected ÷ SAR due)
+================================================================ */
+const SUPABASE_URL = "https://mazhidqjpvcxnpgexxlx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hemhpZHFqcHZjeG5wZ2V4eGx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwMjU1OTksImV4cCI6MjEwODYwMTU5OX0.bRRDIb12b7Ysjl1eVA0FSFPnppzi0ywwP2VwnMM7RF0";
+
+/* ---------- utils ---------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const n  = v => { const x = parseFloat(v); return Number.isFinite(x) ? x : 0; };
+const r2 = v => Math.round((n(v) + Number.EPSILON) * 100) / 100;
+const fmt = (v, d=2) => n(v).toLocaleString("en-US",{minimumFractionDigits:d, maximumFractionDigits:d});
+const fmt0 = v => Math.round(n(v)).toLocaleString("en-US");
+const fmtRate = v => n(v) ? n(v).toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:5}) : "—";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const dFmt = s => { if(!s) return "—"; const d=new Date(s+"T12:00:00"); return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}); };
+const monthKey = s => (s||"").slice(0,7);
+const monthLabel = k => { const d=new Date(k+"-15T12:00:00"); return d.toLocaleDateString("en-GB",{month:"short",year:"2-digit"}); };
+const daysAgo = s => Math.max(0, Math.floor((new Date(todayStr()) - new Date(s+"T12:00:00")) / 864e5));
+const initials = s => (String(s||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]||"").join("") || "?").toUpperCase();
+const signedCls = v => n(v) > 0.004 ? "pos" : (n(v) < -0.004 ? "neg" : "");
+const signedFmt = v => (n(v) > 0 ? "+" : "") + fmt(v);
+
+function toast(msg, type=""){
+  const t = document.createElement("div");
+  t.className = "toast " + type; t.textContent = msg;
+  $("#toasts").appendChild(t);
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .35s"; setTimeout(()=>t.remove(), 360); }, 3800);
+}
+const setLoading = on => $("#loader").classList.toggle("show", !!on);
+async function busy(btn, fn, label){
+  if(!btn) return fn();
+  const old = btn.textContent; btn.disabled = true; btn.textContent = label || "Please wait…";
+  try { return await fn(); } finally { btn.disabled = false; btn.textContent = old; }
+}
+let cfResolve = null;
+function confirmBox(title, text, yes="Delete"){
+  $("#cfTitle").textContent = title; $("#cfText").textContent = text; $("#cfYes").textContent = yes;
+  $("#confirmOverlay").classList.add("open");
+  return new Promise(res => cfResolve = res);
+}
+$("#cfYes").addEventListener("click", ()=>{ $("#confirmOverlay").classList.remove("open"); cfResolve && cfResolve(true); });
+$("#cfNo").addEventListener("click",  ()=>{ $("#confirmOverlay").classList.remove("open"); cfResolve && cfResolve(false); });
+
+const openSheet  = id => $("#"+id).classList.add("open");
+const closeSheet = id => $("#"+id).classList.remove("open");
+$$("[data-close]").forEach(b => b.addEventListener("click", ()=> closeSheet(b.dataset.close)));
+$$(".overlay").forEach(ov => ov.addEventListener("click", e => { if(e.target === ov) ov.classList.remove("open"); }));
+function formErr(id, msg){ const el = $("#"+id); el.textContent = msg || ""; el.classList.toggle("show", !!msg); if(msg) el.scrollIntoView({behavior:"smooth", block:"center"}); }
+
+/* ---------- supabase (remember-me aware storage) ---------- */
+const dynStorage = {
+  getItem:    k => (localStorage.getItem("ratex_remember") === "0" ? sessionStorage : localStorage).getItem(k),
+  setItem:    (k,v) => (localStorage.getItem("ratex_remember") === "0" ? sessionStorage : localStorage).setItem(k, v),
+  removeItem: k => { localStorage.removeItem(k); sessionStorage.removeItem(k); }
+};
+let sb = null;
+try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth:{ storage: dynStorage, persistSession:true, autoRefreshToken:true } }); }
+catch(e){ console.error(e); }
+
+/* ---------- state ---------- */
+const S = { user:null, customers:[], lots:[], trades:[], allocs:[], pays:[] };
+let D = null; // derived
+let ui = { tab:"dashboard", typeFilter:"all", statusFilter:"all", search:"", period:"all", tradeMode:"bdt" };
+
+function rebuild(){
+  const lotMap = new Map(S.lots.map(l => [l.id, l]));
+  const custMap = new Map(S.customers.map(c => [c.id, c]));
+  const allocByTrade = new Map(), allocByLot = new Map(), paysByTrade = new Map();
+  S.allocs.forEach(a => {
+    if(!allocByTrade.has(a.trade_id)) allocByTrade.set(a.trade_id, []);
+    allocByTrade.get(a.trade_id).push(a);
+    if(!allocByLot.has(a.lot_id)) allocByLot.set(a.lot_id, []);
+    allocByLot.get(a.lot_id).push(a);
+  });
+  S.pays.forEach(p => { if(!paysByTrade.has(p.trade_id)) paysByTrade.set(p.trade_id, []); paysByTrade.get(p.trade_id).push(p); });
+
+  const lots = S.lots.map(l => {
+    const used = (allocByLot.get(l.id)||[]).reduce((s,a)=>s+n(a.bdt_allocated),0);
+    return { ...l, usedBdt:r2(used), remainingBdt:r2(n(l.total_bdt)-used), sarCost:r2(n(l.sar_amount)+n(l.fee_sar)) };
+  }).sort((a,b)=> (b.txn_date||"").localeCompare(a.txn_date||"") || (b.created_at||"").localeCompare(a.created_at||""));
+  lots.forEach(l => lotMap.set(l.id, l));
+
+  const trades = S.trades.map(t => {
+    const allocs = allocByTrade.get(t.id) || [];
+    const pays = (paysByTrade.get(t.id)||[]).sort((a,b)=>(a.txn_date||"").localeCompare(b.txn_date||""));
+    const costSar = allocs.reduce((s,a)=>s+n(a.cost_sar),0);
+    const paid = pays.reduce((s,p)=>s+n(p.sar_amount),0);
+    const dueTotal = n(t.sar_due);
+    const profit = dueTotal - costSar;
+    const ratio = dueTotal > 0 ? Math.min(1, paid/dueTotal) : 0;
+    const dueLeft = Math.max(0, dueTotal - paid);
+    return { ...t, allocs, pays, customer: custMap.get(t.customer_id) || null,
+      totalOutBdt: r2(n(t.bdt_amount)+n(t.delivery_charge_bdt)),
+      costSar:r2(costSar), paidSar:r2(paid), dueLeft:r2(dueLeft), profitSar:r2(profit),
+      actualProfit:r2(profit*ratio), pendingProfit:r2(profit*(1-ratio)), ratio,
+      status: dueLeft <= 0.005 && paid > 0 ? "Settled" : (paid > 0 ? "Partial" : "Pending") };
+  }).sort((a,b)=> (b.txn_date||"").localeCompare(a.txn_date||"") || (b.created_at||"").localeCompare(a.created_at||""));
+  const tradeMap = new Map(trades.map(t=>[t.id,t]));
+
+  const customers = S.customers.map(c => {
+    const ct = trades.filter(t=>t.customer_id===c.id);
+    return { ...c, trades:ct,
+      totalBdt: r2(ct.reduce((s,t)=>s+n(t.bdt_amount),0)),
+      totalDue: r2(ct.reduce((s,t)=>s+n(t.sar_due),0)),
+      paidSar:  r2(ct.reduce((s,t)=>s+t.paidSar,0)),
+      dueLeft:  r2(ct.reduce((s,t)=>s+t.dueLeft,0)),
+      profitSar:r2(ct.reduce((s,t)=>s+t.profitSar,0)),
+      openCount: ct.filter(t=>t.status!=="Settled").length };
+  });
+
+  const tot = {
+    bdtBalance: r2(lots.reduce((s,l)=>s+l.remainingBdt,0)),
+    bdtBought:  r2(lots.reduce((s,l)=>s+n(l.total_bdt),0)),
+    investedSar:r2(lots.reduce((s,l)=>s+l.sarCost,0)),
+    collectedSar:r2(S.pays.reduce((s,p)=>s+n(p.sar_amount),0)),
+    receivableSar:r2(trades.reduce((s,t)=>s+n(t.sar_due),0)),
+    pendingSar: r2(trades.reduce((s,t)=>s+t.dueLeft,0)),
+    soldBdt:    r2(trades.reduce((s,t)=>s+n(t.bdt_amount),0)),
+    profitSar:  r2(trades.reduce((s,t)=>s+t.profitSar,0)),
+    actualProfit:r2(trades.reduce((s,t)=>s+t.actualProfit,0)),
+    pendingProfit:r2(trades.reduce((s,t)=>s+t.pendingProfit,0)),
+    costSoldSar:r2(trades.reduce((s,t)=>s+t.costSar,0)),
+  };
+  tot.sarBalance = r2(tot.collectedSar - tot.investedSar);
+  const remainLots = lots.filter(l=>l.remainingBdt > 0.005);
+  const remainSarCost = remainLots.reduce((s,l)=> s + (n(l.effective_rate) ? l.remainingBdt / n(l.effective_rate) : 0), 0);
+  tot.avgCostRate = remainSarCost > 0 ? tot.bdtBalance / remainSarCost : 0;
+
+  D = { lotMap, custMap, tradeMap, lots, trades, customers, tot, allocByLot };
+  return D;
+}
+
+/* ---------- data ---------- */
+async function loadData(showSpin=true){
+  if(!sb || !S.user) return;
+  if(showSpin) setLoading(true);
+  try{
+    const q = (t, col="txn_date") => sb.from(t).select("*").order(col, {ascending:false});
+    const [c,l,t,a,p] = await Promise.all([
+      sb.from("ratex_customers").select("*").order("name"),
+      q("ratex_stock_lots"), q("ratex_trades"),
+      sb.from("ratex_trade_lots").select("*"), q("ratex_settlements")
+    ]);
+    const bad = [c,l,t,a,p].find(x=>x.error);
+    if(bad) throw bad.error;
+    S.customers=c.data||[]; S.lots=l.data||[]; S.trades=t.data||[]; S.allocs=a.data||[]; S.pays=p.data||[];
+    $("#setupBanner").innerHTML = "";
+    renderAll();
+  }catch(err){
+    console.error(err);
+    const msg = String(err.message||err);
+    if(/ratex_|relation|schema cache|could not find/i.test(msg)){
+      $("#setupBanner").innerHTML = `<div class="banner"><b>⚠ One-time database setup needed.</b><br>
+        Open <b>Supabase → SQL Editor</b>, paste the full content of <code>supabase-setup.sql</code> and click <b>Run</b>, then reload this page.
+        <br><small>Details: ${esc(msg)}</small></div>`;
+      S.customers=[];S.lots=[];S.trades=[];S.allocs=[];S.pays=[]; renderAll();
+    } else toast("Could not load data: " + msg, "error");
+  } finally { setLoading(false); }
+}
+
+/* ---------- navigation ---------- */
+function switchTab(tab){
+  ui.tab = tab;
+  $$(".page").forEach(p => p.classList.toggle("hidden", p.id !== "page-"+tab));
+  $$(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+$$(".bottom-nav button").forEach(b => b.addEventListener("click", ()=> switchTab(b.dataset.tab)));
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-goto]"); if(g) switchTab(g.dataset.goto);
+  if(e.target.closest("[data-open-stock]")) openStock();
+  if(e.target.closest("[data-open-trade]")) openTrade();
+});
+
+/* ================= RENDER ================= */
+function renderAll(){ rebuild(); renderDashboard(); renderTradePage(); renderSettlementPage(); renderAnalytics(); renderCustomerDatalist(); }
+
+function emptyBox(icon, title, text, btnHtml=""){
+  return `<div class="empty neu"><div class="eic">${icon}</div><h4>${title}</h4><p>${text}</p>${btnHtml}</div>`;
+}
+function lotLabel(l){ return `${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR @ ${fmtRate(l.effective_rate)}${l.source ? " · "+esc(l.source) : ""}`; }
+
+function statusPill(t){ return `<span class="pill pill-${t.status.toLowerCase()}">${t.status}</span>`; }
+
+function tradeCard(t, compact=false){
+  const cName = t.customer ? t.customer.name : "Unknown customer";
+  const allocTxt = t.allocs.map(a => { const l=D.lotMap.get(a.lot_id); return `<div class="row"><span>${l ? esc(lotLabel(l)) : "Lot"}</span><b>${fmt(a.bdt_allocated)} BDT · cost ${fmt(a.cost_sar)} SAR</b></div>`; }).join("") || `<div class="row"><span>No lot allocated</span></div>`;
+  const payTxt = t.pays.map(p=>`<div class="row"><span>${dFmt(p.txn_date)} · ${esc(p.method)}${p.note?" · "+esc(p.note):""}</span><b class="pos">+${fmt(p.sar_amount)} SAR</b></div>`).join("") || `<div class="row"><span>No payments yet</span></div>`;
+  return `<article class="card neu">
+    <div class="card-top">
+      <div class="avatar-c">${esc(initials(cName))}</div>
+      <div class="tt"><div class="t1">${esc(cName)}</div>
+      <div class="t2">${dFmt(t.txn_date)} · ${esc(t.delivery_method)}${t.receiver_info ? " · "+esc(t.receiver_info) : ""}${t.customer?.phone ? " · "+esc(t.customer.phone) : ""}</div></div>
+      ${statusPill(t)}
+    </div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">BDT Delivered</div><div class="v">${fmt(t.bdt_amount)} <small>BDT</small></div></div>
+      <div class="kv"><div class="l">Sell Rate</div><div class="v">${fmtRate(t.sell_rate)}</div></div>
+      <div class="kv"><div class="l">SAR Receivable</div><div class="v">${fmt(t.sar_due)} <small>SAR</small></div></div>
+      <div class="kv"><div class="l">Profit</div><div class="v ${signedCls(t.profitSar)}">${signedFmt(t.profitSar)} <small>SAR</small></div></div>
+      <div class="kv"><div class="l">Paid</div><div class="v pos">${fmt(t.paidSar)} <small>SAR</small></div></div>
+      <div class="kv"><div class="l">Due Left</div><div class="v ${t.dueLeft>0.005?"neg":""}">${fmt(t.dueLeft)} <small>SAR</small></div></div>
+      <div class="kv"><div class="l">Cost (SAR)</div><div class="v">${fmt(t.costSar)}</div></div>
+      <div class="kv"><div class="l">Actual Profit</div><div class="v ${signedCls(t.actualProfit)}">${signedFmt(t.actualProfit)} <small>SAR</small></div></div>
+    </div>
+    <div class="progress" style="margin-top:13px"><i style="width:${Math.round(t.ratio*100)}%"></i></div>
+    ${t.note ? `<p style="font-size:12.5px;color:var(--muted);margin:10px 2px 0">📝 ${esc(t.note)}</p>` : ""}
+    <div class="detail" id="detail-${t.id}">
+      <h5>Stock used (manual lots)</h5>${allocTxt}
+      <h5 style="margin-top:14px">Payments received</h5>${payTxt}
+      <div class="row" style="margin-top:6px"><span>Pending profit (unpaid part)</span><b class="${signedCls(t.pendingProfit)}">${signedFmt(t.pendingProfit)} SAR</b></div>
+    </div>
+    <div class="card-actions">
+      ${t.dueLeft > 0.005 ? `<button class="mini-btn blue" data-action="pay" data-id="${t.id}">＋ Receive Payment</button>` : ""}
+      <button class="mini-btn" data-action="detail" data-id="${t.id}">Details</button>
+      <button class="mini-btn" data-action="edit-trade" data-id="${t.id}">✎ Edit</button>
+      <button class="mini-btn red" data-action="del-trade" data-id="${t.id}">🗑 Delete</button>
+    </div></article>`;
+}
+
+function lotCard(l, full=true){
+  const soldPct = n(l.total_bdt) ? Math.min(100, Math.round(l.usedBdt / n(l.total_bdt) * 100)) : 0;
+  return `<article class="card neu">
+    <div class="card-top">
+      <div class="avatar-c" style="color:#fff;background:var(--grad)">⇩</div>
+      <div class="tt"><div class="t1">Stock In — ${fmt0(l.sar_amount)} SAR${l.source ? " via "+esc(l.source) : ""}</div>
+      <div class="t2">${dFmt(l.txn_date)} · Rate ${fmtRate(l.base_rate)} + ${fmt(l.incentive_pct,2)}% incentive${n(l.fee_sar) ? " · Fee "+fmt(l.fee_sar)+" SAR" : ""}</div></div>
+      <span class="pill pill-stock">${l.remainingBdt > 0.005 ? "In Stock" : "Sold Out"}</span>
+    </div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">BDT Deposited</div><div class="v">${fmt(l.total_bdt)}</div></div>
+      <div class="kv"><div class="l">Effective Rate</div><div class="v">${fmtRate(l.effective_rate)}</div></div>
+      <div class="kv"><div class="l">Sold</div><div class="v">${fmt(l.usedBdt)}</div></div>
+      <div class="kv"><div class="l">Remaining</div><div class="v" style="color:var(--blue2)">${fmt(l.remainingBdt)}</div></div>
+    </div>
+    <div class="progress" style="margin-top:13px"><i style="width:${soldPct}%"></i></div>
+    <div style="font-size:12px;color:var(--muted);margin-top:7px">${soldPct}% sold</div>
+    ${l.note ? `<p style="font-size:12.5px;color:var(--muted);margin:8px 2px 0">📝 ${esc(l.note)}</p>` : ""}
+    ${full ? `<div class="card-actions"><button class="mini-btn" data-action="edit-lot" data-id="${l.id}">✎ Edit</button><button class="mini-btn red" data-action="del-lot" data-id="${l.id}">🗑 Delete</button></div>` : ""}
+  </article>`;
+}
+
+/* ----- dashboard ----- */
+function renderDashboard(){
+  const t = D.tot;
+  const nm = S.user?.user_metadata?.full_name || "";
+  $("#dashGreeting").textContent = nm ? `Assalamu Alaikum, ${nm.split(" ")[0]}` : "Overview";
+  $("#dashDate").textContent = new Date().toLocaleDateString("en-GB",{weekday:"long", day:"numeric", month:"long", year:"numeric"});
+  $("#dBdtBalance").textContent = fmt(t.bdtBalance);
+  $("#dLotCount").textContent = D.lots.filter(l=>l.remainingBdt>0.005).length;
+  $("#dAvgCost").textContent = fmtRate(t.avgCostRate);
+  $("#dBought").textContent = fmt0(t.bdtBought);
+  $("#dSarBalance").textContent = fmt(t.sarBalance);
+  $("#dSarBalance").parentElement.className = "vl " + signedCls(t.sarBalance);
+  $("#dSarSub").textContent = `Collected ${fmt(t.collectedSar)} − Invested ${fmt(t.investedSar)} SAR`;
+  const openN = D.trades.filter(x=>x.status!=="Settled").length;
+  $("#dPendingSar").textContent = fmt(t.pendingSar);
+  $("#dPendingSub").textContent = openN ? `${openN} open trade${openN>1?"s":""} unpaid` : "All settled 🎉";
+  $("#dActualProfit").textContent = fmt(t.actualProfit);
+  $("#dActualProfit").parentElement.className = "vl " + signedCls(t.actualProfit);
+  $("#dPendingProfit").textContent = fmt(t.pendingProfit);
+  $("#dPendingProfit").parentElement.className = "vl " + signedCls(t.pendingProfit);
+  const ratioPct = t.receivableSar > 0 ? Math.round(t.collectedSar / t.receivableSar * 100) : 0;
+  $("#dCollectRatio").textContent = ratioPct + "% collected";
+  $("#dCollectBar").style.width = Math.min(100, ratioPct) + "%";
+  $("#dInvested").textContent = fmt0(t.investedSar);
+  $("#dSoldBdt").textContent = fmt0(t.soldBdt);
+  $("#dCollected").textContent = fmt0(t.collectedSar);
+  $("#dTotalDue").textContent = `Total receivable ${fmt(t.receivableSar)} SAR`;
+  $("#dTotalProfit").innerHTML = `Total profit <b class="${signedCls(t.profitSar)}">${signedFmt(t.profitSar)} SAR</b>`;
+
+  $("#dashLots").innerHTML = D.lots.length
+    ? D.lots.slice(0,3).map(l=>lotCard(l,false)).join("")
+    : emptyBox("⇩","No BDT stock yet","Send a remittance first — tap Stock In and enter the SAR you sent, the exchange rate and the 2.5% incentive. RateX calculates your deposited BDT and true cost rate.", `<button class="btn btn-grad" data-open-stock>＋ Add First Stock</button>`);
+
+  const dues = D.customers.filter(c=>c.dueLeft>0.005).sort((a,b)=>b.dueLeft-a.dueLeft);
+  $("#dashDues").innerHTML = dues.length
+    ? dues.slice(0,4).map(c=>customerDueRow(c)).join("")
+    : `<div class="list-row neu-sm"><div class="avatar-c" style="color:var(--green)">✓</div><div class="tt"><b>No pending dues</b><div style="font-size:12px;color:var(--muted)">Everyone has settled. Great!</div></div></div>`;
+
+  const acts = [
+    ...D.trades.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇄","#d97706", `Sold ${fmt0(x.bdt_amount)} BDT to ${esc(x.customer?.name||"customer")}`, `${fmt(x.sar_due)} SAR @ ${fmtRate(x.sell_rate)}`, x.status)})),
+    ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇩","var(--blue2)", `Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
+    ...S.pays.map(p=>{ const tr=D.tradeMap.get(p.trade_id); return {date:p.txn_date, sort:(p.created_at||p.txn_date), html:activityRow("✓","var(--green)", `Received ${fmt(p.sar_amount)} SAR${tr? " from "+esc(tr.customer?.name||"customer"):""}`, esc(p.method), dFmt(p.txn_date))}; })
+  ].sort((a,b)=> String(b.sort).localeCompare(String(a.sort))).slice(0,7);
+  $("#dashRecent").innerHTML = acts.length ? acts.map(a=>a.html).join("") : `<div class="list-row neu-sm"><div class="tt" style="color:var(--muted);font-size:13.5px">No activity yet. Your trades, stock and payments will appear here.</div></div>`;
+}
+function activityRow(icon, color, title, sub, right){
+  return `<div class="list-row neu-sm"><div class="avatar-c" style="color:${color}">${icon}</div>
+    <div class="tt"><b style="font-size:14px">${title}</b><div style="font-size:12px;color:var(--muted);margin-top:2px">${sub}</div></div>
+    <div class="rv"><small>${esc(right)}</small></div></div>`;
+}
+function customerDueRow(c){
+  const firstOpen = c.trades.filter(t=>t.dueLeft>0.005).sort((a,b)=>(a.txn_date||"").localeCompare(b.txn_date||""))[0];
+  return `<div class="list-row neu-sm"><div class="avatar-c">${esc(initials(c.name))}</div>
+    <div class="tt"><b style="font-size:14.5px">${esc(c.name)}</b><div style="font-size:12px;color:var(--muted);margin-top:2px">${c.phone?esc(c.phone)+" · ":""}${c.openCount} open trade${c.openCount>1?"s":""} · bought ${fmt0(c.totalBdt)} BDT</div></div>
+    <div class="rv"><span class="neg">${fmt(c.dueLeft)} SAR</span><small>due</small></div>
+    ${firstOpen ? `<button class="mini-btn blue" data-action="pay" data-id="${firstOpen.id}">Collect</button>` : ""}</div>`;
+}
+
+/* ----- trade page ----- */
+function renderTradePage(){
+  const q = ui.search.trim().toLowerCase();
+  const matchTrade = t => (ui.statusFilter==="all" || t.status===ui.statusFilter) &&
+    (!q || [t.customer?.name, t.customer?.phone, t.delivery_method, t.receiver_info, t.note].join(" ").toLowerCase().includes(q));
+  const matchLot = l => !q || [l.source, l.note].join(" ").toLowerCase().includes(q);
+  let items = [];
+  if(ui.typeFilter !== "stock") items.push(...D.trades.filter(matchTrade).map(t=>({type:"sell", date:t.txn_date, sort:t.created_at||t.txn_date, obj:t})));
+  if(ui.typeFilter !== "sell" && ui.statusFilter==="all") items.push(...D.lots.filter(matchLot).map(l=>({type:"stock", date:l.txn_date, sort:l.created_at||l.txn_date, obj:l})));
+  items.sort((a,b)=> String(b.date).localeCompare(String(a.date)) || String(b.sort).localeCompare(String(a.sort)));
+  $("#tradeCount").textContent = items.length + " record" + (items.length===1?"":"s");
+  $("#tradeList").innerHTML = items.length
+    ? items.map(i => i.type==="sell" ? tradeCard(i.obj) : lotCard(i.obj)).join("")
+    : emptyBox("⇄","Nothing here yet","No records match this filter. Add a Stock In (remittance you sent) or a Sell Trade (BDT delivered to a customer) to get started.",
+      `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-neu" data-open-stock>＋ Stock In</button><button class="btn btn-grad" data-open-trade>＋ Sell Trade</button></div>`);
+}
+$("#tradeSearch").addEventListener("input", e=>{ ui.search = e.target.value; renderTradePage(); });
+$("#tradeStatusFilter").addEventListener("change", e=>{ ui.statusFilter = e.target.value; renderTradePage(); });
+$$("[data-typefilter]").forEach(b=> b.addEventListener("click", ()=>{ ui.typeFilter=b.dataset.typefilter; $$("[data-typefilter]").forEach(x=>x.classList.toggle("active", x===b)); renderTradePage(); }));
+
+/* ----- settlement page ----- */
+function renderSettlementPage(){
+  const t = D.tot;
+  const open = D.trades.filter(x=>x.dueLeft>0.005).sort((a,b)=>(a.txn_date||"").localeCompare(b.txn_date||""));
+  const dues = D.customers.filter(c=>c.dueLeft>0.005).sort((a,b)=>b.dueLeft-a.dueLeft);
+  const mk = monthKey(todayStr());
+  const monthPays = S.pays.filter(p=>monthKey(p.txn_date)===mk);
+  $("#sPending").textContent = fmt(t.pendingSar);
+  $("#sPendingSub").textContent = `${open.length} open trade${open.length===1?"":"s"}`;
+  $("#sCustCount").textContent = dues.length;
+  $("#sMonth").textContent = fmt(monthPays.reduce((s,p)=>s+n(p.sar_amount),0));
+  $("#sMonthSub").textContent = `${monthPays.length} payment${monthPays.length===1?"":"s"} in ${monthLabel(mk)}`;
+  if(open.length){
+    const days = daysAgo(open[0].txn_date);
+    $("#sOldest").textContent = days + (days===1 ? " day" : " days");
+    $("#sOldestSub").textContent = `${open[0].customer?.name || "Customer"} · since ${dFmt(open[0].txn_date)}`;
+  } else { $("#sOldest").textContent = "—"; $("#sOldestSub").textContent = "All clear 🎉"; }
+
+  $("#customerDues").innerHTML = dues.length ? dues.map(customerDueRow).join("")
+    : `<div class="list-row neu-sm"><div class="avatar-c" style="color:var(--green)">✓</div><div class="tt"><b>No customer dues</b><div style="font-size:12px;color:var(--muted)">All customers have fully settled.</div></div></div>`;
+
+  $("#openTrades").innerHTML = open.length ? open.map(x=>tradeCard(x)).join("")
+    : emptyBox("✓","No open trades","Every sell trade is fully settled. New credit (baki) trades will appear here automatically.");
+
+  const pays = [...S.pays].sort((a,b)=> String(b.txn_date).localeCompare(String(a.txn_date)) || String(b.created_at).localeCompare(String(a.created_at)));
+  $("#payHistory").innerHTML = pays.length ? pays.map(p=>{
+    const tr = D.tradeMap.get(p.trade_id);
+    return `<div class="list-row neu-sm"><div class="avatar-c" style="color:var(--green)">✓</div>
+      <div class="tt"><b style="font-size:14.5px">${esc(tr?.customer?.name || "Customer")}</b>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">${dFmt(p.txn_date)} · ${esc(p.method)}${tr? " · trade of "+fmt0(tr.bdt_amount)+" BDT":""}${p.note?" · "+esc(p.note):""}</div></div>
+      <div class="rv pos">+${fmt(p.sar_amount)} SAR</div>
+      <button class="mini-btn" data-action="edit-pay" data-id="${p.id}">✎</button>
+      <button class="mini-btn red" data-action="del-pay" data-id="${p.id}">🗑</button></div>`;
+  }).join("") : `<div class="list-row neu-sm"><div class="tt" style="color:var(--muted);font-size:13.5px">No payments recorded yet.</div></div>`;
+}
+
+/* ----- analytics ----- */
+function periodTrades(){
+  const now = new Date(todayStr());
+  return D.trades.filter(t=>{
+    if(ui.period==="all") return true;
+    const d = new Date(t.txn_date+"T12:00:00");
+    if(ui.period==="month") return monthKey(t.txn_date) === monthKey(todayStr());
+    if(ui.period==="year") return d.getFullYear() === now.getFullYear();
+    return (now - d)/864e5 <= n(ui.period);
+  });
+}
+function renderAnalytics(){
+  const ts = periodTrades();
+  const profit = ts.reduce((s,t)=>s+t.profitSar,0), actual = ts.reduce((s,t)=>s+t.actualProfit,0);
+  const cost = ts.reduce((s,t)=>s+t.costSar,0);
+  const sellBdt = ts.reduce((s,t)=>s+n(t.bdt_amount),0), sellSar = ts.reduce((s,t)=>s+n(t.sar_due),0);
+  const avgSell = sellSar ? sellBdt/sellSar : 0;
+  const avgBuy = cost ? ts.reduce((s,t)=>s+t.totalOutBdt,0)/cost : 0;
+  $("#aProfit").textContent = fmt(profit);
+  $("#aProfit").parentElement.className = "vl " + signedCls(profit);
+  $("#aProfitSub").innerHTML = `Actual <b class="${signedCls(actual)}">${fmt(actual)}</b> · Pending ${fmt(profit-actual)} SAR`;
+  $("#aMargin").textContent = cost ? fmt(profit/cost*100,1)+"%" : "—";
+  $("#aRates").textContent = avgBuy||avgSell ? `${fmtRate(avgBuy)} / ${fmtRate(avgSell)}` : "—";
+  $("#aSpread").textContent = avgBuy&&avgSell ? `Spread ${fmtRate(avgBuy-avgSell)} BDT per SAR (higher = better)` : "Buy effective vs sell rate";
+  $("#aTrades").textContent = ts.length;
+  $("#aTradesSub").textContent = `${ts.filter(t=>t.status==="Settled").length} settled · ${fmt0(sellBdt)} BDT sold`;
+
+  // monthly profit bars
+  const byM = new Map();
+  ts.forEach(t=>{ const k=monthKey(t.txn_date); byM.set(k,(byM.get(k)||0)+t.profitSar); });
+  const months = [...byM.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
+  const maxAbs = Math.max(1, ...months.map(m=>Math.abs(m[1])));
+  $("#aMonthly").innerHTML = months.length ? months.map(([k,v])=>`
+    <div class="bar-row"><span class="bl">${monthLabel(k)}</span>
+    <div class="bar-track"><div class="bar-fill ${v<0?"negf":""}" style="width:${Math.max(2,Math.abs(v)/maxAbs*100)}%"></div></div>
+    <span class="bv ${signedCls(v)}">${signedFmt(v)}</span></div>`).join("")
+    : `<p style="color:var(--muted);font-size:13.5px;margin:6px 0">No trades in this period yet.</p>`;
+
+  // collection donut (period trades)
+  const due = sellSar, paid = ts.reduce((s,t)=>s+t.paidSar,0), left = Math.max(0,due-paid);
+  const pct = due ? Math.round(paid/due*100) : 0;
+  $("#aDonut").style.background = `conic-gradient(#0a84ff 0% ${pct}%, #f0b429 ${pct}% 100%)`;
+  $("#aDonutPct").textContent = pct + "%";
+  $("#aDonutLegend").innerHTML = `
+    <div><span class="dot" style="background:#0a84ff"></span>Collected <b>${fmt(paid)} SAR</b></div>
+    <div><span class="dot" style="background:#f0b429"></span>Still due <b>${fmt(left)} SAR</b></div>
+    <div style="color:var(--muted);font-size:12.5px;line-height:1.5">Total receivable in period: ${fmt(due)} SAR</div>`;
+
+  // lot performance (all lots; revenue attributed proportionally)
+  $("#aLots").innerHTML = D.lots.length ? D.lots.map(l=>{
+    const allocs = D.allocByLot.get(l.id)||[];
+    let lprofit = 0;
+    allocs.forEach(a=>{ const tr=D.tradeMap.get(a.trade_id); if(tr && tr.totalOutBdt>0) lprofit += n(tr.sar_due)*(n(a.bdt_allocated)/tr.totalOutBdt) - n(a.cost_sar); });
+    return `<tr><td><b>${dFmt(l.txn_date)}</b><br><small>${fmt0(l.sar_amount)} SAR${l.source?" · "+esc(l.source):""}</small></td>
+      <td>${fmtRate(l.effective_rate)}</td><td>${fmt0(l.total_bdt)}</td><td>${fmt0(l.usedBdt)}</td><td>${fmt0(l.remainingBdt)}</td>
+      <td class="${signedCls(lprofit)}">${signedFmt(lprofit)}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No stock lots yet.</td></tr>`;
+
+  // monthly rate trend (all data)
+  const mk2 = new Map();
+  const bucket = k => { if(!mk2.has(k)) mk2.set(k,{buyBdt:0,buySar:0,sellBdt:0,sellSar:0,profit:0}); return mk2.get(k); };
+  D.lots.forEach(l=>{ const b=bucket(monthKey(l.txn_date)); b.buyBdt+=n(l.total_bdt); b.buySar+=l.sarCost; });
+  D.trades.forEach(t=>{ const b=bucket(monthKey(t.txn_date)); b.sellBdt+=n(t.bdt_amount); b.sellSar+=n(t.sar_due); b.profit+=t.profitSar; });
+  const rows = [...mk2.entries()].sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
+  $("#aRateTrend").innerHTML = rows.length ? rows.map(([k,b])=>{
+    const buy=b.buySar?b.buyBdt/b.buySar:0, sell=b.sellSar?b.sellBdt/b.sellSar:0;
+    return `<tr><td><b>${monthLabel(k)}</b></td><td>${buy?fmtRate(buy):"—"}</td><td>${sell?fmtRate(sell):"—"}</td>
+      <td>${buy&&sell?fmtRate(buy-sell):"—"}</td><td>${fmt0(b.sellBdt)}</td><td class="${signedCls(b.profit)}">${signedFmt(b.profit)}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No data yet.</td></tr>`;
+
+  const tops = [...D.customers].filter(c=>c.trades.length).sort((a,b)=>b.profitSar-a.profitSar).slice(0,6);
+  $("#aCustomers").innerHTML = tops.length ? tops.map((c,i)=>`
+    <div class="list-row neu-sm"><div class="avatar-c">${i+1}</div>
+    <div class="tt"><b style="font-size:14.5px">${esc(c.name)}</b><div style="font-size:12px;color:var(--muted);margin-top:2px">${c.trades.length} trades · ${fmt0(c.totalBdt)} BDT · paid ${fmt(c.paidSar)} SAR${c.dueLeft>0.005?` · <span class="neg">due ${fmt(c.dueLeft)}</span>`:""}</div></div>
+    <div class="rv ${signedCls(c.profitSar)}">${signedFmt(c.profitSar)}<small style="color:var(--muted)">SAR profit</small></div></div>`).join("")
+    : `<div class="list-row neu-sm"><div class="tt" style="color:var(--muted);font-size:13.5px">No customers yet.</div></div>`;
+}
+$("#analyticsPeriod").addEventListener("change", e=>{ ui.period=e.target.value; renderAnalytics(); });
+
+function renderCustomerDatalist(){
+  $("#customerList").innerHTML = S.customers.map(c=>`<option value="${esc(c.name)}">`).join("");
+}
+$("#trCustName").addEventListener("change", e=>{
+  const c = S.customers.find(x=>x.name.toLowerCase() === e.target.value.trim().toLowerCase());
+  if(c && !$("#trCustPhone").value) $("#trCustPhone").value = c.phone || "";
+});
+
+/* ================= STOCK FORM ================= */
+let stockManualTotal = false;
+function stockCalc(updateTotal=true){
+  const sar=n($("#stSar").value), fee=n($("#stFee").value), rate=n($("#stRate").value), inc=n($("#stIncentive").value);
+  const base = sar*rate, auto = r2(base*(1+inc/100));
+  if(updateTotal && !stockManualTotal && auto>0) $("#stTotalBdt").value = auto;
+  const total = n($("#stTotalBdt").value);
+  const eff = (sar+fee)>0 && total>0 ? total/(sar+fee) : 0;
+  $("#stPreview").innerHTML = `
+    <div class="row"><span>BDT before incentive (${fmt(sar)} × ${fmtRate(rate)})</span><b>${fmt(base)} BDT</b></div>
+    <div class="row"><span>+ Govt. incentive ${fmt(inc,2)}%</span><b>${fmt(Math.max(0,total-base))} BDT</b></div>
+    <div class="row"><span>Total SAR cost (incl. fee)</span><b>${fmt(sar+fee)} SAR</b></div>
+    <div class="row total"><span>Effective cost rate</span><span>${fmtRate(eff)} BDT/SAR</span></div>`;
+  return {sar, fee, rate, inc, total, eff};
+}
+["stSar","stFee","stRate","stIncentive"].forEach(id=> $("#"+id).addEventListener("input", ()=>stockCalc(true)));
+$("#stTotalBdt").addEventListener("input", ()=>{ stockManualTotal = true; stockCalc(false); });
+$("#stRecalc").addEventListener("click", ()=>{ stockManualTotal=false; stockCalc(true); });
+
+function openStock(lot=null){
+  formErr("stErr",""); stockManualTotal = !!lot;
+  $("#stockTitle").textContent = lot ? "Edit Stock In" : "Stock In — Remittance Sent";
+  $("#stId").value = lot?.id || "";
+  $("#stDate").value = lot?.txn_date || todayStr();
+  $("#stSource").value = lot?.source || "";
+  $("#stSar").value = lot?.sar_amount ?? "";
+  $("#stFee").value = lot?.fee_sar ?? 0;
+  $("#stRate").value = lot?.base_rate ?? "";
+  $("#stIncentive").value = lot?.incentive_pct ?? 2.5;
+  $("#stTotalBdt").value = lot?.total_bdt ?? "";
+  $("#stNote").value = lot?.note || "";
+  stockCalc(!lot);
+  openSheet("stockOverlay");
+}
+$("#stockForm").addEventListener("submit", async e=>{
+  e.preventDefault(); formErr("stErr","");
+  const {sar,fee,rate,inc,total,eff} = stockCalc(false);
+  if(!(sar>0 && rate>0 && total>0 && eff>0)) return formErr("stErr","Please enter SAR sent, exchange rate and total BDT deposited.");
+  const id = $("#stId").value;
+  if(id){
+    const lot = D.lotMap.get(id);
+    if(lot && total < lot.usedBdt - 0.005) return formErr("stErr",`Already ${fmt(lot.usedBdt)} BDT from this lot is sold — total BDT cannot be less than that.`);
+  }
+  const payload = { user_id:S.user.id, txn_date:$("#stDate").value, source:$("#stSource").value.trim(),
+    sar_amount:r2(sar), fee_sar:r2(fee), base_rate:rate, incentive_pct:inc, total_bdt:r2(total),
+    effective_rate: Math.round(eff*1e6)/1e6, note:$("#stNote").value.trim() };
+  await busy($("#stSave"), async ()=>{
+    const res = id ? await sb.from("ratex_stock_lots").update(payload).eq("id", id)
+                   : await sb.from("ratex_stock_lots").insert(payload);
+    if(res.error) return formErr("stErr", res.error.message);
+    closeSheet("stockOverlay"); toast(id ? "Stock updated ✅" : "Stock added — BDT balance updated ✅", "success");
+    await loadData(false);
+  }, "Saving…");
+});
+
+/* ================= SELL TRADE FORM ================= */
+function setTradeMode(mode){
+  ui.tradeMode = mode;
+  $("#modeBdt").classList.toggle("active", mode==="bdt");
+  $("#modeSar").classList.toggle("active", mode==="sar");
+  $("#trSarDue").readOnly = mode==="bdt";
+  $("#trBdt").readOnly = mode==="sar";
+  tradeAmounts();
+}
+$("#modeBdt").addEventListener("click", ()=>setTradeMode("bdt"));
+$("#modeSar").addEventListener("click", ()=>setTradeMode("sar"));
+
+function tradeAmounts(){
+  const rate = n($("#trRate").value);
+  if(rate > 0){
+    if(ui.tradeMode==="bdt"){ const b=n($("#trBdt").value); if(b>0) $("#trSarDue").value = r2(b/rate); }
+    else { const s=n($("#trSarDue").value); if(s>0) $("#trBdt").value = r2(s*rate); }
+  }
+  tradePreview();
+}
+["trBdt","trRate","trSarDue","trCharge"].forEach(id=> $("#"+id).addEventListener("input", tradeAmounts));
+
+function tradeNeeded(){ return r2(n($("#trBdt").value) + n($("#trCharge").value)); }
+function lotAvailable(lotId, editingTradeId=""){
+  const lot = D?.lotMap.get(lotId); if(!lot) return 0;
+  const usedByOthers = S.allocs.filter(a=>a.lot_id===lotId && a.trade_id!==editingTradeId).reduce((s,a)=>s+n(a.bdt_allocated),0);
+  return r2(n(lot.total_bdt) - usedByOthers);
+}
+function allocRowHtml(selectedId="", amount=""){
+  const editingId = $("#trId").value;
+  const opts = ['<option value="">— Select stock lot —</option>']
+    .concat(D.lots.map(l=>{
+      const av = lotAvailable(l.id, editingId);
+      return `<option value="${l.id}" ${l.id===selectedId?"selected":""} ${av<=0.005 && l.id!==selectedId ? "disabled":""}>${esc(lotLabel(l))} · Avail. ${fmt(av)} BDT</option>`;
+    })).join("");
+  return `<div class="alloc-row">
+    <select class="alloc-lot">${opts}</select>
+    <input type="number" class="alloc-amt" min="0" step="any" inputmode="decimal" placeholder="BDT amount" value="${amount}">
+    <button type="button" class="alloc-del" title="Remove">✕</button>
+    <div class="av"></div></div>`;
+}
+function refreshAllocRows(autoFillRow=null){
+  const editingId = $("#trId").value, needed = tradeNeeded();
+  const rows = $$("#allocRows .alloc-row");
+  rows.forEach(row=>{
+    const sel = $(".alloc-lot", row), amt = $(".alloc-amt", row), av = $(".av", row);
+    if(!sel.value){ av.textContent=""; return; }
+    const avail = lotAvailable(sel.value, editingId);
+    av.textContent = `Available in this lot: ${fmt(avail)} BDT`;
+    if(row === autoFillRow){
+      const others = rows.filter(r=>r!==row).reduce((s,r)=>s+n($(".alloc-amt",r).value),0);
+      const want = Math.max(0, needed - others);
+      amt.value = r2(Math.min(want || avail, avail));
+    }
+  });
+  tradePreview();
+}
+$("#allocRows").addEventListener("change", e=>{
+  if(e.target.classList.contains("alloc-lot")) refreshAllocRows(e.target.closest(".alloc-row"));
+});
+$("#allocRows").addEventListener("input", e=>{ if(e.target.classList.contains("alloc-amt")) tradePreview(); });
+$("#allocRows").addEventListener("click", e=>{
+  const del = e.target.closest(".alloc-del");
+  if(del){ const rows=$$("#allocRows .alloc-row"); if(rows.length>1) del.closest(".alloc-row").remove(); else { $(".alloc-lot",del.closest(".alloc-row")).value=""; $(".alloc-amt",del.closest(".alloc-row")).value=""; } refreshAllocRows(); }
+});
+$("#addAllocBtn").addEventListener("click", ()=>{ $("#allocRows").insertAdjacentHTML("beforeend", allocRowHtml()); refreshAllocRows(); });
+
+function readAllocations(){
+  return $$("#allocRows .alloc-row").map(row=>({ lot_id:$(".alloc-lot",row).value, bdt:r2(n($(".alloc-amt",row).value)) })).filter(a=>a.lot_id || a.bdt>0);
+}
+function tradePreview(){
+  const needed = tradeNeeded(), sarDue = n($("#trSarDue").value);
+  const allocs = readAllocations();
+  const allocated = r2(allocs.reduce((s,a)=>s+a.bdt,0));
+  let cost = 0;
+  allocs.forEach(a=>{ const l=D?.lotMap.get(a.lot_id); if(l && n(l.effective_rate)) cost += a.bdt / n(l.effective_rate); });
+  cost = r2(cost);
+  const profit = r2(sarDue - cost);
+  const left = r2(needed - allocated);
+  const margin = cost>0 ? fmt(profit/cost*100,1) : "—";
+  $("#trPreview").innerHTML = `
+    <div class="row"><span>Stock going out (delivered + charge)</span><b>${fmt(needed)} BDT</b></div>
+    <div class="row"><span>Allocated from lots</span><b class="${Math.abs(left)<=0.009 && needed>0 ? "pos":"neg"}">${fmt(allocated)} BDT ${needed>0 ? (Math.abs(left)<=0.009 ? "✓" : `· ${left>0? fmt(left)+" left" : fmt(-left)+" extra"}`) : ""}</b></div>
+    <div class="row"><span>Your cost of this BDT</span><b>${fmt(cost)} SAR</b></div>
+    <div class="row"><span>Customer pays you</span><b>${fmt(sarDue)} SAR</b></div>
+    <div class="row total"><span>Estimated profit (${margin}${cost>0?"%":""})</span><span class="${signedCls(profit)}">${sarDue>0&&allocated>0 ? signedFmt(profit)+" SAR" : "—"}</span></div>`;
+  return {needed, allocated, left, cost, profit, allocs, sarDue};
+}
+
+function openTrade(trade=null){
+  if(!D.lots.length){ toast("Add Stock In first — you need BDT stock before selling.", "error"); openStock(); return; }
+  formErr("trErr","");
+  $("#tradeTitle").textContent = trade ? "Edit Sell Trade" : "New Sell Trade";
+  $("#trId").value = trade?.id || "";
+  $("#trDate").value = trade?.txn_date || todayStr();
+  $("#trMethod").value = trade?.delivery_method || "bKash";
+  $("#trCustName").value = trade?.customer?.name || "";
+  $("#trCustPhone").value = trade?.customer?.phone || "";
+  $("#trReceiver").value = trade?.receiver_info || "";
+  $("#trBdt").value = trade?.bdt_amount ?? "";
+  $("#trRate").value = trade?.sell_rate ?? "";
+  $("#trSarDue").value = trade?.sar_due ?? "";
+  $("#trCharge").value = trade?.delivery_charge_bdt ?? 0;
+  $("#trNote").value = trade?.note || "";
+  $("#initialPayWrap").classList.toggle("hidden", !!trade);
+  $("#trInitPay").value = 0;
+  setTradeMode("bdt");
+  $("#allocRows").innerHTML = trade?.allocs?.length
+    ? trade.allocs.map(a=>allocRowHtml(a.lot_id, a.bdt_allocated)).join("")
+    : allocRowHtml();
+  refreshAllocRows();
+  openSheet("tradeOverlay");
+}
+
+async function ensureCustomer(name, phone){
+  const nm = name.trim(), ph = phone.trim();
+  let c = S.customers.find(x=>x.name.toLowerCase()===nm.toLowerCase() && (x.phone||"")===ph)
+       || S.customers.find(x=>x.name.toLowerCase()===nm.toLowerCase() && (!ph || !x.phone));
+  if(c){
+    if(ph && !c.phone) await sb.from("ratex_customers").update({phone:ph}).eq("id", c.id);
+    return c.id;
+  }
+  const {data, error} = await sb.from("ratex_customers").insert({user_id:S.user.id, name:nm, phone:ph}).select().single();
+  if(error) throw error;
+  S.customers.push(data);
+  return data.id;
+}
+
+$("#tradeForm").addEventListener("submit", async e=>{
+  e.preventDefault(); formErr("trErr","");
+  const editingId = $("#trId").value;
+  const custName = $("#trCustName").value.trim();
+  const bdt = n($("#trBdt").value), rate = n($("#trRate").value), sarDue = n($("#trSarDue").value), charge = n($("#trCharge").value);
+  if(!custName) return formErr("trErr","Customer name is required — dues are tracked per customer.");
+  if(!(bdt>0 && rate>0 && sarDue>0)) return formErr("trErr","Enter BDT amount, your sell rate and the SAR total.");
+  const pv = tradePreview();
+  if(!pv.allocs.length || pv.allocs.some(a=>!a.lot_id || !(a.bdt>0))) return formErr("trErr","Select which stock lot(s) this BDT comes from, with amounts.");
+  const seen = new Set();
+  for(const a of pv.allocs){
+    if(seen.has(a.lot_id)) return formErr("trErr","The same lot is selected twice — merge it into one row.");
+    seen.add(a.lot_id);
+    const av = lotAvailable(a.lot_id, editingId);
+    if(a.bdt > av + 0.005) return formErr("trErr",`A lot has only ${fmt(av)} BDT available, but you allocated ${fmt(a.bdt)} BDT. Reduce it or add another lot.`);
+  }
+  if(Math.abs(pv.left) > 0.009) return formErr("trErr",`Allocated ${fmt(pv.allocated)} BDT but this trade needs ${fmt(pv.needed)} BDT (delivered + delivery charge). ${pv.left>0 ? "Allocate "+fmt(pv.left)+" BDT more." : "Remove "+fmt(-pv.left)+" BDT."}`);
+  const initPay = editingId ? 0 : n($("#trInitPay").value);
+  if(initPay > sarDue + 0.005) return formErr("trErr","SAR received now cannot be more than the total SAR due.");
+
+  await busy($("#trSave"), async ()=>{
+    try{
+      const customer_id = await ensureCustomer(custName, $("#trCustPhone").value);
+      const payload = { user_id:S.user.id, customer_id, txn_date:$("#trDate").value,
+        delivery_method:$("#trMethod").value, receiver_info:$("#trReceiver").value.trim(),
+        bdt_amount:r2(bdt), delivery_charge_bdt:r2(charge), sell_rate:rate, sar_due:r2(sarDue),
+        note:$("#trNote").value.trim() };
+      let tradeId = editingId, created = false;
+      if(editingId){
+        const {error} = await sb.from("ratex_trades").update(payload).eq("id", editingId);
+        if(error) throw error;
+      } else {
+        const {data, error} = await sb.from("ratex_trades").insert(payload).select().single();
+        if(error) throw error;
+        tradeId = data.id; created = true;
+      }
+      try{
+        const del = await sb.from("ratex_trade_lots").delete().eq("trade_id", tradeId);
+        if(del.error) throw del.error;
+        const rows = pv.allocs.map(a=>{
+          const lot = D.lotMap.get(a.lot_id), cr = n(lot.effective_rate);
+          return { user_id:S.user.id, trade_id:tradeId, lot_id:a.lot_id, bdt_allocated:a.bdt,
+                   cost_rate:cr, cost_sar: Math.round((a.bdt/cr)*10000)/10000 };
+        });
+        const ins = await sb.from("ratex_trade_lots").insert(rows);
+        if(ins.error) throw ins.error;
+        if(initPay > 0){
+          const pay = await sb.from("ratex_settlements").insert({ user_id:S.user.id, trade_id:tradeId,
+            txn_date:$("#trDate").value, sar_amount:r2(initPay), method:$("#trInitMethod").value, note:"Paid at trade time" });
+          if(pay.error) throw pay.error;
+        }
+      }catch(inner){
+        if(created) await sb.from("ratex_trades").delete().eq("id", tradeId); // rollback orphan
+        throw inner;
+      }
+      closeSheet("tradeOverlay");
+      toast(editingId ? "Trade updated ✅" : `Trade saved ✅ Profit ${signedFmt(pv.profit)} SAR${sarDue-initPay>0.005 ? ` · ${fmt(sarDue-initPay)} SAR pending` : " · fully paid"}`, "success");
+      await loadData(false);
+    }catch(err){ formErr("trErr", err.message || String(err)); }
+  }, "Saving…");
+});
+
+/* ================= SETTLEMENT FORM ================= */
+function payDuePreview(){
+  const tid = $("#payTradeSel").value, editingPayId = $("#payId").value;
+  const t = D?.tradeMap.get(tid);
+  if(!t){ $("#payPreview").innerHTML = `<div class="row"><span>Select a trade</span></div>`; return null; }
+  const ownOld = editingPayId ? n(S.pays.find(p=>p.id===editingPayId)?.sar_amount) : 0;
+  const dueBefore = r2(t.dueLeft + ownOld);
+  const amt = n($("#payAmount").value);
+  $("#payPreview").innerHTML = `
+    <div class="row"><span>${esc(t.customer?.name||"Customer")} · ${fmt0(t.bdt_amount)} BDT · ${dFmt(t.txn_date)}</span></div>
+    <div class="row"><span>Total / Paid / Due before</span><b>${fmt(t.sar_due)} / ${fmt(r2(t.paidSar-ownOld))} / ${fmt(dueBefore)} SAR</b></div>
+    <div class="row total"><span>Due after this payment</span><span class="${dueBefore-amt>0.005?"neg":"pos"}">${fmt(Math.max(0,dueBefore-amt))} SAR</span></div>`;
+  return {trade:t, dueBefore};
+}
+$("#payTradeSel").addEventListener("change", payDuePreview);
+$("#payAmount").addEventListener("input", payDuePreview);
+$("#payFullBtn").addEventListener("click", ()=>{ const pv=payDuePreview(); if(pv){ $("#payAmount").value = pv.dueBefore; payDuePreview(); } });
+
+function openPay(tradeId=null, payment=null){
+  formErr("payErr","");
+  $("#payTitle").textContent = payment ? "Edit Payment" : "Receive Payment";
+  $("#payId").value = payment?.id || "";
+  const openTrades = D.trades.filter(t=> t.dueLeft > 0.005 || t.id === (payment?.trade_id || tradeId));
+  $("#payTradeSel").innerHTML = openTrades.length
+    ? openTrades.map(t=>`<option value="${t.id}">${esc(t.customer?.name||"Customer")} · ${fmt0(t.bdt_amount)} BDT · due ${fmt(t.dueLeft + (payment&&payment.trade_id===t.id ? n(payment.sar_amount):0))} SAR · ${dFmt(t.txn_date)}</option>`).join("")
+    : `<option value="">No unpaid trades</option>`;
+  $("#payTradeSel").value = payment?.trade_id || tradeId || (openTrades[0]?.id || "");
+  $("#payTradeSel").disabled = !!payment;
+  $("#payDate").value = payment?.txn_date || todayStr();
+  $("#payAmount").value = payment?.sar_amount ?? "";
+  $("#payMethod").value = payment?.method || "Cash";
+  $("#payNote").value = payment?.note || "";
+  payDuePreview();
+  openSheet("payOverlay");
+}
+$("#addPaymentBtn").addEventListener("click", ()=>{
+  if(!D.trades.some(t=>t.dueLeft>0.005)) return toast("No unpaid trades right now — everything is settled 🎉");
+  openPay();
+});
+$("#payForm").addEventListener("submit", async e=>{
+  e.preventDefault(); formErr("payErr","");
+  const pv = payDuePreview();
+  const amt = n($("#payAmount").value);
+  if(!pv) return formErr("payErr","Select a trade first.");
+  if(!(amt>0)) return formErr("payErr","Enter the SAR amount received.");
+  if(amt > pv.dueBefore + 0.005) return formErr("payErr",`This is more than the due amount (${fmt(pv.dueBefore)} SAR). Reduce it — extra advance against a future trade should be recorded on that trade.`);
+  const id = $("#payId").value;
+  const payload = { user_id:S.user.id, trade_id:$("#payTradeSel").value, txn_date:$("#payDate").value,
+    sar_amount:r2(amt), method:$("#payMethod").value, note:$("#payNote").value.trim() };
+  await busy($("#paySave"), async ()=>{
+    const res = id ? await sb.from("ratex_settlements").update(payload).eq("id", id)
+                   : await sb.from("ratex_settlements").insert(payload);
+    if(res.error) return formErr("payErr", res.error.message);
+    closeSheet("payOverlay");
+    toast(pv.dueBefore - amt <= 0.005 ? "Fully settled 🎉 Profit is now actual." : `Payment saved ✅ ${fmt(pv.dueBefore-amt)} SAR still due.`, "success");
+    await loadData(false);
+  }, "Saving…");
+});
+
+/* ================= ROW ACTIONS (edit/delete/detail/pay) ================= */
+document.addEventListener("click", async e=>{
+  const btn = e.target.closest("[data-action]"); if(!btn) return;
+  const {action, id} = btn.dataset;
+  if(action==="detail"){ $("#detail-"+id)?.classList.toggle("open"); btn.textContent = $("#detail-"+id)?.classList.contains("open") ? "Hide" : "Details"; }
+  if(action==="pay") openPay(id);
+  if(action==="edit-trade"){ const t=D.tradeMap.get(id); if(t) openTrade(t); }
+  if(action==="edit-lot"){ const l=D.lotMap.get(id); if(l) openStock(l); }
+  if(action==="edit-pay"){ const p=S.pays.find(x=>x.id===id); if(p) openPay(p.trade_id, p); }
+
+  if(action==="del-trade"){
+    const t=D.tradeMap.get(id);
+    if(await confirmBox("Delete this trade?", `The sell trade of ${fmt0(t?.bdt_amount)} BDT (${t?.customer?.name||""}) will be deleted with all its payments. The BDT returns to your stock lots. This cannot be undone.`)){
+      setLoading(true);
+      const {error} = await sb.from("ratex_trades").delete().eq("id", id); setLoading(false);
+      error ? toast(error.message,"error") : (toast("Trade deleted. Stock restored."), loadData(false));
+    }
+  }
+  if(action==="del-lot"){
+    const l=D.lotMap.get(id);
+    if(l && l.usedBdt > 0.005) return toast(`This lot already supplied ${fmt(l.usedBdt)} BDT to sell trades — delete/edit those trades first.`, "error");
+    if(await confirmBox("Delete this stock lot?", `Stock of ${fmt0(l?.total_bdt)} BDT (${dFmt(l?.txn_date)}) will be removed from your balance. This cannot be undone.`)){
+      setLoading(true);
+      const {error} = await sb.from("ratex_stock_lots").delete().eq("id", id); setLoading(false);
+      error ? toast(error.message,"error") : (toast("Stock lot deleted."), loadData(false));
+    }
+  }
+  if(action==="del-pay"){
+    const p=S.pays.find(x=>x.id===id);
+    if(await confirmBox("Delete this payment?", `${fmt(p?.sar_amount)} SAR received on ${dFmt(p?.txn_date)} will be removed and that amount becomes due again.`)){
+      setLoading(true);
+      const {error} = await sb.from("ratex_settlements").delete().eq("id", id); setLoading(false);
+      error ? toast(error.message,"error") : (toast("Payment deleted. Due updated."), loadData(false));
+    }
+  }
+});
+
+/* ================= AUTH ================= */
+function authMsg(msg, ok=false){
+  const el = $("#authMsg");
+  el.textContent = msg; el.className = "auth-msg show " + (ok ? "ok" : "err");
+}
+function showAuth(which){
+  const login = $("#loginForm"), signup = $("#signupForm");
+  login.classList.toggle("hidden", which!=="login");
+  signup.classList.toggle("hidden", which!=="signup");
+  signup.classList.toggle("from-left", false);
+  login.classList.toggle("from-left", which==="login");
+  $("#authMsg").className = "auth-msg";
+}
+$("#toSignup").addEventListener("click", ()=>showAuth("signup"));
+$("#toLogin").addEventListener("click", ()=>showAuth("login"));
+$$("[data-eye]").forEach(b=> b.addEventListener("click", ()=>{
+  const inp = $("#"+b.dataset.eye);
+  inp.type = inp.type==="password" ? "text" : "password";
+  b.textContent = inp.type==="password" ? "👁" : "🙈";
+}));
+$$("[data-social]").forEach(b=> b.addEventListener("click", ()=>{
+  authMsg(`${b.dataset.social} login is not enabled in Supabase yet. Please use Email & Password. (To enable it: Supabase → Authentication → Providers.)`);
+}));
+function needSb(){ if(!sb){ authMsg("Could not connect to Supabase. Check your internet connection and reload the page."); return false; } return true; }
+
+$("#loginForm").addEventListener("submit", async e=>{
+  e.preventDefault(); if(!needSb()) return;
+  localStorage.setItem("ratex_remember", $("#rememberMe").checked ? "1" : "0");
+  await busy($("#loginSubmit"), async ()=>{
+    const {error} = await sb.auth.signInWithPassword({ email:$("#loginEmail").value.trim(), password:$("#loginPass").value });
+    if(error) authMsg(error.message === "Invalid login credentials" ? "Wrong email or password. If you just signed up, confirm your email first." : error.message);
+  }, "LOGGING IN…");
+});
+$("#signupForm").addEventListener("submit", async e=>{
+  e.preventDefault(); if(!needSb()) return;
+  if($("#suPass").value !== $("#suPass2").value) return authMsg("Passwords do not match. Please re-enter.");
+  localStorage.setItem("ratex_remember", "1");
+  await busy($("#signupSubmit"), async ()=>{
+    const {data, error} = await sb.auth.signUp({
+      email: $("#suEmail").value.trim(), password: $("#suPass").value,
+      options: { data:{ full_name: $("#suName").value.trim() }, emailRedirectTo: location.origin + location.pathname }
+    });
+    if(error) return authMsg(error.message);
+    if(!data.session) authMsg("Account created ✅ Please check your email and click the confirmation link, then login.", true);
+    else toast("Welcome to RateX 🎉", "success");
+  }, "CREATING…");
+});
+$("#forgotBtn").addEventListener("click", async ()=>{
+  if(!needSb()) return;
+  const email = $("#loginEmail").value.trim();
+  if(!email) return authMsg("Type your email address above first, then tap Forgot Password.");
+  const {error} = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  error ? authMsg(error.message) : authMsg("Password reset link sent ✅ Check your email inbox.", true);
+});
+$("#logoutBtn").addEventListener("click", async ()=>{ await sb?.auth.signOut(); });
+
+function onSignedIn(user){
+  S.user = user;
+  $("#authScreen").classList.add("hidden");
+  $("#appScreen").classList.remove("hidden");
+  const name = user.user_metadata?.full_name || user.email || "Trader";
+  $("#userName").textContent = name;
+  $("#userAvatar").textContent = initials(name);
+  loadData();
+}
+function onSignedOut(){
+  S.user = null; S.customers=[];S.lots=[];S.trades=[];S.allocs=[];S.pays=[];
+  $("#appScreen").classList.add("hidden");
+  $("#authScreen").classList.remove("hidden");
+  showAuth("login");
+}
+if(sb){
+  sb.auth.getSession().then(({data})=>{ data.session ? onSignedIn(data.session.user) : onSignedOut(); });
+  sb.auth.onAuthStateChange(async (event, session)=>{
+    if(event === "PASSWORD_RECOVERY"){
+      const np = prompt("Set a new password (min. 6 characters):");
+      if(np){ const {error} = await sb.auth.updateUser({password: np}); toast(error ? error.message : "Password updated ✅", error ? "error" : "success"); }
+    }
+    if(session?.user && S.user?.id !== session.user.id) onSignedIn(session.user);
+    if(!session && S.user) onSignedOut();
+  });
+} else {
+  authMsg("Supabase library failed to load (no internet?). The designs work, but login needs connection — reload when online.");
+}
+
+/* ================= PWA ================= */
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load", ()=> navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+let deferredInstall = null;
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredInstall = e; $("#installBtn").classList.remove("hidden"); });
+$("#installBtn").addEventListener("click", async ()=>{ if(deferredInstall){ deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall=null; $("#installBtn").classList.add("hidden"); } });
+window.addEventListener("offline", ()=> toast("You are offline — changes can't be saved until you reconnect.", "error"));
+</script>
+</body>
+</html>
