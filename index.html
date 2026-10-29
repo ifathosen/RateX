@@ -173,6 +173,10 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .bank-total .l{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:800}
 .bank-subhead{display:flex;align-items:center;justify-content:space-between;margin:15px 2px 10px;font-size:11px;font-weight:900;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted)}
 .bank-empty{padding:18px;text-align:center;color:var(--muted);font-size:13px;line-height:1.55}
+.bank-actions{display:grid; grid-template-columns:1fr; gap:10px}
+.bank-actions.two{grid-template-columns:1fr 1fr}
+@media(max-width:430px){.bank-actions.two{grid-template-columns:1fr}}
+.pill-sar-add{background:#dcfce7; color:#067a51}
 .acct-grid{display:grid; grid-template-columns:1fr; gap:12px}
 @media(min-width:680px){.acct-grid{grid-template-columns:1fr 1fr}}
 .acct-card{padding:17px 18px; display:flex; gap:13px; align-items:center}
@@ -212,6 +216,30 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .detail h5{margin:6px 0 8px; font-size:11px; letter-spacing:1.2px; text-transform:uppercase; color:var(--muted)}
 .detail .row{display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed #ccd3e2}
 .detail .row:last-child{border:none}
+.detail .row>span{min-width:0}
+.detail .row>b{text-align:right; flex:none}
+.detail .lot-detail-row small{font-weight:600; line-height:1.45}
+.trade-group{margin:24px 0 20px}
+.trade-group:first-child{margin-top:2px}
+.trade-group-head{display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin:0 2px 11px}
+.trade-group-head h3{font-size:16.5px; font-weight:900}
+.trade-group-head p{font-size:12px; color:var(--muted); margin:4px 0 0; line-height:1.45}
+.trade-group-total{text-align:right; font-size:13px; font-weight:900; flex:none}
+.trade-group-total small{display:block; margin-top:3px; font-weight:700}
+.trade-summary-card{padding:15px 16px}
+.trade-summary-top{display:flex; align-items:flex-start; gap:12px}
+.trade-summary-top .tt{flex:1; min-width:0}
+.trade-summary-top .t2{font-size:12px; color:var(--muted); margin-top:3px; line-height:1.45}
+.trade-name-btn{display:inline-flex; align-items:center; gap:7px; max-width:100%; padding:0; color:var(--ink); font-weight:900; font-size:15.5px; text-align:left}
+.trade-name-btn .trade-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.trade-name-btn .chev{color:var(--blue2); font-size:14px; line-height:1; transition:transform .18s; flex:none}
+.trade-summary-card.open .trade-name-btn .chev{transform:rotate(180deg)}
+.trade-summary-meta{display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:11px; font-size:12.5px; color:var(--ink2); line-height:1.5}
+.trade-summary-meta b{color:var(--ink)}
+.trade-expanded{display:none; margin-top:14px; padding-top:2px; border-top:1px dashed #c4ccdd}
+.trade-summary-card.open .trade-expanded{display:block}
+.trade-expanded .kv-grid{margin-top:14px}
+.trade-expanded .detail{display:block}
 .empty{padding:44px 22px; text-align:center; color:var(--muted)}
 .empty .eic{width:78px; height:78px; margin:0 auto 14px; border-radius:50%; box-shadow:var(--sh-out-sm); display:flex; align-items:center; justify-content:center; font-size:32px; background:var(--surface)}
 .empty h4{color:var(--ink); font-size:17px; margin-bottom:6px}
@@ -264,10 +292,33 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 .seg{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px}
 .seg button{padding:13px 8px; border-radius:15px; background:var(--surface); box-shadow:var(--sh-out-sm); font-weight:800; font-size:13px; color:var(--muted)}
 .seg button.active{box-shadow:var(--sh-in-sm); color:var(--blue2)}
-.alloc-row{display:grid; grid-template-columns:1fr 118px 38px; gap:9px; margin-top:12px; align-items:start}
+.alloc-row{display:grid; grid-template-columns:minmax(0,1fr) 118px 38px; gap:9px; margin-top:12px; align-items:start}
 .alloc-row select,.alloc-row input{width:100%; padding:14px 12px; border:none; outline:none; border-radius:14px; background:var(--surface); box-shadow:var(--sh-in); font-size:13.5px}
-.alloc-row .av{grid-column:1/-1; font-size:11.5px; color:var(--muted); margin:-2px 4px 0}
+.alloc-row .av{grid-column:1/-1; font-size:11.5px; color:var(--muted); margin:-2px 0 0}
+.alloc-row .av:empty{display:none}
 .alloc-del{width:38px; height:48px; border-radius:12px; color:var(--red); box-shadow:var(--sh-out-sm); background:var(--surface); font-size:16px}
+.lot-pick-btn{width:100%; min-height:58px; padding:11px 12px; border-radius:14px; background:var(--surface); box-shadow:var(--sh-in); display:flex; align-items:center; gap:9px; text-align:left}
+.lot-pick-btn:active{box-shadow:var(--sh-in), 0 0 0 2px rgba(10,132,255,.35)}
+.lot-pick-copy{flex:1; min-width:0}
+.lot-pick-title{display:block; font-size:13px; font-weight:900; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.lot-pick-sub{display:block; font-size:11px; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.lot-pick-chev{color:var(--blue2); font-weight:900; flex:none}
+.lot-info{box-shadow:var(--sh-in-sm); border-radius:14px; padding:11px 12px; background:var(--surface)}
+.lot-info-grid{display:grid; grid-template-columns:1fr 1fr; gap:9px 13px}
+.lot-info-item{min-width:0}
+.lot-info-item .l{font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); font-weight:800}
+.lot-info-item .v{font-size:12px; font-weight:800; color:var(--ink2); margin-top:3px; line-height:1.35; overflow-wrap:anywhere}
+.lot-choice{width:100%; text-align:left; padding:15px; border-radius:18px; background:var(--surface); box-shadow:var(--sh-out-sm); margin-top:11px}
+.lot-choice:active{box-shadow:var(--sh-in-sm)}
+.lot-choice.selected{box-shadow:var(--sh-in-sm), 0 0 0 2px rgba(10,132,255,.45)}
+.lot-choice:disabled{opacity:.5; cursor:not-allowed}
+.lot-choice-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:11px}
+.lot-choice-head .rt{font-size:15px; font-weight:900; overflow-wrap:anywhere}
+.lot-choice-head .rs{font-size:11.5px; color:var(--muted); margin-top:3px}
+.lot-choice .progress{height:8px; margin-top:11px}
+.lot-choice-note{font-size:11.5px; color:var(--muted); margin-top:9px; line-height:1.45}
+.lot-picker-list{padding-bottom:4px}
+@media(max-width:430px){.alloc-row{grid-template-columns:minmax(0,1fr) 104px 34px} .alloc-del{width:34px} .lot-pick-btn{padding:10px} .lot-choice-head{align-items:flex-start}}
 .form-err{display:none; margin-top:16px; padding:12px 15px; border-radius:14px; box-shadow:var(--sh-in-sm); color:var(--red); font-size:13.5px; line-height:1.5}
 .form-err.show{display:block}
 .sheet .save-row{margin-top:24px}
@@ -468,7 +519,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
     <!-- ============ TRADE ============ -->
     <section class="page hidden" id="page-trade">
       <div class="page-head">
-        <div><h2>Trades</h2><p>Stock-in remittances &amp; BDT sell trades — edit or delete anytime.</p></div>
+        <div><h2>Trades</h2><p>Pending and settled bills are grouped separately. Tap a customer name for full details.</p></div>
         <div class="head-actions">
           <button class="btn btn-neu" data-open-stock>＋ Stock In</button>
           <button class="btn btn-grad" data-open-trade>＋ Sell Trade</button>
@@ -486,6 +537,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <button class="chip" data-typefilter="sell">Sell Trades</button>
         <button class="chip" data-typefilter="stock">Stock In</button>
         <button class="chip" data-typefilter="transfer">Transfers</button>
+        <button class="chip" data-typefilter="saradd">SAR Additions</button>
         <span style="flex:1"></span><small id="tradeCount"></small>
       </div>
       <div id="tradeList"></div>
@@ -660,7 +712,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <button type="button" class="mini-btn" id="addAllocBtn">＋ Add Lot</button>
     </div>
     <div id="allocRows"></div>
-    <p class="hint" style="margin:8px 4px 0">The amount box is only the BDT used for this trade — delivered amount + delivery charge. It auto-fills; type over it only when splitting one trade across lots.</p>
+    <p class="hint" style="margin:8px 4px 0">Tap a lot box to open the organized lot list with date, SAR sent, effective rate, channel, BD account and available balance. The amount box is only the BDT used for this trade — delivered amount + delivery charge. It auto-fills; type over it only when splitting one trade across lots.</p>
     <div class="calc-box neu-in" id="trPreview"></div>
 
     <div id="initialPayWrap">
@@ -676,6 +728,17 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
     <div class="form-err" id="trErr"></div>
     <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="trSave">SAVE TRADE</button></div>
   </form>
+</div>
+
+<!-- ================= STOCK LOT PICKER ================= -->
+<div class="overlay" id="lotPickerOverlay" style="z-index:110">
+  <div class="sheet">
+    <div class="grab"></div>
+    <div class="sheet-head"><div><h3>Choose Stock Lot</h3><p>Complete lot information, neatly separated. Search by remit number, channel, date or BD account.</p></div><button type="button" class="icon-btn close-x" data-close="lotPickerOverlay">✕</button></div>
+    <div class="field"><label for="lotPickerSearch">Search Lots</label><input type="search" id="lotPickerSearch" placeholder="REM-2026… / Enjaz / EBL / 27 Oct"></div>
+    <div class="calc-box neu-in" id="lotPickerNeed"></div>
+    <div class="lot-picker-list" id="lotPickerList"></div>
+  </div>
 </div>
 
 <!-- ================= SETTLEMENT MODAL ================= -->
@@ -746,6 +809,25 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
     <div class="field"><label for="tfNote">Note (optional)</label><input type="text" id="tfNote" placeholder="Any note…"></div>
     <div class="form-err" id="tfErr"></div>
     <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="tfSave">SAVE TRANSFER</button></div>
+  </form>
+</div>
+
+<!-- ================= ADDITIONAL SAR BALANCE ================= -->
+<div class="overlay" id="sarAddOverlay" style="z-index:96">
+  <form class="sheet" id="sarAddForm">
+    <div class="grab"></div>
+    <div class="sheet-head"><div><h3 id="saTitle">Add Additional SAR Balance</h3><p>Credit outside money to one Saudi SAR account — for example salary, hand-cash deposit or extra trading capital.</p></div><button type="button" class="icon-btn close-x" data-close="sarAddOverlay">✕</button></div>
+    <input type="hidden" id="saId">
+    <div class="grid2">
+      <div class="field"><label for="saDate">Date</label><input type="date" id="saDate" required></div>
+      <div class="field"><label for="saAmount">Additional Amount · SAR</label><input type="number" id="saAmount" required min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
+    </div>
+    <div class="field"><label for="saAccount">Post To Saudi SAR Account</label><select id="saAccount" required></select></div>
+    <div class="field"><label for="saSource">Source / Reason</label><input type="text" id="saSource" list="saSourceList" placeholder="Salary / cash deposit / capital added…"><datalist id="saSourceList"><option>Salary received</option><option>Personal cash deposit</option><option>Extra trading capital</option><option>Bank deposit</option><option>Refund received</option><option>Other incoming SAR</option></datalist></div>
+    <div class="calc-box neu-in" id="saPreview"></div>
+    <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">This only increases the selected SAR account balance. It does not create BDT stock, reduce a customer due, or change trading profit.</p>
+    <div class="form-err" id="saErr"></div>
+    <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="saSave">ADD SAR BALANCE</button></div>
   </form>
 </div>
 
@@ -850,7 +932,7 @@ catch(e){ console.error(e); }
 /* ---------- state ---------- */
 const S = { user:null, customers:[], lots:[], trades:[], allocs:[], pays:[], accounts:[], transfers:[] };
 let D = null; // derived
-let ui = { tab:"dashboard", typeFilter:"all", statusFilter:"all", search:"", period:"all", tradeMode:"bdt" };
+let ui = { tab:"dashboard", typeFilter:"all", statusFilter:"all", search:"", period:"all", tradeMode:"bdt", expandedTrades:new Set() };
 
 /* ================================================================
    OFFLINE-FIRST LAYER
@@ -1068,7 +1150,18 @@ function accountTotals(a, exclude={}){
   inn=r2(inn); out=r2(out);
   return { inn, out, balance: r2(n(a.opening_balance)+inn-out) };
 }
+const SAR_ADD_MARKER = "[[ADD_SAR_BALANCE]]";
+function isSarBalanceAddition(tf){
+  return !!tf && !tf.from_account_id && String(tf.note || "").startsWith(SAR_ADD_MARKER);
+}
+function sarAdditionSource(tf){
+  return isSarBalanceAddition(tf) ? String(tf.note || "").slice(SAR_ADD_MARKER.length).trim() : "";
+}
+function transferDisplayNote(tf){
+  return isSarBalanceAddition(tf) ? sarAdditionSource(tf) : (tf?.note || "");
+}
 function transferFeeSar(tf, convRate){
+  if(isSarBalanceAddition(tf)) return 0;
   const fee = n(tf.fee); if(!(fee > 0)) return 0;
   const src = S.accounts.find(a=>a.id===tf.from_account_id) || S.accounts.find(a=>a.id===tf.to_account_id);
   const cur = src?.currency || "SAR";
@@ -1200,6 +1293,8 @@ document.addEventListener("click", e => {
   const g = e.target.closest("[data-goto]"); if(g) switchTab(g.dataset.goto);
   if(e.target.closest("[data-open-stock]")) openStock();
   if(e.target.closest("[data-open-trade]")) openTrade();
+  const sarAddBtn = e.target.closest("[data-open-sar-add]");
+  if(sarAddBtn) openSarAdd(null, sarAddBtn.dataset.id || "");
   const bankBtn = e.target.closest("[data-open-bank-account]");
   if(bankBtn) openAccount(null, { currency:bankBtn.dataset.currency, type:bankBtn.dataset.type || "", lockCurrency:true });
   else if(e.target.closest("[data-open-account]")) openAccount();
@@ -1213,6 +1308,36 @@ function emptyBox(icon, title, text, btnHtml=""){
   return `<div class="empty neu"><div class="eic">${icon}</div><h4>${title}</h4><p>${text}</p>${btnHtml}</div>`;
 }
 function lotLabel(l){ return `${lotDisplayNo(l)} · ${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR @ ${fmtRate(l.effective_rate)}${l.source ? " · "+l.source : ""}${l.bdt_account_id ? " · "+accountName(l.bdt_account_id) : ""}`; }
+function lotInfoItems(l, avail, { using=0, compact=false }={}){
+  const usedByOthers = r2(n(l.total_bdt) - avail);
+  const sent = `${fmt(l.sar_amount)} SAR${n(l.fee_sar) ? ` + ${fmt(l.fee_sar)} fee` : ""}`;
+  const items = [
+    ["Lot date", dFmt(l.txn_date)],
+    ["Available now", `${fmt(avail)} BDT`]
+  ];
+  if(using > 0) items.push(["After this trade", `${fmt(avail - using)} BDT`]);
+  items.push(
+    ["Effective buy rate", fmtRate(l.effective_rate)],
+    ["Sent", sent],
+    ["Total deposited", `${fmt(l.total_bdt)} BDT`],
+    ["Used by other trades", `${fmt(usedByOthers)} BDT`],
+    ["Base rate + incentive", `${fmtRate(l.base_rate)} + ${fmt(l.incentive_pct,2)}%`],
+    ["Channel", l.source || "—"],
+    ["SAR debit A/C", l.sar_account_id ? accountName(l.sar_account_id) : "Not assigned"],
+    ["BD credit A/C", l.bdt_account_id ? accountName(l.bdt_account_id) : "Not assigned"]
+  );
+  if(l.kind === "opening") items.splice(1, 0, ["Lot type", "Historical lot"]);
+  if(!compact) return items;
+  const keep = new Set(["Available now", "After this trade", "Effective buy rate", "Sent", "Channel", "BD credit A/C"]);
+  return items.filter(([label])=>keep.has(label));
+}
+function lotInfoGridHtml(items){
+  return `<div class="lot-info-grid">${items.map(([label,value])=>`<div class="lot-info-item"><div class="l">${esc(label)}</div><div class="v">${esc(value)}</div></div>`).join("")}</div>`;
+}
+function lotPickButtonHtml(l=null, avail=0){
+  if(!l) return `<span class="lot-pick-copy"><span class="lot-pick-title">Select stock lot</span><span class="lot-pick-sub">Tap to view complete, organized lot details</span></span><span class="lot-pick-chev">⌄</span>`;
+  return `<span class="lot-pick-copy"><span class="lot-pick-title">${esc(lotDisplayNo(l))}</span><span class="lot-pick-sub">${esc(dFmt(l.txn_date))} · Available ${fmt(avail)} BDT · Eff. ${fmtRate(l.effective_rate)}</span></span><span class="lot-pick-chev">⌄</span>`;
+}
 
 function splitAccountName(name){
   const parts = String(name || "").split(/\s+—\s+/);
@@ -1233,13 +1358,35 @@ function accountCard(a){
     <div style="text-align:right">
       <div style="font-weight:900;font-size:17px" class="${signedCls(a.balance)}">${fmt(a.balance)}</div>
       <small>${a.currency}</small>
-      <div style="margin-top:6px;display:flex;gap:6px;justify-content:flex-end">
+      <div style="margin-top:6px;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+        ${isSar ? `<button class="mini-btn blue" data-open-sar-add data-id="${a.id}">＋ Balance</button>` : ""}
         <button class="mini-btn" data-action="edit-account" data-id="${a.id}">✎</button>
         <button class="mini-btn red" data-action="del-account" data-id="${a.id}">🗑</button>
       </div>
     </div></div>`;
 }
 function transferCard(tf){
+  if(isSarBalanceAddition(tf)){
+    const to = accountById(tf.to_account_id);
+    const source = sarAdditionSource(tf) || "Additional SAR balance";
+    return `<article class="card neu">
+    <div class="card-top">
+      <div class="avatar-c" style="color:#fff;background:linear-gradient(135deg,#12b981,#0a9d6c)">＋</div>
+      <div class="tt"><div class="t1">Additional SAR Balance → ${esc(to?.name || "SAR account")}</div>
+      <div class="t2">${dFmt(tf.txn_date)} · External SAR credited · ${esc(source)}</div></div>
+      <span class="pill pill-sar-add">SAR Added</span>
+    </div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">Amount Credited</div><div class="v pos">+${fmt(tf.amount)} <small>SAR</small></div></div>
+      <div class="kv"><div class="l">SAR Account</div><div class="v" style="font-size:12.5px">${esc(to?.name || "—")}</div></div>
+      <div class="kv"><div class="l">Source / Reason</div><div class="v" style="font-size:12.5px">${esc(source)}</div></div>
+      <div class="kv"><div class="l">Stock / Profit</div><div class="v">No change</div></div>
+    </div>
+    <div class="card-actions">
+      <button class="mini-btn" data-action="edit-sar-add" data-id="${tf.id}">✎ Edit</button>
+      <button class="mini-btn red" data-action="del-transfer" data-id="${tf.id}">🗑 Delete</button>
+    </div></article>`;
+  }
   const from = accountById(tf.from_account_id), to = accountById(tf.to_account_id);
   const cur = from?.currency || to?.currency || "";
   return `<article class="card neu">
@@ -1263,18 +1410,19 @@ function transferCard(tf){
 
 function statusPill(t){ return `<span class="pill pill-${t.status.toLowerCase()}">${t.status}</span>`; }
 
-function tradeCard(t, compact=false){
-  const cName = t.customer ? t.customer.name : "Unknown customer";
-  const allocTxt = t.allocs.map(a => { const l=D.lotMap.get(a.lot_id); return `<div class="row"><span>${l ? esc(lotLabel(l)) : "Lot"}</span><b>${fmt(a.bdt_allocated)} BDT · cost ${fmt(a.cost_sar)} SAR</b></div>`; }).join("") || `<div class="row"><span>No lot allocated</span></div>`;
-  const payTxt = t.pays.map(p=>`<div class="row"><span>${dFmt(p.txn_date)} · ${esc(p.method)}${p.account_id?" → "+esc(accountName(p.account_id)):""}${p.note?" · "+esc(p.note):""}</span><b class="pos">+${fmt(p.sar_amount)} SAR</b></div>`).join("") || `<div class="row"><span>No payments yet</span></div>`;
-  return `<article class="card neu">
-    <div class="card-top">
-      <div class="avatar-c">${esc(initials(cName))}</div>
-      <div class="tt"><div class="t1">${esc(cName)}</div>
-      <div class="t2">${dFmt(t.txn_date)} · ${esc(t.delivery_method)}${t.receiver_info ? " · "+esc(t.receiver_info) : ""}${t.customer?.phone ? " · "+esc(t.customer.phone) : ""}</div></div>
-      ${statusPill(t)}
-    </div>
-    <div class="kv-grid">
+function tradeAllocDetailHtml(t){
+  return t.allocs.map(a => {
+    const l = D.lotMap.get(a.lot_id);
+    if(!l) return `<div class="row"><span>Lot no longer available</span><b>${fmt(a.bdt_allocated)} BDT</b></div>`;
+    return `<div class="row lot-detail-row"><span><b>${esc(lotDisplayNo(l))}</b><br><small>${dFmt(l.txn_date)} · Eff. ${fmtRate(a.cost_rate || l.effective_rate)} · ${esc(l.source || "—")} · ${esc(l.bdt_account_id ? accountName(l.bdt_account_id) : "BD A/C not assigned")}</small></span><b>${fmt(a.bdt_allocated)} BDT<br><small>cost ${fmt(a.cost_sar)} SAR</small></b></div>`;
+  }).join("") || `<div class="row"><span>No lot allocated</span></div>`;
+}
+function tradePayDetailHtml(t){
+  return t.pays.map(p=>`<div class="row"><span>${dFmt(p.txn_date)} · ${esc(p.method)}${p.account_id?" → "+esc(accountName(p.account_id)):""}${p.note?" · "+esc(p.note):""}</span><b class="pos">+${fmt(p.sar_amount)} SAR</b></div>`).join("")
+    || `<div class="row"><span>No payments yet</span></div>`;
+}
+function tradeMetricsHtml(t){
+  return `<div class="kv-grid">
       <div class="kv"><div class="l">BDT Delivered</div><div class="v">${fmt(t.bdt_amount)} <small>BDT</small></div></div>
       <div class="kv"><div class="l">Sell Rate</div><div class="v">${fmtRate(t.sell_rate)}</div></div>
       <div class="kv"><div class="l">SAR Receivable</div><div class="v">${fmt(t.sar_due)} <small>SAR</small></div></div>
@@ -1285,19 +1433,68 @@ function tradeCard(t, compact=false){
       <div class="kv"><div class="l">Actual Profit</div><div class="v ${signedCls(t.actualProfit)}">${signedFmt(t.actualProfit)} <small>SAR</small></div></div>
     </div>
     <div class="progress" style="margin-top:13px"><i style="width:${Math.round(t.ratio*100)}%"></i></div>
-    ${t.note ? `<p style="font-size:12.5px;color:var(--muted);margin:10px 2px 0">📝 ${esc(t.note)}</p>` : ""}
-    <div class="detail" id="detail-${t.id}">
+    ${t.note ? `<p style="font-size:12.5px;color:var(--muted);margin:10px 2px 0">📝 ${esc(t.note)}</p>` : ""}`;
+}
+function tradeDetailHtml(t, open=false){
+  return `<div class="detail${open ? " open" : ""}"${open ? "" : ` id="detail-${t.id}"`}>
       <div class="row"><span>Delivered from BD account</span><b>${esc(t.sourceAccount?.name || (t.allocs[0] ? accountName(D.lotMap.get(t.allocs[0].lot_id)?.bdt_account_id) : "—"))}</b></div>
-      <h5 style="margin-top:12px">Stock used (manual lots)</h5>${allocTxt}
-      <h5 style="margin-top:14px">Payments received</h5>${payTxt}
+      <h5 style="margin-top:12px">Stock used (manual lots)</h5>${tradeAllocDetailHtml(t)}
+      <h5 style="margin-top:14px">Payments received</h5>${tradePayDetailHtml(t)}
       <div class="row" style="margin-top:6px"><span>Pending profit (unpaid part)</span><b class="${signedCls(t.pendingProfit)}">${signedFmt(t.pendingProfit)} SAR</b></div>
-    </div>
-    <div class="card-actions">
-      ${t.dueLeft > 0.005 ? `<button class="mini-btn blue" data-action="pay" data-id="${t.id}">＋ Receive Payment</button>` : ""}
-      <button class="mini-btn" data-action="detail" data-id="${t.id}">Details</button>
+    </div>`;
+}
+function tradeActionsHtml(t, { detailButton=true, includePay=true }={}){
+  return `<div class="card-actions">
+      ${includePay && t.dueLeft > 0.005 ? `<button class="mini-btn blue" data-action="pay" data-id="${t.id}">＋ Receive Payment</button>` : ""}
+      ${detailButton ? `<button class="mini-btn" data-action="detail" data-id="${t.id}">Details</button>` : ""}
       <button class="mini-btn" data-action="edit-trade" data-id="${t.id}">✎ Edit</button>
       <button class="mini-btn red" data-action="del-trade" data-id="${t.id}">🗑 Delete</button>
-    </div></article>`;
+    </div>`;
+}
+function tradeCard(t, compact=false){
+  if(compact) return tradeSummaryCard(t);
+  const cName = t.customer ? t.customer.name : "Unknown customer";
+  return `<article class="card neu">
+    <div class="card-top">
+      <div class="avatar-c">${esc(initials(cName))}</div>
+      <div class="tt"><div class="t1">${esc(cName)}</div>
+      <div class="t2">${dFmt(t.txn_date)} · ${esc(t.delivery_method)}${t.receiver_info ? " · "+esc(t.receiver_info) : ""}${t.customer?.phone ? " · "+esc(t.customer.phone) : ""}</div></div>
+      ${statusPill(t)}
+    </div>
+    ${tradeMetricsHtml(t)}
+    ${tradeDetailHtml(t)}
+    ${tradeActionsHtml(t)}
+  </article>`;
+}
+function tradeSummaryCard(t){
+  const cName = t.customer ? t.customer.name : "Unknown customer";
+  const open = ui.expandedTrades?.has(t.id);
+  const settled = t.status === "Settled";
+  const lastMeta = settled
+    ? `<span>Actual profit <b class="${signedCls(t.actualProfit)}">${signedFmt(t.actualProfit)} SAR</b></span>`
+    : `<span>Due left <b class="neg">${fmt(t.dueLeft)} SAR</b></span>`;
+  return `<article class="card neu trade-summary-card${open ? " open" : ""}">
+    <div class="trade-summary-top">
+      <div class="avatar-c">${esc(initials(cName))}</div>
+      <div class="tt">
+        <button type="button" class="trade-name-btn" data-action="toggle-trade" data-id="${t.id}" aria-expanded="${open ? "true" : "false"}"><span class="trade-name">${esc(cName)}</span><span class="chev">⌄</span></button>
+        <div class="t2">${dFmt(t.txn_date)} · ${esc(t.delivery_method)}${t.receiver_info ? " · "+esc(t.receiver_info) : ""}${t.customer?.phone ? " · "+esc(t.customer.phone) : ""}</div>
+      </div>
+      ${statusPill(t)}
+    </div>
+    <div class="trade-summary-meta">
+      <span><b>${fmt(t.bdt_amount)} BDT</b> @ ${fmtRate(t.sell_rate)}</span>
+      <span>Receivable <b>${fmt(t.sar_due)} SAR</b></span>
+      <span>Paid <b>${fmt(t.paidSar)} SAR</b></span>
+      ${lastMeta}
+    </div>
+    <div class="progress" style="margin-top:10px"><i style="width:${Math.round(t.ratio*100)}%"></i></div>
+    <div class="trade-expanded">
+      ${tradeMetricsHtml(t)}
+      ${tradeDetailHtml(t, true)}
+      ${tradeActionsHtml(t, { detailButton:false })}
+    </div>
+  </article>`;
 }
 
 function lotCard(l, full=true){
@@ -1342,7 +1539,10 @@ function renderBankSection(currency){
       <div class="bt2"><h4>${title}</h4><p>${all.length} account(s) · Opening posted total ${fmt(opening)} ${currency}</p></div>
       <div class="bank-total"><div class="l">Total ${currency}</div><div class="v ${signedCls(total)}">${fmt(total)}</div></div>
     </div>
-    <button type="button" class="btn ${isSar ? "btn-neu" : "btn-grad"}" style="width:100%" data-open-bank-account data-currency="${currency}" data-type="${addBankType}">＋ Add ${isSar ? "Saudi Bank Account" : "Bangladesh Bank Account"}</button>
+    <div class="bank-actions${isSar ? " two" : ""}">
+      <button type="button" class="btn ${isSar ? "btn-neu" : "btn-grad"}" data-open-bank-account data-currency="${currency}" data-type="${addBankType}">＋ Add ${isSar ? "Saudi Bank Account" : "Bangladesh Bank Account"}</button>
+      ${isSar ? `<button type="button" class="btn btn-grad" data-open-sar-add>＋ Add Additional SAR Balance</button>` : ""}
+    </div>
     ${group(isSar ? "Saudi Bank Accounts" : "Bangladesh Bank Accounts", banks, addBankType)}
     ${group(isSar ? "Cash & Wallets (SAR)" : "Mobile Wallets & Cash (BDT)", wallets, isSar ? "Cash" : "Mobile Wallet")}
   </div>`;
@@ -1402,7 +1602,13 @@ function renderDashboard(){
     ...D.trades.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇄","#d97706", `Sold ${fmt0(x.bdt_amount)} BDT to ${esc(x.customer?.name||"customer")}`, `${fmt(x.sar_due)} SAR @ ${fmtRate(x.sell_rate)}`, x.status)})),
     ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇩","var(--blue2)", `${esc(lotDisplayNo(x))} · Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
     ...S.pays.map(p=>{ const tr=D.tradeMap.get(p.trade_id); return {date:p.txn_date, sort:(p.created_at||p.txn_date), html:activityRow("✓","var(--green)", `Received ${fmt(p.sar_amount)} SAR${tr? " from "+esc(tr.customer?.name||"customer"):""}`, esc(p.method) + (p.account_id ? " → "+esc(accountName(p.account_id)) : ""), dFmt(p.txn_date))}; }),
-    ...D.transfers.map(tf=>({date:tf.txn_date, sort:(tf.created_at||tf.txn_date), html:activityRow("⇪","#6d28d9", `Transferred ${fmt(tf.amount)}`, `${esc(accountName(tf.from_account_id))} → ${esc(accountName(tf.to_account_id))}`, dFmt(tf.txn_date))}))
+    ...D.transfers.map(tf=>{
+      const add = isSarBalanceAddition(tf);
+      return {date:tf.txn_date, sort:(tf.created_at||tf.txn_date), html:activityRow(add ? "＋" : "⇪", add ? "var(--green)" : "#6d28d9",
+        add ? `Added ${fmt(tf.amount)} SAR balance` : `Transferred ${fmt(tf.amount)}`,
+        add ? `${esc(sarAdditionSource(tf) || "External SAR")} → ${esc(accountName(tf.to_account_id))}` : `${esc(accountName(tf.from_account_id))} → ${esc(accountName(tf.to_account_id))}`,
+        dFmt(tf.txn_date))};
+    })
   ].sort((a,b)=> String(b.sort).localeCompare(String(a.sort))).slice(0,7);
   $("#dashRecent").innerHTML = acts.length ? acts.map(a=>a.html).join("") : `<div class="list-row neu-sm"><div class="tt" style="color:var(--muted);font-size:13.5px">No activity yet. Your trades, stock and payments will appear here.</div></div>`;
 }
@@ -1425,15 +1631,67 @@ function renderTradePage(){
   const matchTrade = t => (ui.statusFilter==="all" || t.status===ui.statusFilter) &&
     (!q || [t.customer?.name, t.customer?.phone, t.delivery_method, t.receiver_info, t.note, t.allocs.map(a=>lotDisplayNo(D.lotMap.get(a.lot_id)||{})).join(" ")].join(" ").toLowerCase().includes(q));
   const matchLot = l => !q || [l.source, l.note, l.remit_no, lotDisplayNo(l), accountName(l.sar_account_id), accountName(l.bdt_account_id)].join(" ").toLowerCase().includes(q);
-  const matchTf = tf => !q || [accountName(tf.from_account_id), accountName(tf.to_account_id), tf.note].join(" ").toLowerCase().includes(q);
-  let items = [];
-  if(ui.typeFilter === "all" || ui.typeFilter === "sell") items.push(...D.trades.filter(matchTrade).map(t=>({type:"sell", date:t.txn_date, sort:t.created_at||t.txn_date, obj:t})));
-  if((ui.typeFilter === "all" || ui.typeFilter === "stock") && ui.statusFilter==="all") items.push(...D.lots.filter(matchLot).map(l=>({type:"stock", date:l.txn_date, sort:l.created_at||l.txn_date, obj:l})));
-  if((ui.typeFilter === "all" || ui.typeFilter === "transfer") && ui.statusFilter==="all") items.push(...D.transfers.filter(matchTf).map(tf=>({type:"transfer", date:tf.txn_date, sort:tf.created_at||tf.txn_date, obj:tf})));
-  items.sort((a,b)=> String(b.date).localeCompare(String(a.date)) || String(b.sort).localeCompare(String(a.sort)));
-  $("#tradeCount").textContent = items.length + " record" + (items.length===1?"":"s");
-  $("#tradeList").innerHTML = items.length
-    ? items.map(i => i.type==="sell" ? tradeCard(i.obj) : (i.type==="transfer" ? transferCard(i.obj) : lotCard(i.obj))).join("")
+  const matchTf = tf => !q || [accountName(tf.from_account_id), accountName(tf.to_account_id), transferDisplayNote(tf),
+    isSarBalanceAddition(tf) ? "additional sar balance sar added external deposit" : "internal transfer"].join(" ").toLowerCase().includes(q);
+
+  const matchedTrades = (ui.typeFilter === "all" || ui.typeFilter === "sell") ? D.trades.filter(matchTrade) : [];
+  const pendingTrades = matchedTrades.filter(t=>t.status !== "Settled");
+  const settledTrades = matchedTrades.filter(t=>t.status === "Settled");
+  const showNonTrades = ui.statusFilter === "all";
+  const lots = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "stock") ? D.lots.filter(matchLot) : [];
+  const matchedTransfers = D.transfers.filter(matchTf);
+  const internalTransfers = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "transfer")
+    ? matchedTransfers.filter(tf=>!isSarBalanceAddition(tf)) : [];
+  const sarAdditions = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "saradd")
+    ? matchedTransfers.filter(isSarBalanceAddition) : [];
+
+  const count = matchedTrades.length + lots.length + internalTransfers.length + sarAdditions.length;
+  $("#tradeCount").textContent = count + " record" + (count===1?"":"s");
+
+  const section = (title, sub, total, totalSub, totalClass, html) => `
+    <section class="trade-group">
+      <div class="trade-group-head"><div><h3>${title}</h3><p>${sub}</p></div>
+      ${total ? `<div class="trade-group-total"><span class="${totalClass || ""}">${total}</span><small>${totalSub || ""}</small></div>` : ""}</div>
+      ${html}
+    </section>`;
+  const sections = [];
+
+  if(pendingTrades.length){
+    const due = r2(pendingTrades.reduce((sm,t)=>sm+t.dueLeft,0));
+    const title = ui.statusFilter === "Partial" ? "Partially Paid Bills"
+      : (ui.statusFilter === "Pending" ? "Pending Bills" : "Pending / Partial Bills");
+    sections.push(section(title,
+      `${pendingTrades.length} unpaid bill${pendingTrades.length===1?"":"s"} · tap a customer name for full details`,
+      `${fmt(due)} SAR`, "total due", "neg", pendingTrades.map(tradeSummaryCard).join("")));
+  }
+  if(settledTrades.length){
+    const collected = r2(settledTrades.reduce((sm,t)=>sm+t.paidSar,0));
+    const actual = r2(settledTrades.reduce((sm,t)=>sm+t.actualProfit,0));
+    sections.push(section("Settled Bills",
+      `${settledTrades.length} fully settled bill${settledTrades.length===1?"":"s"} · compact list · tap a customer name for full details`,
+      `${fmt(collected)} SAR`, `collected · actual profit ${signedFmt(actual)} SAR`, "pos", settledTrades.map(tradeSummaryCard).join("")));
+  }
+  if(lots.length){
+    const deposited = r2(lots.reduce((sm,l)=>sm+n(l.total_bdt),0));
+    const remaining = r2(lots.reduce((sm,l)=>sm+l.remainingBdt,0));
+    sections.push(section("Stock In Remittances",
+      `${lots.length} remittance lot${lots.length===1?"":"s"}`,
+      `${fmt(deposited)} BDT`, `${fmt(remaining)} BDT still in stock`, "", lots.map(l=>lotCard(l)).join("")));
+  }
+  if(internalTransfers.length){
+    sections.push(section("Internal Transfers",
+      `${internalTransfers.length} account-to-account transfer${internalTransfers.length===1?"":"s"}`,
+      "", "", "", internalTransfers.map(transferCard).join("")));
+  }
+  if(sarAdditions.length){
+    const added = r2(sarAdditions.reduce((sm,tf)=>sm+n(tf.amount),0));
+    sections.push(section("Additional SAR Balances",
+      `${sarAdditions.length} external SAR credit${sarAdditions.length===1?"":"s"} to Saudi SAR accounts`,
+      `+${fmt(added)} SAR`, "total added", "pos", sarAdditions.map(transferCard).join("")));
+  }
+
+  $("#tradeList").innerHTML = sections.length
+    ? sections.join("")
     : emptyBox("⇄","Nothing here yet","No records match this filter. Add a Stock In (remittance you sent) or a Sell Trade (BDT delivered to a customer) to get started.",
       `<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-neu" data-open-stock>＋ Stock In</button><button class="btn btn-grad" data-open-trade>＋ Sell Trade</button></div>`);
 }
@@ -1619,6 +1877,7 @@ function populateAccountSelects(){
   setAccountSelect("trSourceAcc", "BDT", "— Deliver from (BD A/C) —");
   setAccountSelect("trInitAccount", "SAR", "— SAR account —");
   setAccountSelect("payAccount", "SAR", "— SAR account —");
+  setAccountSelect("saAccount", "SAR", "— Saudi SAR account —");
   setAccountSelect("tfFrom", "", "— From account —");
   refreshTransferTo();
 }
@@ -1703,6 +1962,7 @@ $("#accountForm").addEventListener("submit", e=>{
   if($("#stockOverlay").classList.contains("open")){ if(saved.currency==="SAR") $("#stSarAcc").value = saved.id; else $("#stBdtAcc").value = saved.id; stockCalc(false); }
   if($("#tradeOverlay").classList.contains("open")){ if(saved.currency==="BDT") $("#trSourceAcc").value = saved.id; else $("#trInitAccount").value = saved.id; tradePreview(); }
   if($("#payOverlay").classList.contains("open") && saved.currency==="SAR"){ $("#payAccount").value = saved.id; payDuePreview(); }
+  if($("#sarAddOverlay").classList.contains("open") && saved.currency==="SAR"){ $("#saAccount").value = saved.id; sarAddPreview(); }
   if($("#transferOverlay").classList.contains("open")){ populateAccountSelects(); }
 });
 
@@ -1773,6 +2033,63 @@ $("#transferForm").addEventListener("submit", e=>{
   closeSheet("transferOverlay");
   toast(id ? "Transfer updated ✅" : `Transferred ${fmt(pv.amount)} ${pv.from.currency} ✅`, "success");
   afterLocalChange();
+});
+
+/* ================= ADDITIONAL SAR BALANCE =================
+   Stored as a one-sided credit in ratex_transfers:
+   from_account_id = null, to_account_id = selected SAR account.
+   accountTotals already credits it, while stock/profit stay unchanged. */
+function sarAddPreview(){
+  const box = $("#saPreview"); if(!box) return null;
+  const editingId = $("#saId").value;
+  const account = accountById($("#saAccount").value);
+  const amount = n($("#saAmount").value);
+  const balance = account ? accountBalance(account.id, {transferId:editingId}) : 0;
+  box.innerHTML = `
+    <div class="row"><span>${account ? esc(account.name) : "SAR account"} balance now → after</span><b>${account ? `${fmt(balance)} → ${fmt(balance + amount)} SAR` : "select account"}</b></div>
+    <div class="row"><span>Entry type</span><b>External SAR balance addition</b></div>
+    <div class="row total"><span>Stock / dues / profit impact</span><span>No change</span></div>`;
+  return { account, amount, balance };
+}
+function openSarAdd(record=null, presetAccountId=""){
+  const sarAccounts = (D?.accounts || []).filter(a=>a.currency==="SAR" && (!a.archived || a.id===record?.to_account_id));
+  if(!sarAccounts.length){
+    toast("Add a Saudi SAR account first, then you can add balance to it.", "error");
+    openAccount(null, { currency:"SAR", type:"Saudi Bank", lockCurrency:true });
+    return;
+  }
+  formErr("saErr","");
+  $("#saTitle").textContent = record ? "Edit Additional SAR Balance" : "Add Additional SAR Balance";
+  $("#saSave").textContent = record ? "UPDATE SAR BALANCE" : "ADD SAR BALANCE";
+  $("#saId").value = record?.id || "";
+  $("#saDate").value = record?.txn_date || todayStr();
+  populateAccountSelects();
+  $("#saAccount").value = record?.to_account_id || presetAccountId || firstAccountId("SAR","Saudi Bank") || firstAccountId("SAR") || sarAccounts[0].id;
+  $("#saAmount").value = record?.amount ?? "";
+  $("#saSource").value = record ? sarAdditionSource(record) : "";
+  sarAddPreview();
+  openSheet("sarAddOverlay");
+}
+$("#saAccount").addEventListener("change", sarAddPreview);
+["saAmount","saDate","saSource"].forEach(id=> $("#"+id).addEventListener("input", sarAddPreview));
+$("#sarAddForm").addEventListener("submit", e=>{
+  e.preventDefault(); formErr("saErr","");
+  const pv = sarAddPreview();
+  if(!pv.account) return formErr("saErr","Select the Saudi SAR account to credit.");
+  if(pv.account.currency !== "SAR") return formErr("saErr","Additional balance can only be added to a SAR account.");
+  if(!(pv.amount > 0)) return formErr("saErr","Enter the additional SAR amount.");
+  const dateStr = $("#saDate").value;
+  if(dateBeforeOpening(pv.account.id, dateStr))
+    return formErr("saErr","Date is before this SAR account's opening date. Change the date or the account opening date.");
+  const source = $("#saSource").value.trim() || "Additional SAR balance";
+  const id = $("#saId").value;
+  const payload = { user_id:S.user.id, txn_date:dateStr, from_account_id:null, to_account_id:pv.account.id,
+    amount:r2(pv.amount), fee:0, note:`${SAR_ADD_MARKER} ${source}` };
+  if(id) payload.id = id;
+  saveLocalRow("transfers", "ratex_transfers", payload);
+  closeSheet("sarAddOverlay");
+  toast(id ? "Additional SAR balance updated ✅" : `+${fmt(pv.amount)} SAR added to ${pv.account.name} ✅`, "success");
+  afterLocalChange(); populateAccountSelects();
 });
 
 /* ================= STOCK FORM ================= */
@@ -1897,17 +2214,75 @@ function lotAvailable(lotId, editingTradeId=""){
 }
 function allocRowHtml(selectedId="", amount="", auto=true){
   const editingId = $("#trId").value;
-  const opts = ['<option value="">— Select stock lot —</option>']
-    .concat(D.lots.map(l=>{
-      const av = lotAvailable(l.id, editingId);
-      return `<option value="${l.id}" ${l.id===selectedId?"selected":""} ${av<=0.005 && l.id!==selectedId ? "disabled":""}>${esc(lotLabel(l))} · Avail. ${fmt(av)} BDT</option>`;
-    })).join("");
+  const lot = selectedId ? D?.lotMap.get(selectedId) : null;
+  const avail = lot ? lotAvailable(lot.id, editingId) : 0;
   return `<div class="alloc-row">
-    <select class="alloc-lot">${opts}</select>
+    <input type="hidden" class="alloc-lot" value="${esc(selectedId)}">
+    <button type="button" class="lot-pick-btn" aria-haspopup="dialog" title="Choose stock lot">${lotPickButtonHtml(lot, avail)}</button>
     <input type="number" class="alloc-amt" data-auto="${auto ? "1" : "0"}" min="0" step="any" inputmode="decimal" placeholder="Use from lot" value="${amount}">
     <button type="button" class="alloc-del" title="Remove">✕</button>
     <div class="av"></div></div>`;
 }
+
+let activeAllocRow = null;
+function lotSearchText(l, avail=""){
+  return [lotDisplayNo(l), l.txn_date, dFmt(l.txn_date), l.source, l.note, l.sar_amount, l.fee_sar,
+    l.total_bdt, avail, l.base_rate, l.incentive_pct, l.effective_rate,
+    accountName(l.sar_account_id), accountName(l.bdt_account_id)].join(" ").toLowerCase();
+}
+function renderLotPicker(){
+  const listEl = $("#lotPickerList"), needEl = $("#lotPickerNeed");
+  if(!listEl || !needEl) return;
+  const row = activeAllocRow;
+  if(!row || !document.contains(row)){
+    listEl.innerHTML = `<div class="bank-empty neu-in">Select a lot row first.</div>`;
+    needEl.innerHTML = "";
+    return;
+  }
+  const editingId = $("#trId").value;
+  const selectedId = $(".alloc-lot", row)?.value || "";
+  const rows = $$("#allocRows .alloc-row");
+  const selectedElsewhere = new Set(rows.filter(r=>r!==row).map(r=>$(".alloc-lot",r)?.value).filter(Boolean));
+  const needed = tradeNeeded();
+  const otherAllocated = rows.filter(r=>r!==row).reduce((sm,r)=>sm+n($(".alloc-amt",r)?.value),0);
+  const thisRowNeed = Math.max(0, r2(needed - otherAllocated));
+  needEl.innerHTML = `
+    <div class="row"><span>Total stock needed for this trade</span><b>${fmt(needed)} BDT</b></div>
+    <div class="row"><span>This lot row will auto-use</span><b>${needed > 0 ? `up to ${fmt(thisRowNeed)} BDT` : "enter delivered BDT first"}</b></div>`;
+  const q = ($("#lotPickerSearch")?.value || "").trim().toLowerCase();
+  const entries = (D?.lots || [])
+    .map(l=>({ l, avail:lotAvailable(l.id, editingId) }))
+    .filter(({l, avail})=>!q || lotSearchText(l, avail).includes(q))
+    .sort((a,b)=> (b.avail > 0.005) - (a.avail > 0.005));
+  listEl.innerHTML = entries.length ? entries.map(({l, avail})=>{
+    const already = selectedElsewhere.has(l.id);
+    const soldOut = avail <= 0.005 && l.id !== selectedId;
+    const disabled = already || soldOut;
+    const usedPct = n(l.total_bdt) > 0 ? Math.min(100, Math.max(0, Math.round((n(l.total_bdt)-avail)/n(l.total_bdt)*100))) : 0;
+    const badge = already ? "Already selected" : (soldOut ? "Sold out" : `${fmt(avail)} BDT available`);
+    return `<button type="button" class="lot-choice${l.id===selectedId ? " selected" : ""}" data-lot-id="${l.id}" ${disabled ? "disabled" : ""}>
+      <div class="lot-choice-head"><div><div class="rt">${esc(lotDisplayNo(l))}</div><div class="rs">${dFmt(l.txn_date)}${l.kind==="opening" ? " · Historical lot" : ""}</div></div><span class="pill ${disabled ? "pill-partial" : "pill-stock"}">${esc(badge)}</span></div>
+      ${lotInfoGridHtml(lotInfoItems(l, avail))}
+      <div class="progress"><i style="width:${usedPct}%"></i></div>
+      <div class="lot-choice-note">${usedPct}% already used by other trades${l.note ? ` · 📝 ${esc(l.note)}` : ""}</div>
+    </button>`;
+  }).join("") : `<div class="bank-empty neu-in" style="margin-top:12px">No stock lot matches your search.</div>`;
+}
+function openLotPicker(row){
+  activeAllocRow = row;
+  const search = $("#lotPickerSearch");
+  if(search) search.value = "";
+  renderLotPicker();
+  openSheet("lotPickerOverlay");
+}
+function chooseLotForRow(row, lotId){
+  const input = $(".alloc-lot", row);
+  if(input) input.value = lotId || "";
+  const lot = D?.lotMap.get(lotId);
+  if(lot?.bdt_account_id && !$("#trSourceAcc").value) $("#trSourceAcc").value = lot.bdt_account_id;
+  refreshAllocRows(row);
+}
+
 function refreshAllocRows(changedRow=null){
   const editingId = $("#trId").value, needed = tradeNeeded();
   const rows = $$("#allocRows .alloc-row");
@@ -1924,10 +2299,17 @@ function refreshAllocRows(changedRow=null){
   }, 0);
   let remainingForAuto = Math.max(0, r2(needed - manualTotal));
   rows.forEach(row=>{
-    const sel = $(".alloc-lot", row), amt = $(".alloc-amt", row), av = $(".av", row);
-    if(!sel.value){
-      av.textContent="";
-      if(amt.dataset.auto === "1") amt.value = "";
+    const sel = $(".alloc-lot", row), amt = $(".alloc-amt", row), av = $(".av", row), pick = $(".lot-pick-btn", row);
+    if(!sel?.value){
+      if(pick) pick.innerHTML = lotPickButtonHtml();
+      if(av) av.innerHTML = "";
+      if(amt?.dataset.auto === "1") amt.value = "";
+      return;
+    }
+    const lot = D?.lotMap.get(sel.value);
+    if(!lot){
+      if(pick) pick.innerHTML = lotPickButtonHtml();
+      if(av) av.textContent = "Selected lot is no longer available.";
       return;
     }
     const avail = lotAvailable(sel.value, editingId);
@@ -1937,16 +2319,26 @@ function refreshAllocRows(changedRow=null){
       remainingForAuto = r2(remainingForAuto - fill);
     }
     const using = n(amt.value);
-    av.textContent = `Available in this lot: ${fmt(avail)} BDT${using > 0 ? ` · After this trade: ${fmt(avail - using)} BDT` : ""}`;
+    if(pick) pick.innerHTML = lotPickButtonHtml(lot, avail);
+    if(av) av.innerHTML = `<div class="lot-info">${lotInfoGridHtml(lotInfoItems(lot, avail, { using, compact:true }))}</div>`;
   });
   tradePreview();
 }
 $("#allocRows").addEventListener("change", e=>{
-  if(e.target.classList.contains("alloc-lot")){
-    const lot = D?.lotMap.get(e.target.value);
-    if(lot?.bdt_account_id && !$("#trSourceAcc").value) $("#trSourceAcc").value = lot.bdt_account_id;
-    refreshAllocRows(e.target.closest(".alloc-row"));
-  }
+  if(e.target.classList.contains("alloc-lot")) chooseLotForRow(e.target.closest(".alloc-row"), e.target.value);
+});
+$("#allocRows").addEventListener("click", e=>{
+  const pick = e.target.closest(".lot-pick-btn");
+  if(pick){ openLotPicker(pick.closest(".alloc-row")); return; }
+  const del = e.target.closest(".alloc-del");
+  if(del){ const rows=$$("#allocRows .alloc-row"); if(rows.length>1) del.closest(".alloc-row").remove(); else { $(".alloc-lot",del.closest(".alloc-row")).value=""; $(".alloc-amt",del.closest(".alloc-row")).value=""; } refreshAllocRows(); }
+});
+$("#lotPickerSearch").addEventListener("input", renderLotPicker);
+$("#lotPickerList").addEventListener("click", e=>{
+  const btn = e.target.closest("[data-lot-id]");
+  if(!btn || btn.disabled || !activeAllocRow) return;
+  chooseLotForRow(activeAllocRow, btn.dataset.lotId);
+  closeSheet("lotPickerOverlay");
 });
 $("#trSourceAcc").addEventListener("change", tradePreview);
 $("#trInitMethod").addEventListener("change", ()=>{
@@ -1956,11 +2348,12 @@ $("#trInitMethod").addEventListener("change", ()=>{
 $("#allocRows").addEventListener("input", e=>{
   if(e.target.classList.contains("alloc-amt")){ e.target.dataset.auto = "0"; refreshAllocRows(); }
 });
-$("#allocRows").addEventListener("click", e=>{
-  const del = e.target.closest(".alloc-del");
-  if(del){ const rows=$$("#allocRows .alloc-row"); if(rows.length>1) del.closest(".alloc-row").remove(); else { $(".alloc-lot",del.closest(".alloc-row")).value=""; $(".alloc-amt",del.closest(".alloc-row")).value=""; } refreshAllocRows(); }
+$("#addAllocBtn").addEventListener("click", ()=>{
+  $("#allocRows").insertAdjacentHTML("beforeend", allocRowHtml());
+  refreshAllocRows();
+  const rows = $$("#allocRows .alloc-row");
+  if(rows.length) openLotPicker(rows[rows.length - 1]);
 });
-$("#addAllocBtn").addEventListener("click", ()=>{ $("#allocRows").insertAdjacentHTML("beforeend", allocRowHtml()); refreshAllocRows(); });
 
 function readAllocations(){
   return $$("#allocRows .alloc-row").map(row=>({ lot_id:$(".alloc-lot",row).value, bdt:r2(n($(".alloc-amt",row).value)) })).filter(a=>a.lot_id || a.bdt>0);
@@ -2170,12 +2563,19 @@ document.addEventListener("click", async e=>{
   const btn = e.target.closest("[data-action]"); if(!btn) return;
   const {action, id} = btn.dataset;
   if(action==="detail"){ $("#detail-"+id)?.classList.toggle("open"); btn.textContent = $("#detail-"+id)?.classList.contains("open") ? "Hide" : "Details"; }
+  if(action==="toggle-trade"){
+    const card = btn.closest(".trade-summary-card");
+    const open = !!card?.classList.toggle("open");
+    if(open) ui.expandedTrades.add(id); else ui.expandedTrades.delete(id);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
   if(action==="pay") openPay(id);
   if(action==="edit-trade"){ const t=D.tradeMap.get(id); if(t) openTrade(t); }
   if(action==="edit-lot"){ const l=D.lotMap.get(id); if(l) openStock(l); }
   if(action==="edit-pay"){ const p=S.pays.find(x=>x.id===id); if(p) openPay(p.trade_id, p); }
   if(action==="edit-account"){ const a=S.accounts.find(x=>x.id===id); if(a) openAccount(a); }
-  if(action==="edit-transfer"){ const tf=S.transfers.find(x=>x.id===id); if(tf) openTransfer(tf); }
+  if(action==="edit-sar-add"){ const tf=S.transfers.find(x=>x.id===id); if(tf) openSarAdd(tf); }
+  if(action==="edit-transfer"){ const tf=S.transfers.find(x=>x.id===id); if(tf) isSarBalanceAddition(tf) ? openSarAdd(tf) : openTransfer(tf); }
 
   if(action==="del-trade"){
     const t=D.tradeMap.get(id); if(!t) return;
@@ -2220,14 +2620,26 @@ document.addEventListener("click", async e=>{
   }
   if(action==="del-transfer"){
     const tf=S.transfers.find(x=>x.id===id); if(!tf) return;
-    const cur = accountById(tf.from_account_id)?.currency || "";
-    if(await deleteConfirm("⚠ Delete this transfer?",
-      "Both account balances will be reversed:",
-      [["Transfer", `${accountName(tf.from_account_id)} → ${accountName(tf.to_account_id)}`],
-       ["Source gets back", `+${fmt(n(tf.amount)+n(tf.fee))} ${cur}`],
-       ["Destination loses", `−${fmt(tf.amount)} ${cur}`]])){
-      deleteLocalRow("transfers", "ratex_transfers", id);
-      toast("Transfer deleted. Balances reversed."); afterLocalChange();
+    if(isSarBalanceAddition(tf)){
+      if(await deleteConfirm("⚠ Delete this SAR balance addition?",
+        "The external SAR credit will be removed from the account permanently:",
+        [["SAR account", accountName(tf.to_account_id)],
+         ["Amount removed", `−${fmt(tf.amount)} SAR`],
+         ["Source / reason", sarAdditionSource(tf) || "Additional SAR balance"],
+         ["Stock / profit", "No change"]])){
+        deleteLocalRow("transfers", "ratex_transfers", id);
+        toast("SAR balance addition deleted. Account balance updated."); afterLocalChange(); populateAccountSelects();
+      }
+    } else {
+      const cur = accountById(tf.from_account_id)?.currency || accountById(tf.to_account_id)?.currency || "";
+      if(await deleteConfirm("⚠ Delete this transfer?",
+        "Both account balances will be reversed:",
+        [["Transfer", `${accountName(tf.from_account_id)} → ${accountName(tf.to_account_id)}`],
+         ["Source gets back", `+${fmt(n(tf.amount)+n(tf.fee))} ${cur}`],
+         ["Destination loses", `−${fmt(tf.amount)} ${cur}`]])){
+        deleteLocalRow("transfers", "ratex_transfers", id);
+        toast("Transfer deleted. Balances reversed."); afterLocalChange();
+      }
     }
   }
   if(action==="del-account"){
