@@ -660,6 +660,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <button type="button" class="mini-btn" id="addAllocBtn">＋ Add Lot</button>
     </div>
     <div id="allocRows"></div>
+    <p class="hint" style="margin:8px 4px 0">The amount box is only the BDT used for this trade — delivered amount + delivery charge. It auto-fills; type over it only when splitting one trade across lots.</p>
     <div class="calc-box neu-in" id="trPreview"></div>
 
     <div id="initialPayWrap">
@@ -1884,7 +1885,7 @@ function tradeAmounts(){
     if(ui.tradeMode==="bdt"){ const b=n($("#trBdt").value); if(b>0) $("#trSarDue").value = r2(b/rate); }
     else { const s=n($("#trSarDue").value); if(s>0) $("#trBdt").value = r2(s*rate); }
   }
-  tradePreview();
+  refreshAllocRows();
 }
 ["trBdt","trRate","trSarDue","trCharge"].forEach(id=> $("#"+id).addEventListener("input", tradeAmounts));
 
@@ -1894,7 +1895,7 @@ function lotAvailable(lotId, editingTradeId=""){
   const usedByOthers = S.allocs.filter(a=>a.lot_id===lotId && a.trade_id!==editingTradeId).reduce((s,a)=>s+n(a.bdt_allocated),0);
   return r2(n(lot.total_bdt) - usedByOthers);
 }
-function allocRowHtml(selectedId="", amount=""){
+function allocRowHtml(selectedId="", amount="", auto=true){
   const editingId = $("#trId").value;
   const opts = ['<option value="">— Select stock lot —</option>']
     .concat(D.lots.map(l=>{
@@ -1903,23 +1904,40 @@ function allocRowHtml(selectedId="", amount=""){
     })).join("");
   return `<div class="alloc-row">
     <select class="alloc-lot">${opts}</select>
-    <input type="number" class="alloc-amt" min="0" step="any" inputmode="decimal" placeholder="BDT amount" value="${amount}">
+    <input type="number" class="alloc-amt" data-auto="${auto ? "1" : "0"}" min="0" step="any" inputmode="decimal" placeholder="Use from lot" value="${amount}">
     <button type="button" class="alloc-del" title="Remove">✕</button>
     <div class="av"></div></div>`;
 }
-function refreshAllocRows(autoFillRow=null){
+function refreshAllocRows(changedRow=null){
   const editingId = $("#trId").value, needed = tradeNeeded();
   const rows = $$("#allocRows .alloc-row");
+  if(changedRow){
+    const changedAmt = $(".alloc-amt", changedRow);
+    if(changedAmt) changedAmt.dataset.auto = "1";
+  }
+  // Manual split amounts are respected. Auto rows only take the amount still
+  // needed for THIS trade (delivered + delivery charge), never the lot's
+  // whole remaining balance.
+  const manualTotal = rows.reduce((sum,row)=>{
+    const amt = $(".alloc-amt", row);
+    return sum + (amt?.dataset.auto === "1" ? 0 : n(amt?.value));
+  }, 0);
+  let remainingForAuto = Math.max(0, r2(needed - manualTotal));
   rows.forEach(row=>{
     const sel = $(".alloc-lot", row), amt = $(".alloc-amt", row), av = $(".av", row);
-    if(!sel.value){ av.textContent=""; return; }
-    const avail = lotAvailable(sel.value, editingId);
-    av.textContent = `Available in this lot: ${fmt(avail)} BDT`;
-    if(row === autoFillRow){
-      const others = rows.filter(r=>r!==row).reduce((s,r)=>s+n($(".alloc-amt",r).value),0);
-      const want = Math.max(0, needed - others);
-      amt.value = r2(Math.min(want || avail, avail));
+    if(!sel.value){
+      av.textContent="";
+      if(amt.dataset.auto === "1") amt.value = "";
+      return;
     }
+    const avail = lotAvailable(sel.value, editingId);
+    if(amt.dataset.auto === "1"){
+      const fill = r2(Math.min(remainingForAuto, avail));
+      amt.value = fill > 0 ? fill : "";
+      remainingForAuto = r2(remainingForAuto - fill);
+    }
+    const using = n(amt.value);
+    av.textContent = `Available in this lot: ${fmt(avail)} BDT${using > 0 ? ` · After this trade: ${fmt(avail - using)} BDT` : ""}`;
   });
   tradePreview();
 }
@@ -1935,7 +1953,9 @@ $("#trInitMethod").addEventListener("change", ()=>{
   const v = defaultSarAccountForMethod($("#trInitMethod").value);
   if(v) $("#trInitAccount").value = v;
 });
-$("#allocRows").addEventListener("input", e=>{ if(e.target.classList.contains("alloc-amt")) tradePreview(); });
+$("#allocRows").addEventListener("input", e=>{
+  if(e.target.classList.contains("alloc-amt")){ e.target.dataset.auto = "0"; refreshAllocRows(); }
+});
 $("#allocRows").addEventListener("click", e=>{
   const del = e.target.closest(".alloc-del");
   if(del){ const rows=$$("#allocRows .alloc-row"); if(rows.length>1) del.closest(".alloc-row").remove(); else { $(".alloc-lot",del.closest(".alloc-row")).value=""; $(".alloc-amt",del.closest(".alloc-row")).value=""; } refreshAllocRows(); }
@@ -1954,7 +1974,8 @@ function tradePreview(){
   cost = r2(cost);
   const profit = r2(sarDue - cost);
   const left = r2(needed - allocated);
-  const margin = cost>0 ? fmt(profit/cost*100,1) : "—";
+  const allocationReady = needed > 0 && allocated > 0 && Math.abs(left) <= 0.009;
+  const margin = allocationReady && cost>0 ? fmt(profit/cost*100,1) : "—";
   const srcAcc = accountById($("#trSourceAcc").value);
   const srcAvail = srcAcc ? accountBalance(srcAcc.id, {tradeId: $("#trId").value}) : null;
   const srcEnough = !srcAcc || needed <= srcAvail + 0.005;
@@ -1962,9 +1983,9 @@ function tradePreview(){
     <div class="row"><span>Stock going out (delivered + charge)</span><b>${fmt(needed)} BDT</b></div>
     <div class="row"><span>Allocated from lots</span><b class="${Math.abs(left)<=0.009 && needed>0 ? "pos":"neg"}">${fmt(allocated)} BDT ${needed>0 ? (Math.abs(left)<=0.009 ? "✓" : `· ${left>0? fmt(left)+" left" : fmt(-left)+" extra"}`) : ""}</b></div>
     <div class="row"><span>BD account ${srcAcc? "("+esc(srcAcc.name)+")" : ""} balance → after</span><b class="${srcEnough?"":"neg"}">${srcAcc? fmt(srcAvail)+" → "+fmt(srcAvail-needed)+" BDT" + (srcEnough?"":" ⚠ not enough") : "not selected"}</b></div>
-    <div class="row"><span>Your cost of this BDT (at lot rates)</span><b>${fmt(cost)} SAR</b></div>
+    <div class="row"><span>Your cost of ${allocationReady ? "this BDT" : "allocated BDT"} (at lot rates)</span><b>${fmt(cost)} SAR</b></div>
     <div class="row"><span>Customer pays you</span><b>${fmt(sarDue)} SAR</b></div>
-    <div class="row total"><span>Estimated trade profit (${margin}${cost>0?"%":""}) — after remit cost + delivery charge</span><span class="${signedCls(profit)}">${sarDue>0&&allocated>0 ? signedFmt(profit)+" SAR" : "—"}</span></div>`;
+    <div class="row total"><span>${allocationReady ? `Estimated trade profit (${margin}%) — after remit cost + delivery charge` : `Estimated trade profit — allocate exactly ${fmt(needed)} BDT first`}</span><span class="${allocationReady ? signedCls(profit) : ""}">${allocationReady && sarDue>0 ? signedFmt(profit)+" SAR" : "—"}</span></div>`;
   return {needed, allocated, left, cost, profit, allocs, sarDue, srcAcc, srcAvail, srcEnough};
 }
 
@@ -1991,7 +2012,7 @@ function openTrade(trade=null){
   $("#trInitAccount").value = defaultSarAccountForMethod($("#trInitMethod").value);
   setTradeMode("bdt");
   $("#allocRows").innerHTML = trade?.allocs?.length
-    ? trade.allocs.map(a=>allocRowHtml(a.lot_id, a.bdt_allocated)).join("")
+    ? trade.allocs.map(a=>allocRowHtml(a.lot_id, a.bdt_allocated, false)).join("")
     : allocRowHtml();
   refreshAllocRows();
   openSheet("tradeOverlay");
