@@ -7,13 +7,14 @@
 <meta name="description" content="RateX — SAR ⇄ BDT remittance trading ledger: stock, sell trades, settlements and profit analytics.">
 <meta name="theme-color" content="#0a84ff">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="RateX">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script>window.supabase || document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');</script>
 <style>
 /* ============================ RateX · Embossed / Neumorphic UI ============================ */
 :root{
@@ -118,6 +119,10 @@ small{color:var(--muted)}
 .user-chip{display:flex; align-items:center; gap:9px; padding:6px 12px 6px 6px; border-radius:999px; background:var(--surface); box-shadow:var(--sh-out-sm); font-size:12.5px; font-weight:700; color:var(--ink2); max-width:46vw}
 .user-chip .avatar{width:30px; height:30px; border-radius:50%; background:var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; flex:none}
 .user-chip span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.sync-chip{display:inline-flex; align-items:center; gap:6px; padding:9px 13px; border-radius:999px; background:var(--surface); box-shadow:var(--sh-out-sm); font-size:11.5px; font-weight:800; color:var(--green); white-space:nowrap}
+.sync-chip.pending{color:var(--amber)} .sync-chip.offline{color:var(--muted)} .sync-chip.failed{color:var(--red)}
+.sync-chip:active{box-shadow:var(--sh-in-sm)}
+@media(max-width:520px){.sync-chip .sync-txt{display:none} .sync-chip{padding:10px 11px}}
 main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px}
 .page-head h2{font-size:25px; font-weight:900}
@@ -364,6 +369,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <div><div class="bn">RateX</div><div class="bt">SAR ⇄ BDT Ledger</div></div>
       <div class="sp"></div>
       <button class="btn btn-neu hidden" id="installBtn" style="padding:10px 16px;font-size:12.5px">⬇ Install</button>
+      <button class="sync-chip" id="syncStatus" title="Sync status — tap to sync now">☁ <span class="sync-txt">Synced</span></button>
       <div class="user-chip"><span class="avatar" id="userAvatar">R</span><span id="userName">—</span></div>
       <button class="icon-btn" id="logoutBtn" title="Logout" aria-label="Logout">⎋</button>
     </div>
@@ -731,6 +737,172 @@ const S = { user:null, customers:[], lots:[], trades:[], allocs:[], pays:[] };
 let D = null; // derived
 let ui = { tab:"dashboard", typeFilter:"all", statusFilter:"all", search:"", period:"all", tradeMode:"bdt" };
 
+/* ================================================================
+   OFFLINE-FIRST LAYER
+   • Every change is saved INSTANTLY on this phone (localStorage)
+     and added to a sync queue — the app fully works offline.
+   • When internet returns, the queue is uploaded (backed up) to
+     Supabase one-by-one (idempotent upserts), then the app pulls
+     the latest server copy. Header chip shows the sync status.
+   ================================================================ */
+let Q = [];                       // pending sync operations
+let syncState = { busy:false, error:"" };
+let localLoadedFor = "";
+const nowIso = () => new Date().toISOString();
+const newId = () => (crypto.randomUUID ? crypto.randomUUID()
+  : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==="x" ? r : (r&0x3|0x8)).toString(16); }));
+const localKey  = uid => "ratex_local_v2_" + uid;
+const queueKey  = uid => "ratex_queue_v2_" + uid;
+
+const TABLE_COLS = {
+  ratex_customers:   ["id","user_id","name","phone","note","created_at","updated_at"],
+  ratex_stock_lots:  ["id","user_id","txn_date","sar_amount","fee_sar","base_rate","incentive_pct","total_bdt","effective_rate","source","note","created_at","updated_at"],
+  ratex_trades:      ["id","user_id","customer_id","txn_date","delivery_method","receiver_info","bdt_amount","delivery_charge_bdt","sell_rate","sar_due","note","created_at","updated_at"],
+  ratex_trade_lots:  ["id","user_id","trade_id","lot_id","bdt_allocated","cost_rate","cost_sar","created_at"],
+  ratex_settlements: ["id","user_id","trade_id","txn_date","sar_amount","method","note","created_at","updated_at"]
+};
+function cleanRow(table, row){
+  const cols = TABLE_COLS[table] || Object.keys(row||{});
+  const out = {};
+  cols.forEach(c => { if(row && row[c] !== undefined) out[c] = row[c]; });
+  return out;
+}
+function persistLocal(){
+  if(!S.user) return;
+  try{
+    localStorage.setItem(localKey(S.user.id), JSON.stringify({
+      customers:S.customers, lots:S.lots, trades:S.trades, allocs:S.allocs, pays:S.pays, savedAt: nowIso()
+    }));
+    localStorage.setItem(queueKey(S.user.id), JSON.stringify(Q));
+  }catch(e){ console.warn("Local save failed (storage full?)", e); }
+}
+function loadLocal(userId){
+  if(localLoadedFor === userId) return;
+  localLoadedFor = userId;
+  try{
+    const d = JSON.parse(localStorage.getItem(localKey(userId)) || "null");
+    S.customers = d?.customers||[]; S.lots = d?.lots||[]; S.trades = d?.trades||[];
+    S.allocs = d?.allocs||[]; S.pays = d?.pays||[];
+    Q = JSON.parse(localStorage.getItem(queueKey(userId)) || "[]");
+    if(!Array.isArray(Q)) Q = [];
+  }catch(e){
+    S.customers=[]; S.lots=[]; S.trades=[]; S.allocs=[]; S.pays=[]; Q=[];
+  }
+}
+function updateSyncUI(){
+  const el = $("#syncStatus"); if(!el) return;
+  const pending = Q.length;
+  el.className = "sync-chip";
+  if(syncState.busy){
+    el.classList.add("pending");
+    el.innerHTML = `⟳ <span class="sync-txt">Syncing…</span>`;
+    el.title = "Backing up your changes to Supabase…";
+  } else if(syncState.error && navigator.onLine){
+    el.classList.add("failed");
+    el.innerHTML = `⚠ <span class="sync-txt">Sync failed${pending?` · ${pending}`:""}</span>`;
+    el.title = "Sync failed: " + syncState.error + " — tap to retry. Your data is safe on this phone.";
+  } else if(!navigator.onLine){
+    el.classList.add("offline");
+    el.innerHTML = `📴 <span class="sync-txt">Offline${pending?` · ${pending} saved`:""}</span>`;
+    el.title = pending ? `${pending} change(s) saved on this phone — they will back up when internet returns.`
+                       : "Offline. Everything you do is saved on this phone.";
+  } else if(pending){
+    el.classList.add("pending");
+    el.innerHTML = `⏳ <span class="sync-txt">${pending} to sync</span>`;
+    el.title = "Tap to back up now.";
+  } else {
+    el.innerHTML = `☁ <span class="sync-txt">Synced</span>`;
+    el.title = "All changes are backed up to Supabase.";
+  }
+}
+function enqueue(kind, table, data={}){
+  Q.push({ qid:newId(), at:nowIso(), kind, table,
+    row: data.row ? cleanRow(table, data.row) : undefined,
+    id: data.id, trade_id: data.trade_id });
+  persistLocal(); updateSyncUI();
+}
+function saveLocalRow(collection, table, row){
+  const arr = S[collection];
+  const idx = row.id ? arr.findIndex(x => x.id === row.id) : -1;
+  let stored = idx >= 0 ? { ...arr[idx], ...row } : { ...row };
+  if(!stored.id) stored.id = newId();
+  if(!stored.created_at) stored.created_at = nowIso();
+  if(collection !== "allocs") stored.updated_at = nowIso();
+  if(idx >= 0) arr[idx] = stored; else arr.push(stored);
+  enqueue("upsert", table, { row: stored });
+  return stored;
+}
+function deleteLocalRow(collection, table, id){
+  S[collection] = S[collection].filter(x => x.id !== id);
+  enqueue("delete", table, { id });
+}
+function afterLocalChange(){
+  persistLocal(); renderAll(); updateSyncUI();
+  syncNow(); // background backup if online; stays queued if offline
+}
+async function applyOp(op){
+  let res;
+  if(op.kind === "upsert")       res = await sb.from(op.table).upsert(cleanRow(op.table, op.row), { onConflict:"id" });
+  else if(op.kind === "delete")  res = await sb.from(op.table).delete().eq("id", op.id);
+  else if(op.kind === "clear_allocs") res = await sb.from("ratex_trade_lots").delete().eq("trade_id", op.trade_id);
+  else return;
+  if(res.error) throw res.error;
+}
+async function pullServer(){
+  const q = (t, col="txn_date") => sb.from(t).select("*").order(col, {ascending:false});
+  const [c,l,t,a,p] = await Promise.all([
+    sb.from("ratex_customers").select("*").order("name"),
+    q("ratex_stock_lots"), q("ratex_trades"),
+    sb.from("ratex_trade_lots").select("*"), q("ratex_settlements")
+  ]);
+  const bad = [c,l,t,a,p].find(x=>x.error);
+  if(bad) throw bad.error;
+  if(Q.length) return false; // new local changes arrived during pull — don't overwrite them
+  S.customers=c.data||[]; S.lots=l.data||[]; S.trades=t.data||[]; S.allocs=a.data||[]; S.pays=p.data||[];
+  $("#setupBanner").innerHTML = "";
+  persistLocal(); renderAll();
+  return true;
+}
+async function syncNow({ pull=false, manual=false } = {}){
+  if(!sb || !S.user || syncState.busy){ updateSyncUI(); return false; }
+  if(!navigator.onLine){
+    updateSyncUI();
+    if(manual) toast(`Offline — ${Q.length ? Q.length+" change(s) saved on this phone" : "no changes pending"}. Backup will happen automatically when internet returns.`);
+    return false;
+  }
+  syncState.busy = true; syncState.error = ""; updateSyncUI();
+  try{
+    for(let guard=0; guard<3; guard++){
+      while(Q.length){
+        await applyOp(Q[0]);
+        Q.shift(); persistLocal(); updateSyncUI();
+      }
+      if(!pull) break;
+      if(await pullServer()) break;
+    }
+    return true;
+  }catch(err){
+    console.error("Sync failed", err);
+    const msg = String(err.message || err);
+    syncState.error = msg;
+    if(/ratex_|relation|schema cache|could not find/i.test(msg)){
+      $("#setupBanner").innerHTML = `<div class="banner"><b>⚠ One-time database setup needed.</b><br>
+        Open <b>Supabase → SQL Editor</b>, paste the full content of <code>supabase-setup.sql</code> and click <b>Run</b>, then reload this page.
+        Your data on this phone is safe and will back up after setup.
+        <br><small>Details: ${esc(msg)}</small></div>`;
+    }
+    if(manual) toast("Sync failed: " + msg + " — data is safe on this phone, tap ☁ to retry.", "error");
+    return false;
+  } finally {
+    syncState.busy = false; updateSyncUI();
+  }
+}
+document.addEventListener("DOMContentLoaded", updateSyncUI);
+window.addEventListener("online",  () => { updateSyncUI(); if(S.user){ toast("Back online — backing up your changes ☁"); syncNow({pull:true}); } });
+window.addEventListener("offline", () => { updateSyncUI(); toast("Offline mode — everything is saved on this phone and will back up when internet returns."); });
+setTimeout(()=>{ const b=$("#syncStatus"); if(b) b.addEventListener("click", ()=> syncNow({pull:true, manual:true})); updateSyncUI(); }, 0);
+
+
 function rebuild(){
   const lotMap = new Map(S.lots.map(l => [l.id, l]));
   const custMap = new Map(S.customers.map(c => [c.id, c]));
@@ -799,31 +971,15 @@ function rebuild(){
   return D;
 }
 
-/* ---------- data ---------- */
+/* ---------- data (offline-first) ---------- */
 async function loadData(showSpin=true){
-  if(!sb || !S.user) return;
-  if(showSpin) setLoading(true);
+  if(!S.user) return;
+  loadLocal(S.user.id);          // instant: show what's saved on this phone
+  renderAll(); updateSyncUI();
+  const hasLocal = S.lots.length || S.trades.length || S.customers.length || Q.length;
+  if(showSpin && !hasLocal) setLoading(true);
   try{
-    const q = (t, col="txn_date") => sb.from(t).select("*").order(col, {ascending:false});
-    const [c,l,t,a,p] = await Promise.all([
-      sb.from("ratex_customers").select("*").order("name"),
-      q("ratex_stock_lots"), q("ratex_trades"),
-      sb.from("ratex_trade_lots").select("*"), q("ratex_settlements")
-    ]);
-    const bad = [c,l,t,a,p].find(x=>x.error);
-    if(bad) throw bad.error;
-    S.customers=c.data||[]; S.lots=l.data||[]; S.trades=t.data||[]; S.allocs=a.data||[]; S.pays=p.data||[];
-    $("#setupBanner").innerHTML = "";
-    renderAll();
-  }catch(err){
-    console.error(err);
-    const msg = String(err.message||err);
-    if(/ratex_|relation|schema cache|could not find/i.test(msg)){
-      $("#setupBanner").innerHTML = `<div class="banner"><b>⚠ One-time database setup needed.</b><br>
-        Open <b>Supabase → SQL Editor</b>, paste the full content of <code>supabase-setup.sql</code> and click <b>Run</b>, then reload this page.
-        <br><small>Details: ${esc(msg)}</small></div>`;
-      S.customers=[];S.lots=[];S.trades=[];S.allocs=[];S.pays=[]; renderAll();
-    } else toast("Could not load data: " + msg, "error");
+    if(sb && navigator.onLine) await syncNow({ pull:true });  // backup queue, then refresh from server
   } finally { setLoading(false); }
 }
 
@@ -1156,13 +1312,11 @@ $("#stockForm").addEventListener("submit", async e=>{
   const payload = { user_id:S.user.id, txn_date:$("#stDate").value, source:$("#stSource").value.trim(),
     sar_amount:r2(sar), fee_sar:r2(fee), base_rate:rate, incentive_pct:inc, total_bdt:r2(total),
     effective_rate: Math.round(eff*1e6)/1e6, note:$("#stNote").value.trim() };
-  await busy($("#stSave"), async ()=>{
-    const res = id ? await sb.from("ratex_stock_lots").update(payload).eq("id", id)
-                   : await sb.from("ratex_stock_lots").insert(payload);
-    if(res.error) return formErr("stErr", res.error.message);
-    closeSheet("stockOverlay"); toast(id ? "Stock updated ✅" : "Stock added — BDT balance updated ✅", "success");
-    await loadData(false);
-  }, "Saving…");
+  if(id) payload.id = id;
+  saveLocalRow("lots", "ratex_stock_lots", payload);       // saved on phone instantly
+  closeSheet("stockOverlay");
+  toast(id ? "Stock updated ✅" : "Stock added — BDT balance updated ✅", "success");
+  afterLocalChange();                                      // renders + backs up if online
 });
 
 /* ================= SELL TRADE FORM ================= */
@@ -1279,18 +1433,16 @@ function openTrade(trade=null){
   openSheet("tradeOverlay");
 }
 
-async function ensureCustomer(name, phone){
+function ensureCustomer(name, phone){
   const nm = name.trim(), ph = phone.trim();
   let c = S.customers.find(x=>x.name.toLowerCase()===nm.toLowerCase() && (x.phone||"")===ph)
        || S.customers.find(x=>x.name.toLowerCase()===nm.toLowerCase() && (!ph || !x.phone));
   if(c){
-    if(ph && !c.phone) await sb.from("ratex_customers").update({phone:ph}).eq("id", c.id);
+    if(ph && !c.phone) c = saveLocalRow("customers", "ratex_customers", { ...c, phone: ph });
     return c.id;
   }
-  const {data, error} = await sb.from("ratex_customers").insert({user_id:S.user.id, name:nm, phone:ph}).select().single();
-  if(error) throw error;
-  S.customers.push(data);
-  return data.id;
+  return saveLocalRow("customers", "ratex_customers",
+    { user_id:S.user.id, name:nm, phone:ph, note:"" }).id;
 }
 
 $("#tradeForm").addEventListener("submit", async e=>{
@@ -1313,46 +1465,35 @@ $("#tradeForm").addEventListener("submit", async e=>{
   const initPay = editingId ? 0 : n($("#trInitPay").value);
   if(initPay > sarDue + 0.005) return formErr("trErr","SAR received now cannot be more than the total SAR due.");
 
-  await busy($("#trSave"), async ()=>{
-    try{
-      const customer_id = await ensureCustomer(custName, $("#trCustPhone").value);
-      const payload = { user_id:S.user.id, customer_id, txn_date:$("#trDate").value,
-        delivery_method:$("#trMethod").value, receiver_info:$("#trReceiver").value.trim(),
-        bdt_amount:r2(bdt), delivery_charge_bdt:r2(charge), sell_rate:rate, sar_due:r2(sarDue),
-        note:$("#trNote").value.trim() };
-      let tradeId = editingId, created = false;
-      if(editingId){
-        const {error} = await sb.from("ratex_trades").update(payload).eq("id", editingId);
-        if(error) throw error;
-      } else {
-        const {data, error} = await sb.from("ratex_trades").insert(payload).select().single();
-        if(error) throw error;
-        tradeId = data.id; created = true;
-      }
-      try{
-        const del = await sb.from("ratex_trade_lots").delete().eq("trade_id", tradeId);
-        if(del.error) throw del.error;
-        const rows = pv.allocs.map(a=>{
-          const lot = D.lotMap.get(a.lot_id), cr = n(lot.effective_rate);
-          return { user_id:S.user.id, trade_id:tradeId, lot_id:a.lot_id, bdt_allocated:a.bdt,
-                   cost_rate:cr, cost_sar: Math.round((a.bdt/cr)*10000)/10000 };
-        });
-        const ins = await sb.from("ratex_trade_lots").insert(rows);
-        if(ins.error) throw ins.error;
-        if(initPay > 0){
-          const pay = await sb.from("ratex_settlements").insert({ user_id:S.user.id, trade_id:tradeId,
-            txn_date:$("#trDate").value, sar_amount:r2(initPay), method:$("#trInitMethod").value, note:"Paid at trade time" });
-          if(pay.error) throw pay.error;
-        }
-      }catch(inner){
-        if(created) await sb.from("ratex_trades").delete().eq("id", tradeId); // rollback orphan
-        throw inner;
-      }
-      closeSheet("tradeOverlay");
-      toast(editingId ? "Trade updated ✅" : `Trade saved ✅ Profit ${signedFmt(pv.profit)} SAR${sarDue-initPay>0.005 ? ` · ${fmt(sarDue-initPay)} SAR pending` : " · fully paid"}`, "success");
-      await loadData(false);
-    }catch(err){ formErr("trErr", err.message || String(err)); }
-  }, "Saving…");
+  try{
+    const customer_id = ensureCustomer(custName, $("#trCustPhone").value);
+    const payload = { user_id:S.user.id, customer_id, txn_date:$("#trDate").value,
+      delivery_method:$("#trMethod").value, receiver_info:$("#trReceiver").value.trim(),
+      bdt_amount:r2(bdt), delivery_charge_bdt:r2(charge), sell_rate:rate, sar_due:r2(sarDue),
+      note:$("#trNote").value.trim() };
+    if(editingId) payload.id = editingId;
+    const tradeId = saveLocalRow("trades", "ratex_trades", payload).id;
+
+    // replace lot allocations locally (queued in the same order for backup)
+    S.allocs = S.allocs.filter(a => a.trade_id !== tradeId);
+    enqueue("clear_allocs", "ratex_trade_lots", { trade_id: tradeId });
+    pv.allocs.forEach(a => {
+      const lot = D.lotMap.get(a.lot_id), cr = n(lot.effective_rate);
+      saveLocalRow("allocs", "ratex_trade_lots", {
+        user_id:S.user.id, trade_id:tradeId, lot_id:a.lot_id, bdt_allocated:a.bdt,
+        cost_rate:cr, cost_sar: Math.round((a.bdt/cr)*10000)/10000 });
+    });
+
+    if(initPay > 0){
+      saveLocalRow("pays", "ratex_settlements", {
+        user_id:S.user.id, trade_id:tradeId, txn_date:$("#trDate").value,
+        sar_amount:r2(initPay), method:$("#trInitMethod").value, note:"Paid at trade time" });
+    }
+
+    closeSheet("tradeOverlay");
+    toast(editingId ? "Trade updated ✅" : `Trade saved ✅ Profit ${signedFmt(pv.profit)} SAR${sarDue-initPay>0.005 ? ` · ${fmt(sarDue-initPay)} SAR pending` : " · fully paid"}`, "success");
+    afterLocalChange();
+  }catch(err){ formErr("trErr", err.message || String(err)); }
 });
 
 /* ================= SETTLEMENT FORM ================= */
@@ -1404,14 +1545,11 @@ $("#payForm").addEventListener("submit", async e=>{
   const id = $("#payId").value;
   const payload = { user_id:S.user.id, trade_id:$("#payTradeSel").value, txn_date:$("#payDate").value,
     sar_amount:r2(amt), method:$("#payMethod").value, note:$("#payNote").value.trim() };
-  await busy($("#paySave"), async ()=>{
-    const res = id ? await sb.from("ratex_settlements").update(payload).eq("id", id)
-                   : await sb.from("ratex_settlements").insert(payload);
-    if(res.error) return formErr("payErr", res.error.message);
-    closeSheet("payOverlay");
-    toast(pv.dueBefore - amt <= 0.005 ? "Fully settled 🎉 Profit is now actual." : `Payment saved ✅ ${fmt(pv.dueBefore-amt)} SAR still due.`, "success");
-    await loadData(false);
-  }, "Saving…");
+  if(id) payload.id = id;
+  saveLocalRow("pays", "ratex_settlements", payload);
+  closeSheet("payOverlay");
+  toast(pv.dueBefore - amt <= 0.005 ? "Fully settled 🎉 Profit is now actual." : `Payment saved ✅ ${fmt(pv.dueBefore-amt)} SAR still due.`, "success");
+  afterLocalChange();
 });
 
 /* ================= ROW ACTIONS (edit/delete/detail/pay) ================= */
@@ -1427,26 +1565,25 @@ document.addEventListener("click", async e=>{
   if(action==="del-trade"){
     const t=D.tradeMap.get(id);
     if(await confirmBox("Delete this trade?", `The sell trade of ${fmt0(t?.bdt_amount)} BDT (${t?.customer?.name||""}) will be deleted with all its payments. The BDT returns to your stock lots. This cannot be undone.`)){
-      setLoading(true);
-      const {error} = await sb.from("ratex_trades").delete().eq("id", id); setLoading(false);
-      error ? toast(error.message,"error") : (toast("Trade deleted. Stock restored."), loadData(false));
+      S.allocs = S.allocs.filter(a => a.trade_id !== id);   // local cascade
+      S.pays   = S.pays.filter(p2 => p2.trade_id !== id);
+      deleteLocalRow("trades", "ratex_trades", id);          // server cascade handles the rest
+      toast("Trade deleted. Stock restored."); afterLocalChange();
     }
   }
   if(action==="del-lot"){
     const l=D.lotMap.get(id);
     if(l && l.usedBdt > 0.005) return toast(`This lot already supplied ${fmt(l.usedBdt)} BDT to sell trades — delete/edit those trades first.`, "error");
     if(await confirmBox("Delete this stock lot?", `Stock of ${fmt0(l?.total_bdt)} BDT (${dFmt(l?.txn_date)}) will be removed from your balance. This cannot be undone.`)){
-      setLoading(true);
-      const {error} = await sb.from("ratex_stock_lots").delete().eq("id", id); setLoading(false);
-      error ? toast(error.message,"error") : (toast("Stock lot deleted."), loadData(false));
+      deleteLocalRow("lots", "ratex_stock_lots", id);
+      toast("Stock lot deleted."); afterLocalChange();
     }
   }
   if(action==="del-pay"){
     const p=S.pays.find(x=>x.id===id);
     if(await confirmBox("Delete this payment?", `${fmt(p?.sar_amount)} SAR received on ${dFmt(p?.txn_date)} will be removed and that amount becomes due again.`)){
-      setLoading(true);
-      const {error} = await sb.from("ratex_settlements").delete().eq("id", id); setLoading(false);
-      error ? toast(error.message,"error") : (toast("Payment deleted. Due updated."), loadData(false));
+      deleteLocalRow("pays", "ratex_settlements", id);
+      toast("Payment deleted. Due updated."); afterLocalChange();
     }
   }
 });
@@ -1505,7 +1642,12 @@ $("#forgotBtn").addEventListener("click", async ()=>{
   const {error} = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
   error ? authMsg(error.message) : authMsg("Password reset link sent ✅ Check your email inbox.", true);
 });
-$("#logoutBtn").addEventListener("click", async ()=>{ await sb?.auth.signOut(); });
+$("#logoutBtn").addEventListener("click", async ()=>{
+  if(Q.length && !(await confirmBox("Unsynced changes on this phone",
+      `You have ${Q.length} change(s) saved on this phone that are not backed up yet. They will stay safe on this phone and back up next time you log in with the same account. Log out anyway?`, "Log out"))) return;
+  if(sb && navigator.onLine) await sb.auth.signOut();
+  else { try{ await sb?.auth.signOut({scope:"local"}); }catch(e){} onSignedOut(); }
+});
 
 function onSignedIn(user){
   S.user = user;
@@ -1517,7 +1659,7 @@ function onSignedIn(user){
   loadData();
 }
 function onSignedOut(){
-  S.user = null; S.customers=[];S.lots=[];S.trades=[];S.allocs=[];S.pays=[];
+  S.user = null; S.customers=[];S.lots=[];S.trades=[];S.allocs=[];S.pays=[]; Q=[]; localLoadedFor="";
   $("#appScreen").classList.add("hidden");
   $("#authScreen").classList.remove("hidden");
   showAuth("login");
@@ -1543,7 +1685,6 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 let deferredInstall = null;
 window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredInstall = e; $("#installBtn").classList.remove("hidden"); });
 $("#installBtn").addEventListener("click", async ()=>{ if(deferredInstall){ deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall=null; $("#installBtn").classList.add("hidden"); } });
-window.addEventListener("offline", ()=> toast("You are offline — changes can't be saved until you reconnect.", "error"));
 </script>
 </body>
 </html>

@@ -1,18 +1,28 @@
-/* RateX — Service Worker (app-shell cache; Supabase API is never cached) */
-const CACHE = "ratex-v1";
+/* RateX — Service Worker v2 (offline app shell; Supabase API is never cached)
+   Files are cached one-by-one so a single missing file can NEVER
+   break installation/offline mode again. */
+const CACHE = "ratex-v2";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/maskable-512.png"
+  "./supabase.js",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./maskable-512.png"
 ];
 
 self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())
-  );
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    await Promise.allSettled(SHELL.map(async (url) => {
+      try {
+        const res = await fetch(url, { cache: "reload" });
+        if (res && res.ok) await cache.put(url, res);
+      } catch (_) { /* keep going — one bad file must not fail install */ }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (e) => {
@@ -26,7 +36,7 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
 
-  // Never intercept Supabase (auth/data) or non-GET requests.
+  // Never intercept Supabase (auth/data backup sync) or non-GET requests.
   if (e.request.method !== "GET" || url.hostname.endsWith("supabase.co")) return;
 
   // Page navigations: network-first, fall back to cached app shell (offline).
@@ -43,12 +53,15 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // Static assets: cache-first, refresh in background.
+  // Static assets (app files + Supabase CDN fallback): cache-first,
+  // refresh in the background. Works fully offline after first visit.
+  const cacheable = url.origin === location.origin || url.hostname === "cdn.jsdelivr.net";
+  if (!cacheable) return;
   e.respondWith(
     caches.match(e.request).then((hit) => {
       const network = fetch(e.request)
         .then((res) => {
-          if (res && res.status === 200 && url.origin === location.origin) {
+          if (res && res.status === 200) {
             const copy = res.clone();
             caches.open(CACHE).then((c) => c.put(e.request, copy));
           }

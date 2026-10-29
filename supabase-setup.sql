@@ -164,6 +164,9 @@ begin
   end loop;
 end $$;
 
+-- Force the REST API to pick up the new tables immediately
+notify pgrst, 'reload schema';
+
 -- ============================================================
 -- Done ✅  Now open the RateX site, Sign Up, and start trading.
 -- Tip: Supabase → Authentication → Providers → Email:

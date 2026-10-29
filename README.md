@@ -31,9 +31,12 @@ Replace the repo contents with the files in this folder and push (GitHub Pages s
 
 ```
 index.html            ← the whole app (Supabase URL + anon key already inside)
+supabase.js           ← Supabase client library, self-hosted so the app opens offline
 manifest.json         ← PWA manifest (app name: RateX)
-sw.js                 ← service worker (offline app shell)
-icons/                ← app icons (192 / 512 / maskable)
+sw.js                 ← service worker (offline app shell, cache v2)
+icon-192.png          ← app icons — ALL files sit flat in the repo root (no subfolders!)
+icon-512.png
+maskable-512.png
 supabase-setup.sql    ← database setup (run once in Supabase, see Step A)
 .nojekyll
 README.md
@@ -41,7 +44,7 @@ README.md
 
 ```bash
 git add .
-git commit -m "RateX v1"
+git commit -m "RateX"
 git push
 ```
 
@@ -97,4 +100,5 @@ Open the live site in Chrome (Android) → menu **⋮ → Install app** (or use 
 - **Currencies:** SAR and BDT only; every rate is entered by you — RateX never fetches market rates.
 - **Overpayment** on a single trade is blocked; record advances on the future trade they belong to.
 - **Social buttons (G / f / in)** on the login card are part of the embossed design; email & password is the working login. To enable Google/Facebook/LinkedIn: Supabase → Authentication → Providers.
-- **Tech:** single-file HTML/CSS/JS + Supabase JS CDN, custom SVG/CSS charts (no chart library). Charts, icons and styles are all self-contained; only the Supabase client loads from CDN.
+- **Offline-first:** once you have logged in (first login needs internet), RateX works completely offline. Every entry is saved instantly on the phone and queued; the header chip shows `☁ Synced`, `⏳ N to sync` or `📴 Offline · N saved`. When internet returns, changes are backed up to Supabase automatically (you can also tap the chip to sync/pull now). Don't clear the browser/site data while the chip shows unsynced changes, and if you edit the same record on two devices while both are offline, the later backup wins.
+- **Tech:** single-file HTML/CSS/JS app with a **self-hosted** Supabase client (`supabase.js`) and a service-worker app shell — even the library loads offline. Custom CSS-bar/conic charts, no chart library. All files live flat in the repo root; manifest and service worker reference `icon-192.png` etc. at root, which is what makes Chrome offer **Install app**.
