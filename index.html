@@ -177,6 +177,10 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .bank-actions .btn{min-width:0; white-space:normal; text-align:center; line-height:1.3}
 @media(min-width:640px){.bank-actions.two{grid-template-columns:1fr 1fr}}
 .pill-sar-add{background:#dcfce7; color:#067a51}
+.pill-spendly{background:#d9f5e9; color:#067a51}
+.sp-connect{margin-top:16px; padding:13px 15px; font-size:13px; line-height:1.55}
+.sp-connect .sp-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+.sp-connect .sp-email{font-weight:800; overflow-wrap:anywhere}
 .acct-grid{display:grid; grid-template-columns:1fr; gap:12px}
 @media(min-width:680px){.acct-grid{grid-template-columns:1fr 1fr}}
 .acct-card{padding:13px 15px}
@@ -528,6 +532,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         </div>
         <div class="progress" style="margin-top:15px"><i id="dCollectBar" style="width:0%"></i></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px"><span id="dTotalDue">Total receivable 0 SAR</span><span id="dTotalProfit">Total profit 0 SAR</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-top:6px;border-top:1px dashed #c4ccdd;padding-top:8px"><span id="dSpendlyOut">💚 To Spendly 0 SAR</span><span id="dSpendlyLeft"></span></div>
       </div>
 
       <div class="section">
@@ -573,6 +578,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <button class="chip" data-typefilter="stock">Stock In</button>
         <button class="chip" data-typefilter="transfer">Transfers</button>
         <button class="chip" data-typefilter="saradd">SAR Additions</button>
+        <button class="chip" data-typefilter="spendly">💚 Spendly</button>
         <span style="flex:1"></span><small id="tradeCount"></small>
       </div>
       <div id="tradeList"></div>
@@ -832,16 +838,28 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 <div class="overlay" id="transferOverlay">
   <form class="sheet" id="transferForm">
     <div class="grab"></div>
-    <div class="sheet-head"><div><h3 id="tfTitle">Transfer Between Accounts</h3><p>Example: deposit hand cash (SAR) into your Saudi Bank to remit again.</p></div><button type="button" class="icon-btn close-x" data-close="transferOverlay">✕</button></div>
+    <div class="sheet-head"><div><h3 id="tfTitle">Transfer Between Accounts</h3><p id="tfSub">Example: deposit hand cash (SAR) into your Saudi Bank to remit again.</p></div><button type="button" class="icon-btn close-x" data-close="transferOverlay">✕</button></div>
     <input type="hidden" id="tfId">
+    <div class="seg" role="group" aria-label="Transfer type">
+      <button type="button" id="tfModeInternal" class="active">⇪ Between Accounts</button>
+      <button type="button" id="tfModeSpendly">💚 To Spendly</button>
+    </div>
     <div class="field"><label for="tfDate">Date</label><input type="date" id="tfDate" required></div>
-    <div class="grid2">
-      <div class="field"><label for="tfFrom">From Account (Debit)</label><select id="tfFrom" required></select></div>
-      <div class="field"><label for="tfTo">To Account (Credit)</label><select id="tfTo" required></select></div>
+    <div id="tfInternalFields">
+      <div class="grid2">
+        <div class="field"><label for="tfFrom">From Account (Debit)</label><select id="tfFrom"></select></div>
+        <div class="field"><label for="tfTo">To Account (Credit)</label><select id="tfTo"></select></div>
+      </div>
+    </div>
+    <div id="tfSpendlyFields" class="hidden">
+      <div class="field"><label for="tfSpFrom">From RateX SAR Account (Debit)</label><select id="tfSpFrom"></select></div>
+      <div class="sp-connect neu-in" id="spConnectBox"></div>
+      <div class="field"><label for="tfSpAccount">Spendly Account — money lands here</label><select id="tfSpAccount"></select></div>
+      <div class="field"><label for="tfSpCategory">Spendly Income Category</label><select id="tfSpCategory"></select></div>
     </div>
     <div class="grid2">
       <div class="field"><label for="tfAmount">Amount</label><input type="number" id="tfAmount" required min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
-      <div class="field"><label for="tfFee">Fee / Charge (extra from source)</label><input type="number" id="tfFee" min="0" step="any" inputmode="decimal" value="0"></div>
+      <div class="field" id="tfFeeWrap"><label for="tfFee">Fee / Charge (extra from source)</label><input type="number" id="tfFee" min="0" step="any" inputmode="decimal" value="0"></div>
     </div>
     <div class="calc-box neu-in" id="tfPreview"></div>
     <div class="field"><label for="tfNote">Note (optional)</label><input type="text" id="tfNote" placeholder="Any note…"></div>
@@ -1201,8 +1219,16 @@ function transferDisplayNote(tf){
 }
 const DISCOUNT_METHOD = "Discount";
 function isDiscountPay(p){ return p?.method === DISCOUNT_METHOD; }
+const SPENDLY_MARKER = "[[TO_SPENDLY]]";
+function isSpendlyTransfer(tf){
+  return !!tf && !tf.to_account_id && String(tf.note || "").startsWith(SPENDLY_MARKER);
+}
+function spendlyMeta(tf){
+  if(!isSpendlyTransfer(tf)) return {};
+  try{ return JSON.parse(String(tf.note).slice(SPENDLY_MARKER.length)) || {}; }catch(e){ return {}; }
+}
 function transferFeeSar(tf, convRate){
-  if(isSarBalanceAddition(tf)) return 0;
+  if(isSarBalanceAddition(tf) || isSpendlyTransfer(tf)) return 0;
   const fee = n(tf.fee); if(!(fee > 0)) return 0;
   const src = S.accounts.find(a=>a.id===tf.from_account_id) || S.accounts.find(a=>a.id===tf.to_account_id);
   const cur = src?.currency || "SAR";
@@ -1299,6 +1325,10 @@ function rebuild(){
   tot.tradeProfitSar = tot.profitSar;
   tot.netProfitSar = r2(tot.profitSar - tot.transferFeesSar);
   tot.netActualProfit = r2(tot.actualProfit - tot.transferFeesSar);
+  const spendlyTfs = S.transfers.filter(isSpendlyTransfer);
+  tot.spendlySar = r2(spendlyTfs.reduce((sm,tf)=>sm+n(tf.amount),0));           // personal drawings to Spendly
+  tot.spendlyMonthSar = r2(spendlyTfs.filter(tf=>monthKey(tf.txn_date)===monthKey(todayStr())).reduce((sm,tf)=>sm+n(tf.amount),0));
+  tot.profitLeftInBusiness = r2(tot.netActualProfit - tot.spendlySar);          // <0 ⇒ spending trading capital
   const remainLots = lots.filter(l=>l.remainingBdt > 0.005);
   const remainSarCost = remainLots.reduce((s,l)=> s + (n(l.effective_rate) ? l.remainingBdt / n(l.effective_rate) : 0), 0);
   tot.avgCostRate = remainSarCost > 0 ? tot.bdtBalance / remainSarCost : 0;
@@ -1436,6 +1466,27 @@ function transferCard(tf){
     </div>
     <div class="card-actions">
       <button class="mini-btn" data-action="edit-sar-add" data-id="${tf.id}">✎ Edit</button>
+      <button class="mini-btn red" data-action="del-transfer" data-id="${tf.id}">🗑 Delete</button>
+    </div></article>`;
+  }
+  if(isSpendlyTransfer(tf)){
+    const meta = spendlyMeta(tf);
+    const from = accountById(tf.from_account_id);
+    return `<article class="card neu">
+    <div class="card-top">
+      <div class="avatar-c" style="color:#fff;background:linear-gradient(135deg,#12b981,#067a51)">💚</div>
+      <div class="tt"><div class="t1">RateX → Spendly · ${esc(meta.accName || "Spendly account")}</div>
+      <div class="t2">${dFmt(tf.txn_date)} · ${esc(meta.cat || "Income")}${meta.note ? " · "+esc(meta.note) : ""}</div></div>
+      <span class="pill pill-spendly">Spendly</span>
+    </div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">Amount Sent</div><div class="v">${fmt(tf.amount)} <small>SAR</small></div></div>
+      <div class="kv"><div class="l">From (RateX)</div><div class="v" style="font-size:12.5px">${esc(from?.name || "—")}</div></div>
+      <div class="kv"><div class="l">To (Spendly)</div><div class="v" style="font-size:12.5px">${esc(meta.accName || "—")}${meta.accType ? ` · ${esc(meta.accType)}` : ""}</div></div>
+      <div class="kv"><div class="l">Spendly Entry</div><div class="v" style="font-size:12.5px">Cash In ✓</div></div>
+    </div>
+    <div class="card-actions">
+      <button class="mini-btn" data-action="edit-transfer" data-id="${tf.id}">✎ Edit</button>
       <button class="mini-btn red" data-action="del-transfer" data-id="${tf.id}">🗑 Delete</button>
     </div></article>`;
   }
@@ -1647,6 +1698,12 @@ function renderDashboard(){
   $("#dCollected").textContent = fmt0(t.collectedSar);
   $("#dTotalDue").textContent = `Total receivable ${fmt(t.receivableSar)} SAR${t.discountSar > 0.004 ? ` · waived ${fmt(t.discountSar)}` : ""}`;
   $("#dTotalProfit").innerHTML = `Net profit <b class="${signedCls(t.netProfitSar)}">${signedFmt(t.netProfitSar)} SAR</b>${t.transferFeesSar>0.004 ? ` <span style="color:var(--muted)">(trade ${signedFmt(t.tradeProfitSar)} − fees ${fmt(t.transferFeesSar)})</span>` : ""}`;
+  $("#dSpendlyOut").innerHTML = `💚 To Spendly <b style="color:var(--ink)">${fmt(t.spendlySar)} SAR</b>${t.spendlyMonthSar > 0.004 ? ` (${fmt(t.spendlyMonthSar)} this month)` : ""}`;
+  $("#dSpendlyLeft").innerHTML = t.spendlySar > 0.004
+    ? (t.profitLeftInBusiness >= -0.004
+        ? `Realized profit still in business <b class="pos">${fmt(t.profitLeftInBusiness)} SAR</b>`
+        : `⚠️ <b class="neg">${fmt(-t.profitLeftInBusiness)} SAR beyond realized profit</b> — spending capital`)
+    : `Realized profit <b class="${signedCls(t.netActualProfit)}">${fmt(t.netActualProfit)} SAR</b> available to send`;
 
   $("#dashAccounts").innerHTML = renderBankSection("SAR") + renderBankSection("BDT");
 
@@ -1664,10 +1721,10 @@ function renderDashboard(){
     ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇩","var(--blue2)", `${esc(lotDisplayNo(x))} · Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
     ...S.pays.map(p=>{ const tr=D.tradeMap.get(p.trade_id); const disc=isDiscountPay(p); return {date:p.txn_date, sort:(p.created_at||p.txn_date), html:activityRow(disc ? "−" : "✓", disc ? "var(--amber)" : "var(--green)", disc ? `Waived ${fmt(p.sar_amount)} SAR discount${tr? " for "+esc(tr.customer?.name||"customer"):""}` : `Received ${fmt(p.sar_amount)} SAR${tr? " from "+esc(tr.customer?.name||"customer"):""}`, disc ? "Written off — not collected" : esc(p.method) + (p.account_id ? " → "+esc(accountName(p.account_id)) : ""), dFmt(p.txn_date))}; }),
     ...D.transfers.map(tf=>{
-      const add = isSarBalanceAddition(tf);
-      return {date:tf.txn_date, sort:(tf.created_at||tf.txn_date), html:activityRow(add ? "＋" : "⇪", add ? "var(--green)" : "#6d28d9",
-        add ? `Added ${fmt(tf.amount)} SAR balance` : `Transferred ${fmt(tf.amount)}`,
-        add ? `${esc(sarAdditionSource(tf) || "External SAR")} → ${esc(accountName(tf.to_account_id))}` : `${esc(accountName(tf.from_account_id))} → ${esc(accountName(tf.to_account_id))}`,
+      const add = isSarBalanceAddition(tf), sp = isSpendlyTransfer(tf), meta = sp ? spendlyMeta(tf) : {};
+      return {date:tf.txn_date, sort:(tf.created_at||tf.txn_date), html:activityRow(sp ? "💚" : (add ? "＋" : "⇪"), (add||sp) ? "var(--green)" : "#6d28d9",
+        sp ? `Sent ${fmt(tf.amount)} SAR to Spendly` : (add ? `Added ${fmt(tf.amount)} SAR balance` : `Transferred ${fmt(tf.amount)}`),
+        sp ? `${esc(accountName(tf.from_account_id))} → Spendly · ${esc(meta.accName || "account")}` : (add ? `${esc(sarAdditionSource(tf) || "External SAR")} → ${esc(accountName(tf.to_account_id))}` : `${esc(accountName(tf.from_account_id))} → ${esc(accountName(tf.to_account_id))}`),
         dFmt(tf.txn_date))};
     })
   ].sort((a,b)=> String(b.sort).localeCompare(String(a.sort))).slice(0,7);
@@ -1693,7 +1750,8 @@ function renderTradePage(){
     (!q || [t.customer?.name, t.customer?.phone, t.delivery_method, t.receiver_info, t.note, t.allocs.map(a=>lotDisplayNo(D.lotMap.get(a.lot_id)||{})).join(" ")].join(" ").toLowerCase().includes(q));
   const matchLot = l => !q || [l.source, l.note, l.remit_no, lotDisplayNo(l), accountName(l.sar_account_id), accountName(l.bdt_account_id)].join(" ").toLowerCase().includes(q);
   const matchTf = tf => !q || [accountName(tf.from_account_id), accountName(tf.to_account_id), transferDisplayNote(tf),
-    isSarBalanceAddition(tf) ? "additional sar balance sar added external deposit" : "internal transfer"].join(" ").toLowerCase().includes(q);
+    isSpendlyTransfer(tf) ? `spendly tunnel ${spendlyMeta(tf).accName||""} ${spendlyMeta(tf).cat||""} ${spendlyMeta(tf).note||""}`
+    : isSarBalanceAddition(tf) ? "additional sar balance sar added external deposit" : "internal transfer"].join(" ").toLowerCase().includes(q);
 
   const matchedTrades = (ui.typeFilter === "all" || ui.typeFilter === "sell") ? D.trades.filter(matchTrade) : [];
   const pendingTrades = matchedTrades.filter(t=>t.status !== "Settled");
@@ -1702,11 +1760,13 @@ function renderTradePage(){
   const lots = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "stock") ? D.lots.filter(matchLot) : [];
   const matchedTransfers = D.transfers.filter(matchTf);
   const internalTransfers = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "transfer")
-    ? matchedTransfers.filter(tf=>!isSarBalanceAddition(tf)) : [];
+    ? matchedTransfers.filter(tf=>!isSarBalanceAddition(tf) && !isSpendlyTransfer(tf)) : [];
   const sarAdditions = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "saradd")
     ? matchedTransfers.filter(isSarBalanceAddition) : [];
+  const spendlyTransfers = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "spendly")
+    ? matchedTransfers.filter(isSpendlyTransfer) : [];
 
-  const count = matchedTrades.length + lots.length + internalTransfers.length + sarAdditions.length;
+  const count = matchedTrades.length + lots.length + internalTransfers.length + sarAdditions.length + spendlyTransfers.length;
   $("#tradeCount").textContent = count + " record" + (count===1?"":"s");
 
   const section = (title, sub, total, totalSub, totalClass, html) => `
@@ -1749,6 +1809,13 @@ function renderTradePage(){
     sections.push(section("Additional SAR Balances",
       `${sarAdditions.length} external SAR credit${sarAdditions.length===1?"":"s"} to Saudi SAR accounts`,
       `+${fmt(added)} SAR`, "total added", "pos", sarAdditions.map(transferCard).join("")));
+  }
+  if(spendlyTransfers.length){
+    const sent = r2(spendlyTransfers.reduce((sm,tf)=>sm+n(tf.amount),0));
+    const left = D.tot.profitLeftInBusiness;
+    sections.push(section("Transfers to Spendly 💚",
+      `${spendlyTransfers.length} personal transfer${spendlyTransfers.length===1?"":"s"} · realized profit ${fmt(D.tot.netActualProfit)} SAR · ${left >= -0.004 ? `${fmt(left)} SAR profit still in business` : `⚠️ ${fmt(-left)} SAR beyond realized profit (capital)`}`,
+      `${fmt(sent)} SAR`, "total sent", "", spendlyTransfers.map(transferCard).join("")));
   }
 
   $("#tradeList").innerHTML = sections.length
@@ -1941,6 +2008,7 @@ function populateAccountSelects(){
   setAccountSelect("payAccount", "SAR", "— SAR account —");
   setAccountSelect("saAccount", "SAR", "— Saudi SAR account —");
   setAccountSelect("tfFrom", "", "— From account —");
+  setAccountSelect("tfSpFrom", "SAR", "— RateX SAR account —");
   refreshTransferTo();
 }
 function firstAccountId(currency, type=""){
@@ -2028,6 +2096,177 @@ $("#accountForm").addEventListener("submit", e=>{
   if($("#transferOverlay").classList.contains("open")){ populateAccountSelects(); }
 });
 
+/* ================= SPENDLY TUNNEL =================
+   Spendly (personal expense app) keeps everything in ONE Firestore
+   document: spendly/{uid} -> { data:{accounts,transactions,...}, rev }.
+   The tunnel appends a Cash-In (income) transaction to that document
+   inside a Firestore transaction (atomic, rev+1 — exactly the shape
+   Spendly itself writes), and debits the chosen RateX SAR account.
+   Requires: online + Google sign-in (same account as Spendly). */
+const SPENDLY_FB_CONFIG={apiKey:"AIzaSyCwCqkUTUn-CfTBxyaGz9ziJOmW8pZmejU",authDomain:"spendly-139.firebaseapp.com",projectId:"spendly-139",storageBucket:"spendly-139.firebasestorage.app",messagingSenderId:"547443315945",appId:"1:547443315945:web:de7758c4e3f8df1e738c78"};
+const SP={fb:null,user:null,authReady:null,loading:false,error:"",accounts:[],categories:[],docExists:false,loaded:false};
+let tfMode="internal";
+let editingSpendlyMeta=null;
+const spAdapter=()=> (typeof window!=="undefined" && window.__SPENDLY_TEST_ADAPTER__) || null;
+const spNewTxId=()=> "tx_ratex_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+async function spEnsure(){
+  const ad=spAdapter();
+  if(ad){ SP.user=ad.user||null; return !!SP.user; }
+  if(SP.fb){ if(SP.authReady) await SP.authReady; return !!SP.user; }
+  SP.loading=true; SP.error=""; renderSpendlyConnect();
+  try{
+    const V="10.12.2";
+    const [appMod,authMod,fsMod]=await Promise.all([
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`),
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`)
+    ]);
+    let app; try{ app=appMod.getApp(); }catch(e){ app=appMod.initializeApp(SPENDLY_FB_CONFIG); }
+    const auth=authMod.getAuth(app);
+    try{ await authMod.setPersistence(auth, authMod.browserLocalPersistence); }catch(e){}
+    SP.fb={app,auth,db:fsMod.getFirestore(app),authMod,fsMod};
+    SP.authReady=new Promise(res=>{
+      authMod.onAuthStateChanged(auth, async u=>{
+        SP.user=u; SP.loaded=false;
+        if(u){ try{ await spLoadAccounts(); }catch(e){ SP.error=String(e?.code||e?.message||e); } }
+        renderSpendlyConnect();
+        if(tfMode==="spendly") transferPreview();
+        res();
+      });
+    });
+    try{ await authMod.getRedirectResult(auth); }catch(e){}
+    await SP.authReady;
+    return !!SP.user;
+  }catch(e){
+    SP.error=String(e?.code||e?.message||e);
+    return false;
+  }finally{
+    SP.loading=false; renderSpendlyConnect();
+  }
+}
+async function spConnect(){
+  const ad=spAdapter();
+  if(ad){ SP.user=ad.user||null; if(SP.user){ await spLoadAccounts(); } renderSpendlyConnect(); transferPreview(); return; }
+  await spEnsure();
+  if(SP.user){ renderSpendlyConnect(); transferPreview(); return; }
+  if(!SP.fb){ toast("Could not load Spendly connection — check internet and try again.", "error"); return; }
+  const provider=new SP.fb.authMod.GoogleAuthProvider();
+  try{ await SP.fb.authMod.signInWithPopup(SP.fb.auth, provider); }
+  catch(e){
+    if(["auth/popup-blocked","auth/popup-closed-by-user","auth/cancelled-popup-request","auth/operation-not-supported-in-this-environment"].includes(e.code)){
+      try{ await SP.fb.authMod.signInWithRedirect(SP.fb.auth, provider); return; }catch(e2){}
+    }
+    SP.error="Sign-in failed: "+String(e.code||e.message||e);
+    renderSpendlyConnect();
+  }
+}
+async function spFetchDoc(){
+  const ad=spAdapter();
+  if(ad) return ad.data ? {exists:true, data:JSON.parse(JSON.stringify(ad.data)), rev:Number(ad.rev)||0, email:ad.user?.email||""} : {exists:false};
+  const ref=SP.fb.fsMod.doc(SP.fb.db,"spendly",SP.user.uid);
+  const snap=await SP.fb.fsMod.getDoc(ref);
+  if(!snap.exists() || !snap.data()?.data) return {exists:false};
+  return {exists:true, data:snap.data().data, rev:Number(snap.data().rev)||0, email:snap.data().email||SP.user.email||""};
+}
+async function spTransact(mutator){
+  const ad=spAdapter();
+  if(ad){
+    if(!ad.data) throw new Error("SP_NO_DOC");
+    const data=JSON.parse(JSON.stringify(ad.data));
+    const out=mutator(data);
+    ad.data=data; ad.rev=(Number(ad.rev)||0)+1; SP.loaded=false;
+    return out;
+  }
+  const {fsMod,db}=SP.fb;
+  const ref=fsMod.doc(db,"spendly",SP.user.uid);
+  const out=await fsMod.runTransaction(db, async tx=>{
+    const snap=await tx.get(ref);
+    if(!snap.exists() || !snap.data()?.data) throw new Error("SP_NO_DOC");
+    const data=JSON.parse(JSON.stringify(snap.data().data));
+    const result=mutator(data);
+    tx.set(ref,{data, rev:(Number(snap.data().rev)||0)+1, updatedAt:new Date().toISOString(), email:snap.data().email||SP.user.email||""});
+    return result;
+  });
+  SP.loaded=false;
+  return out;
+}
+function spComputeAccounts(data){
+  const txs=Array.isArray(data?.transactions)?data.transactions:[];
+  return (Array.isArray(data?.accounts)?data.accounts:[]).map(a=>{
+    let bal=Number(a.opening||0);
+    txs.forEach(t=>{ if(t.account===a.id) bal += t.type==="income" ? Number(t.amount||0) : -Number(t.amount||0); });
+    return {id:a.id, name:a.name||"Account", type:a.type||"Other", balance:r2(bal)};
+  });
+}
+async function spLoadAccounts(){
+  const res=await spFetchDoc();
+  SP.docExists=res.exists;
+  SP.accounts=res.exists ? spComputeAccounts(res.data) : [];
+  const cats=res.exists && Array.isArray(res.data?.categories?.income) ? res.data.categories.income : [];
+  SP.categories=[...new Set(["RateX Profit", ...cats])];
+  SP.loaded=true;
+  renderSpendlySelects(); renderSpendlyConnect();
+  return res;
+}
+function renderSpendlySelects(){
+  const accEl=$("#tfSpAccount"), catEl=$("#tfSpCategory"); if(!accEl||!catEl) return;
+  const curA=accEl.value || editingSpendlyMeta?.acc || "";
+  const types=["Bank","Cash","Mobile Wallet","Card","Other"];
+  accEl.innerHTML = SP.accounts.length
+    ? types.map(tp=>{ const items=SP.accounts.filter(a=>a.type===tp);
+        return items.length ? `<optgroup label="${tp}">${items.map(a=>`<option value="${esc(a.id)}">${esc(a.name)} · Bal ${fmt(a.balance)} SAR</option>`).join("")}</optgroup>` : ""; }).join("")
+    : `<option value="">${SP.user ? "No Spendly accounts found" : "Connect Spendly first"}</option>`;
+  accEl.value = SP.accounts.some(a=>a.id===curA) ? curA : (SP.accounts.find(a=>a.type==="Bank")?.id || SP.accounts[0]?.id || "");
+  const curC=catEl.value || editingSpendlyMeta?.cat || "RateX Profit";
+  const catList=SP.categories.length?SP.categories:["RateX Profit"];
+  catEl.innerHTML=catList.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
+  catEl.value=catList.includes(curC) ? curC : "RateX Profit";
+}
+function renderSpendlyConnect(){
+  const box=$("#spConnectBox"); if(!box) return;
+  const bindRefresh=()=> $("#spRefreshBtn")?.addEventListener("click", async ()=>{ SP.error=""; try{ await spLoadAccounts(); }catch(e){ SP.error=String(e?.code||e?.message||e); renderSpendlyConnect(); } transferPreview(); });
+  if(!navigator.onLine){ box.innerHTML=`📴 <b>Offline.</b> The Spendly tunnel needs internet — the entry is written directly into Spendly's cloud.`; return; }
+  if(SP.loading){ box.innerHTML=`⟳ Connecting to Spendly…`; return; }
+  if(!SP.user){
+    box.innerHTML=`<div class="sp-row"><span>💚 <b>Spendly not connected.</b><br><small>Connect once with the same Google account you use in Spendly.</small></span><button type="button" class="mini-btn blue" id="spConnectBtn">Connect Spendly</button></div>${SP.error?`<div class="neg" style="margin-top:6px">${esc(SP.error)}</div>`:""}`;
+    $("#spConnectBtn")?.addEventListener("click", spConnect);
+    return;
+  }
+  if(SP.loaded && !SP.docExists){
+    box.innerHTML=`<div class="sp-row"><span>⚠️ Connected as <span class="sp-email">${esc(SP.user.email||"")}</span>, but no Spendly cloud data found.<br><small>Open Spendly once and sign in with Google there, then tap Refresh.</small></span><button type="button" class="mini-btn" id="spRefreshBtn">↻ Refresh</button></div>`;
+    bindRefresh(); return;
+  }
+  box.innerHTML=`<div class="sp-row"><span>💚 <b>Spendly connected</b> · <span class="sp-email">${esc(SP.user.email||"")}</span><br><small>${SP.accounts.length} account(s) loaded from Spendly.</small></span><button type="button" class="mini-btn" id="spRefreshBtn">↻ Refresh</button></div>${SP.error?`<div class="neg" style="margin-top:6px">${esc(SP.error)}</div>`:""}`;
+  bindRefresh();
+}
+function setTfMode(mode){
+  tfMode=mode;
+  $("#tfModeInternal")?.classList.toggle("active", mode==="internal");
+  $("#tfModeSpendly")?.classList.toggle("active", mode==="spendly");
+  $("#tfInternalFields")?.classList.toggle("hidden", mode!=="internal");
+  $("#tfSpendlyFields")?.classList.toggle("hidden", mode!=="spendly");
+  $("#tfFeeWrap")?.classList.toggle("hidden", mode==="spendly");
+  const editing=!!$("#tfId")?.value;
+  if(!editing) $("#tfTitle").textContent = mode==="spendly" ? "Transfer to Spendly 💚" : "Transfer Between Accounts";
+  $("#tfSub").textContent = mode==="spendly"
+    ? "Move trading money to your personal Spendly — it lands there as Cash In, ready to spend."
+    : "Example: deposit hand cash (SAR) into your Saudi Bank to remit again.";
+  $("#tfSave").textContent = editing
+    ? (mode==="spendly" ? "UPDATE SPENDLY TRANSFER" : "UPDATE TRANSFER")
+    : (mode==="spendly" ? "SEND TO SPENDLY ➜" : "SAVE TRANSFER");
+  if(mode==="spendly"){
+    renderSpendlyConnect(); renderSpendlySelects();
+    spEnsure().then(async ok=>{ if(ok && !SP.loaded) await spLoadAccounts(); }).catch(()=>{}).finally(()=>transferPreview());
+  }
+  transferPreview();
+}
+$("#tfModeInternal").addEventListener("click", ()=>{ if(!$("#tfId").value) setTfMode("internal"); });
+$("#tfModeSpendly").addEventListener("click", ()=>{ if(!$("#tfId").value) setTfMode("spendly"); });
+$("#tfSpFrom").addEventListener("change", transferPreview);
+$("#tfSpAccount").addEventListener("change", transferPreview);
+$("#tfSpCategory").addEventListener("change", transferPreview);
+
 function refreshTransferTo(){
   const fromEl = $("#tfFrom"), toEl = $("#tfTo"); if(!fromEl || !toEl) return;
   const from = accountById(fromEl.value);
@@ -2038,9 +2277,28 @@ function refreshTransferTo(){
   toEl.value = cur;
   transferPreview();
 }
+function spendlyPreview(box, editingId){
+  const from = accountById($("#tfSpFrom").value);
+  const amount = n($("#tfAmount").value);
+  const fromBal = from ? accountBalance(from.id, {transferId:editingId}) : 0;
+  const enough = !from || amount <= fromBal + 0.005;
+  const spAcc = SP.accounts.find(a=>a.id === $("#tfSpAccount").value) || null;
+  const editingTf = editingId ? S.transfers.find(x=>x.id===editingId) : null;
+  const oldAmt = editingTf && isSpendlyTransfer(editingTf) ? n(editingTf.amount) : 0;
+  const profitAvail = r2(n(D?.tot?.netActualProfit) - (n(D?.tot?.spendlySar) - oldAmt));
+  const profitAfter = r2(profitAvail - amount);
+  box.innerHTML = `
+    <div class="row"><span>${from?esc(from.name):"RateX SAR account"} balance now → after</span><b class="${enough?"":"neg"}">${from?fmt(fromBal):"—"} → ${from?fmt(fromBal-amount):"—"} SAR</b></div>
+    <div class="row"><span>Spendly · ${spAcc?esc(spAcc.name):"destination"} balance now → after</span><b>${spAcc?`${fmt(spAcc.balance)} → ${fmt(spAcc.balance+amount)} SAR`:(SP.user?"choose account":"connect Spendly above")}</b></div>
+    <div class="row"><span>Realized profit not yet sent to Spendly now → after</span><b class="${profitAfter < -0.004 ? "neg" : "pos"}">${fmt(profitAvail)} → ${fmt(profitAfter)} SAR</b></div>
+    ${amount>0 && profitAfter < -0.004 ? `<div class="row total"><span class="neg">⚠️ Exceeds realized profit by ${fmt(-profitAfter)} SAR — this part spends trading capital.</span></div>` : ""}
+    ${from && amount>0 && !enough ? `<div class="row total"><span class="neg">⚠ Exceeds source balance by ${fmt(amount-fromBal)} SAR</span></div>` : ""}`;
+  return {mode:"spendly", from, amount, fee:0, fromBal, enough, spAcc, profitAvail, profitAfter};
+}
 function transferPreview(){
   const box = $("#tfPreview"); if(!box) return;
   const editingId = $("#tfId").value;
+  if(tfMode === "spendly") return spendlyPreview(box, editingId);
   const from = accountById($("#tfFrom").value), to = accountById($("#tfTo").value);
   const amount = n($("#tfAmount").value), fee = n($("#tfFee").value);
   const fromBal = from ? accountBalance(from.id, {transferId:editingId}) : 0;
@@ -2051,33 +2309,103 @@ function transferPreview(){
     <div class="row"><span>${to?esc(to.name):"To"} balance now → after</span><b>${to?fmt(toBal):"—"} → ${to?fmt(toBal+amount):"—"} ${to?.currency||""}</b></div>
     ${fee>0 ? `<div class="row"><span>Profit impact</span><b class="neg">−${fmt(fee)} ${from?.currency||""} fee reduces Net Profit (already debited above)</b></div>` : ""}
     ${from && amount>0 && !enough ? `<div class="row total"><span class="neg">⚠ Exceeds source balance by ${fmt(amount+fee-fromBal)} ${from.currency}</span></div>` : ""}`;
-  return {from, to, amount, fee, fromBal, enough};
+  return {mode:"internal", from, to, amount, fee, fromBal, enough};
 }
 function openTransfer(tf=null){
-  if((D?.accounts||[]).filter(a=>!a.archived).length < 2){
-    toast("Create at least two accounts first (e.g. Cash in Hand + Saudi Bank).", "error");
+  const active = (D?.accounts||[]).filter(a=>!a.archived);
+  if(!active.length){
+    toast("Create an account first.", "error");
     openAccount(); return;
   }
   formErr("tfErr","");
-  $("#tfTitle").textContent = tf ? "Edit Transfer" : "Transfer Between Accounts";
+  const isSp = !!tf && isSpendlyTransfer(tf);
+  editingSpendlyMeta = isSp ? spendlyMeta(tf) : null;
   $("#tfId").value = tf?.id || "";
   $("#tfDate").value = tf?.txn_date || todayStr();
   populateAccountSelects();
-  $("#tfFrom").value = tf?.from_account_id || firstAccountId("SAR","Cash") || firstAccountId("SAR") || (D.accounts.find(a=>!a.archived)?.id || "");
+  $("#tfFrom").value = (!isSp ? tf?.from_account_id : "") || firstAccountId("SAR","Cash") || firstAccountId("SAR") || (active[0]?.id || "");
   refreshTransferTo();
-  $("#tfTo").value = tf?.to_account_id || firstAccountId("SAR","Saudi Bank") || "";
+  $("#tfTo").value = (!isSp ? tf?.to_account_id : "") || firstAccountId("SAR","Saudi Bank") || "";
   if($("#tfTo").value === $("#tfFrom").value) $("#tfTo").value = "";
+  $("#tfSpFrom").value = (isSp ? tf.from_account_id : "") || firstAccountId("SAR","Saudi Bank") || firstAccountId("SAR") || "";
   $("#tfAmount").value = tf?.amount ?? "";
-  $("#tfFee").value = tf?.fee ?? 0;
-  $("#tfNote").value = tf?.note || "";
+  $("#tfFee").value = isSp ? 0 : (tf?.fee ?? 0);
+  $("#tfNote").value = isSp ? (editingSpendlyMeta?.note || "") : (tf?.note || "");
+  $("#tfModeInternal").disabled = !!tf;
+  $("#tfModeSpendly").disabled = !!tf;
+  setTfMode(isSp ? "spendly" : "internal");
+  if(tf) $("#tfTitle").textContent = isSp ? "Edit Spendly Transfer" : "Edit Transfer";
   transferPreview();
   openSheet("transferOverlay");
 }
 $("#tfFrom").addEventListener("change", refreshTransferTo);
 ["tfTo","tfAmount","tfFee","tfDate"].forEach(id=> $("#"+id).addEventListener("input", transferPreview));
 $("#tfTo").addEventListener("change", transferPreview);
-$("#transferForm").addEventListener("submit", e=>{
+async function saveSpendlyTransfer(){
+  const pv = transferPreview();
+  if(!pv.from) return formErr("tfErr","Select the RateX SAR account to debit.");
+  if(pv.from.currency !== "SAR") return formErr("tfErr","Spendly transfers are SAR only — choose a Saudi SAR account.");
+  if(!(pv.amount > 0)) return formErr("tfErr","Enter the amount to send to Spendly.");
+  if(!pv.enough) return formErr("tfErr",`Not enough balance in ${pv.from.name}: available ${fmt(pv.fromBal)} SAR. A transfer can never exceed the account balance.`);
+  const dateStr = $("#tfDate").value;
+  if(dateBeforeOpening(pv.from.id, dateStr))
+    return formErr("tfErr","Date is before this account's opening date. Change the date or the account opening date.");
+  if(!navigator.onLine) return formErr("tfErr","You are offline. The Spendly tunnel writes directly into Spendly's cloud — reconnect and try again. Nothing was debited.");
+  const spAccId = $("#tfSpAccount").value;
+  if(!spAccId) return formErr("tfErr","Connect Spendly and choose which Spendly account receives the money.");
+  const category = $("#tfSpCategory").value || "RateX Profit";
+  const userNote = $("#tfNote").value.trim();
+  const editingId = $("#tfId").value;
+  const txId = editingSpendlyMeta?.tx || spNewTxId();
+  const spNote = userNote || "From RateX trading";
+  const txDateIso = new Date(dateStr + "T12:00:00").toISOString();
+  let savedMeta = null;
+  try{
+    await busy($("#tfSave"), async ()=>{
+      const connected = await spEnsure();
+      if(!connected || !SP.user) throw new Error("CONNECT_FIRST");
+      if(!SP.loaded) await spLoadAccounts();
+      const spAcc = SP.accounts.find(a=>a.id === spAccId);
+      if(!spAcc) throw new Error("SP_ACC_GONE");
+      /* 1) Spendly first (atomic Firestore transaction) — RateX is
+            only debited after Spendly confirms the Cash-In entry. */
+      await spTransact(data=>{
+        if(!Array.isArray(data.transactions)) data.transactions = [];
+        if(!data.categories || typeof data.categories !== "object") data.categories = {income:[], expense:[]};
+        if(!Array.isArray(data.categories.income)) data.categories.income = [];
+        if(!data.categories.income.includes(category)) data.categories.income.push(category);
+        if(editingId){
+          const t = data.transactions.find(x=>x.id === txId);
+          if(!t) throw new Error("SP_TX_NOT_FOUND");
+          Object.assign(t, {type:"income", amount:r2(pv.amount), category, account:spAccId, note:spNote, date:txDateIso});
+        }else{
+          data.transactions.unshift({id:txId, type:"income", amount:r2(pv.amount), category, account:spAccId, note:spNote, date:txDateIso});
+        }
+      });
+      /* 2) RateX debit record (to_account_id null + tunnel marker). */
+      savedMeta = {tx:txId, acc:spAccId, accName:spAcc.name, accType:spAcc.type, cat:category, note:userNote};
+      const payload = { user_id:S.user.id, txn_date:dateStr, from_account_id:pv.from.id, to_account_id:null,
+        amount:r2(pv.amount), fee:0, note:SPENDLY_MARKER + JSON.stringify(savedMeta) };
+      if(editingId) payload.id = editingId;
+      saveLocalRow("transfers", "ratex_transfers", payload);
+    });
+  }catch(err){
+    const code = String(err?.code || err?.message || err);
+    if(code.includes("CONNECT_FIRST")) return formErr("tfErr","Connect Spendly above first (same Google account as Spendly), then tap Send again.");
+    if(code.includes("SP_NO_DOC")) return formErr("tfErr","No Spendly cloud data found for this Google account. Open Spendly once, sign in with Google there, then try again.");
+    if(code.includes("SP_TX_NOT_FOUND")) return formErr("tfErr","This entry was deleted inside Spendly, so it cannot be edited from here. Delete this RateX record instead — deleting only removes the RateX debit.");
+    if(code.includes("SP_ACC_GONE")) return formErr("tfErr","That Spendly account no longer exists. Tap Refresh and choose another account.");
+    return formErr("tfErr","Could not reach Spendly ("+code+"). Nothing was debited in RateX — check internet and try again.");
+  }
+  editingSpendlyMeta = savedMeta;
+  closeSheet("transferOverlay");
+  toast(editingId ? "Spendly transfer updated 💚" : `Sent ${fmt(pv.amount)} SAR to Spendly 💚`, "success");
+  afterLocalChange();
+  spLoadAccounts().catch(()=>{});
+}
+$("#transferForm").addEventListener("submit", async e=>{
   e.preventDefault(); formErr("tfErr","");
+  if(tfMode === "spendly"){ await saveSpendlyTransfer(); return; }
   const pv = transferPreview();
   if(!pv.from || !pv.to) return formErr("tfErr","Select both From and To accounts.");
   if(pv.from.id === pv.to.id) return formErr("tfErr","From and To accounts must be different.");
@@ -2753,7 +3081,34 @@ document.addEventListener("click", async e=>{
   }
   if(action==="del-transfer"){
     const tf=S.transfers.find(x=>x.id===id); if(!tf) return;
-    if(isSarBalanceAddition(tf)){
+    if(isSpendlyTransfer(tf)){
+      const meta = spendlyMeta(tf);
+      if(await deleteConfirm("⚠ Delete this Spendly transfer?",
+        "This reverses BOTH apps: the Cash-In entry is removed from Spendly and the RateX account is credited back:",
+        [["Account credited back", accountName(tf.from_account_id)],
+         ["RateX account balance will increase by", fmt(tf.amount)+" SAR"],
+         ["Removed from Spendly", `${fmt(tf.amount)} SAR · ${meta.accName || "account"}`]])){
+        if(!navigator.onLine) return toast("You are offline — deleting a Spendly transfer must update Spendly too. Reconnect and try again.", "error");
+        const connected = await spEnsure().catch(()=>false);
+        if(!connected || !SP.user) return toast("Connect Spendly first (Transfer → 💚 To Spendly → Connect) so both apps stay in sync.", "error");
+        let removed = false;
+        try{
+          await spTransact(data=>{
+            const before = (data.transactions || []).length;
+            data.transactions = (data.transactions || []).filter(x=>x.id !== meta.tx);
+            removed = data.transactions.length < before;
+          });
+        }catch(err){
+          if(!String(err?.message || err).includes("SP_NO_DOC"))
+            return toast("Could not update Spendly — nothing was deleted in RateX. Check internet and try again.", "error");
+        }
+        deleteLocalRow("transfers", "ratex_transfers", tf.id);
+        toast(removed ? "Deleted from RateX and Spendly 💚" : "Already gone in Spendly — RateX record deleted.", "success");
+        afterLocalChange();
+        spLoadAccounts().catch(()=>{});
+      }
+    }
+    else if(isSarBalanceAddition(tf)){
       if(await deleteConfirm("⚠ Delete this SAR balance addition?",
         "The external SAR credit will be removed from the account permanently:",
         [["SAR account", accountName(tf.to_account_id)],
