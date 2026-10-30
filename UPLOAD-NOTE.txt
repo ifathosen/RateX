@@ -1,0 +1,13 @@
+RateX logo update — upload/replace these 6 files in the root of GitHub repo ifathosen/RateX:
+
+1. index.html
+2. manifest.json
+3. sw.js
+4. ratex-icon-192.png
+5. ratex-icon-512.png
+6. ratex-maskable-512.png
+
+This note does not need to be uploaded.
+The old icon-192.png / icon-512.png / maskable-512.png files may remain in the repo; they will simply be unused.
+
+After pushing, open RateX online once and reload it so the new service worker activates. A fresh install will show the new logo. If an already-installed home-screen icon does not change after some time, first make sure RateX shows Synced, then remove the home-screen shortcut and Add to Home screen again. Do not clear site data while changes are unsynced.

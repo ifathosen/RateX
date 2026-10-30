@@ -1,15 +1,15 @@
-/* RateX — Service Worker v9 (offline app shell; Supabase API is never cached)
+/* RateX — Service Worker v10 (offline app shell; Supabase API is never cached)
    Files are cached one-by-one so a single missing file can NEVER
    break installation/offline mode again. */
-const CACHE = "ratex-v9";
+const CACHE = "ratex-v10";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
   "./supabase.js",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./maskable-512.png"
+  "./ratex-icon-192.png",
+  "./ratex-icon-512.png",
+  "./ratex-maskable-512.png"
 ];
 
 self.addEventListener("install", (e) => {
