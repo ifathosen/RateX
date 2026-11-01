@@ -179,6 +179,14 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 @media(min-width:640px){.bank-actions.two{grid-template-columns:1fr 1fr}}
 .pill-sar-add{background:#dcfce7; color:#067a51}
 .pill-spendly{background:#d9f5e9; color:#067a51}
+.pill-loan{background:#fee2e2; color:#b42318}
+.seg.three{grid-template-columns:repeat(3,1fr)}
+.seg.three button{font-size:12px; padding:12px 4px}
+.loan-lot-list{display:flex; flex-direction:column; gap:9px}
+.loan-lot-row{display:grid; grid-template-columns:1fr 118px; gap:10px; align-items:center; background:var(--surface); box-shadow:var(--sh-in-sm); border-radius:14px; padding:10px 11px}
+.loan-lot-row .ll-t{font-size:12.5px; font-weight:800; line-height:1.4}
+.loan-lot-row .ll-s{font-size:11.5px; color:var(--muted); line-height:1.45}
+.loan-lot-row input{padding:10px 9px; text-align:right}
 .sp-connect{margin-top:16px; padding:13px 15px; font-size:13px; line-height:1.55}
 .sp-connect .sp-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
 .sp-connect .sp-email{font-weight:800; overflow-wrap:anywhere}
@@ -534,6 +542,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <div class="progress" style="margin-top:15px"><i id="dCollectBar" style="width:0%"></i></div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px"><span id="dTotalDue">Total receivable 0 SAR</span><span id="dTotalProfit">Total profit 0 SAR</span></div>
         <div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-top:6px;border-top:1px dashed #c4ccdd;padding-top:8px"><span id="dSpendlyOut">💚 To Spendly 0 SAR</span><span id="dSpendlyLeft"></span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-top:6px"><span id="dLoanOut">🏦 Bank loan paid 0</span><span id="dLoanStock"></span></div>
       </div>
 
       <div class="section">
@@ -580,6 +589,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <button class="chip" data-typefilter="transfer">Transfers</button>
         <button class="chip" data-typefilter="saradd">SAR Additions</button>
         <button class="chip" data-typefilter="spendly">💚 Spendly</button>
+        <button class="chip" data-typefilter="loan">🏦 Loan Paid</button>
         <span style="flex:1"></span><small id="tradeCount"></small>
       </div>
       <div id="tradeList"></div>
@@ -841,9 +851,10 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
     <div class="grab"></div>
     <div class="sheet-head"><div><h3 id="tfTitle">Transfer Between Accounts</h3><p id="tfSub">Example: deposit hand cash (SAR) into your Saudi Bank to remit again.</p></div><button type="button" class="icon-btn close-x" data-close="transferOverlay">✕</button></div>
     <input type="hidden" id="tfId">
-    <div class="seg" role="group" aria-label="Transfer type">
-      <button type="button" id="tfModeInternal" class="active">⇪ Between Accounts</button>
-      <button type="button" id="tfModeSpendly">💚 To Spendly</button>
+    <div class="seg three" role="group" aria-label="Transfer type">
+      <button type="button" id="tfModeInternal" class="active">⇪ Accounts</button>
+      <button type="button" id="tfModeSpendly">💚 Spendly</button>
+      <button type="button" id="tfModeLoan">🏦 Loan Out</button>
     </div>
     <div class="field"><label for="tfDate">Date</label><input type="date" id="tfDate" required></div>
     <div id="tfInternalFields">
@@ -857,6 +868,14 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
       <div class="sp-connect neu-in" id="spConnectBox"></div>
       <div class="field"><label for="tfSpAccount">Spendly Account — money lands here</label><select id="tfSpAccount"></select></div>
       <div class="field"><label for="tfSpCategory">Spendly Income Category</label><select id="tfSpCategory"></select></div>
+    </div>
+    <div id="tfLoanFields" class="hidden">
+      <div class="field"><label for="tfLoanFrom">Pay From Account (Debit)</label><select id="tfLoanFrom"></select></div>
+      <div class="field"><label for="tfLoanName">Bank / Loan Name</label><input type="text" id="tfLoanName" placeholder="e.g. BRAC Bank loan installment"></div>
+      <div id="tfLoanBdtFields">
+        <div class="field"><label for="tfLoanOpeningUsed">Use from Opening / Free Balance · BDT</label><input type="number" id="tfLoanOpeningUsed" min="0" step="any" inputmode="decimal" value="0"><p class="hint" id="tfLoanFreeHint"></p></div>
+        <div class="field"><label>Use from Stock Lots · BDT</label><div class="loan-lot-list" id="tfLoanLots"></div><button type="button" class="mini-btn" id="tfLoanAuto" style="margin-top:9px">Auto-fill: free balance first, then oldest lots</button></div>
+      </div>
     </div>
     <div class="grid2">
       <div class="field"><label for="tfAmount">Amount</label><input type="number" id="tfAmount" required min="0.01" step="any" inputmode="decimal" placeholder="0.00"></div>
@@ -1216,7 +1235,10 @@ function sarAdditionSource(tf){
   return isSarBalanceAddition(tf) ? String(tf.note || "").slice(SAR_ADD_MARKER.length).trim() : "";
 }
 function transferDisplayNote(tf){
-  return isSarBalanceAddition(tf) ? sarAdditionSource(tf) : (tf?.note || "");
+  if(isSarBalanceAddition(tf)) return sarAdditionSource(tf);
+  if(isSpendlyTransfer(tf)) return spendlyMeta(tf).note || "";
+  if(isLoanPayment(tf)) return loanMeta(tf).note || "";
+  return tf?.note || "";
 }
 const DISCOUNT_METHOD = "Discount";
 function isDiscountPay(p){ return p?.method === DISCOUNT_METHOD; }
@@ -1227,6 +1249,18 @@ function isSpendlyTransfer(tf){
 function spendlyMeta(tf){
   if(!isSpendlyTransfer(tf)) return {};
   try{ return JSON.parse(String(tf.note).slice(SPENDLY_MARKER.length)) || {}; }catch(e){ return {}; }
+}
+const LOAN_PAYMENT_MARKER = "[[LOAN_PAYMENT]]";
+function isLoanPayment(tf){
+  return !!tf && !!tf.from_account_id && !tf.to_account_id && String(tf.note || "").startsWith(LOAN_PAYMENT_MARKER);
+}
+function loanMeta(tf){
+  if(!isLoanPayment(tf)) return {};
+  try{ return JSON.parse(String(tf.note).slice(LOAN_PAYMENT_MARKER.length)) || {}; }catch(e){ return {}; }
+}
+function loanAllocationsOf(tf){
+  const lots = loanMeta(tf)?.lots;
+  return Array.isArray(lots) ? lots.filter(x=>x && x.lot && n(x.bdt) > 0) : [];
 }
 function transferFeeSar(tf, convRate){
   if(isSarBalanceAddition(tf) || isSpendlyTransfer(tf)) return 0;
@@ -1268,9 +1302,15 @@ function rebuild(){
   });
   S.pays.forEach(p => { if(!paysByTrade.has(p.trade_id)) paysByTrade.set(p.trade_id, []); paysByTrade.get(p.trade_id).push(p); });
 
+  const loanUseByLot = new Map();
+  S.transfers.filter(isLoanPayment).forEach(tf=>{
+    loanAllocationsOf(tf).forEach(x=> loanUseByLot.set(x.lot, r2((loanUseByLot.get(x.lot)||0) + n(x.bdt))));
+  });
   const lots = S.lots.map(l => {
     const used = (allocByLot.get(l.id)||[]).reduce((s,a)=>s+n(a.bdt_allocated),0);
-    return { ...l, usedBdt:r2(used), remainingBdt:r2(n(l.total_bdt)-used), sarCost:r2(n(l.sar_amount)+n(l.fee_sar)) };
+    const loanUsed = loanUseByLot.get(l.id) || 0;
+    const consumed = r2(used + loanUsed);
+    return { ...l, usedBdt:r2(used), loanUsedBdt:r2(loanUsed), consumedBdt:consumed, remainingBdt:r2(n(l.total_bdt)-consumed), sarCost:r2(n(l.sar_amount)+n(l.fee_sar)) };
   }).sort((a,b)=> (b.txn_date||"").localeCompare(a.txn_date||"") || (b.created_at||"").localeCompare(a.created_at||""));
   lots.forEach(l => lotMap.set(l.id, l));
 
@@ -1330,6 +1370,15 @@ function rebuild(){
   tot.spendlySar = r2(spendlyTfs.reduce((sm,tf)=>sm+n(tf.amount),0));           // personal drawings to Spendly
   tot.spendlyMonthSar = r2(spendlyTfs.filter(tf=>monthKey(tf.txn_date)===monthKey(todayStr())).reduce((sm,tf)=>sm+n(tf.amount),0));
   tot.profitLeftInBusiness = r2(tot.netActualProfit - tot.spendlySar);          // <0 ⇒ spending trading capital
+  const loanTfs = S.transfers.filter(isLoanPayment);
+  const loanCur = tf => S.accounts.find(a=>a.id===tf.from_account_id)?.currency || "";
+  tot.loanPaidBdt = r2(loanTfs.filter(tf=>loanCur(tf)==="BDT").reduce((sm,tf)=>sm+n(tf.amount),0));
+  tot.loanPaidSar = r2(loanTfs.filter(tf=>loanCur(tf)==="SAR").reduce((sm,tf)=>sm+n(tf.amount),0));
+  tot.loanMonthBdt = r2(loanTfs.filter(tf=>loanCur(tf)==="BDT" && monthKey(tf.txn_date)===monthKey(todayStr())).reduce((sm,tf)=>sm+n(tf.amount),0));
+  tot.loanMonthSar = r2(loanTfs.filter(tf=>loanCur(tf)==="SAR" && monthKey(tf.txn_date)===monthKey(todayStr())).reduce((sm,tf)=>sm+n(tf.amount),0));
+  tot.loanOpeningUsedBdt = r2(loanTfs.reduce((sm,tf)=>sm+n(loanMeta(tf).openingUsed),0));
+  tot.loanLotBdt = r2(loanTfs.reduce((sm,tf)=>sm+loanAllocationsOf(tf).reduce((s2,x)=>s2+n(x.bdt),0),0));
+  tot.loanLotCostSar = r2(loanTfs.reduce((sm,tf)=>sm+loanAllocationsOf(tf).reduce((s2,x)=>s2+n(x.costSar),0),0));
   const remainLots = lots.filter(l=>l.remainingBdt > 0.005);
   const remainSarCost = remainLots.reduce((s,l)=> s + (n(l.effective_rate) ? l.remainingBdt / n(l.effective_rate) : 0), 0);
   tot.avgCostRate = remainSarCost > 0 ? tot.bdtBalance / remainSarCost : 0;
@@ -1342,7 +1391,7 @@ function rebuild(){
   tot.bdtAccountsBalance = r2(accounts.filter(a=>a.currency==="BDT").reduce((sm,a)=>sm+a.balance,0));
   tot.hasAccounts = accounts.length > 0;
 
-  D = { lotMap, custMap, tradeMap, lots, trades, customers, tot, allocByLot, accounts, accountMap, transfers };
+  D = { lotMap, custMap, tradeMap, lots, trades, customers, tot, allocByLot, loanUseByLot, accounts, accountMap, transfers };
   return D;
 }
 
@@ -1467,6 +1516,34 @@ function transferCard(tf){
     </div>
     <div class="card-actions">
       <button class="mini-btn" data-action="edit-sar-add" data-id="${tf.id}">✎ Edit</button>
+      <button class="mini-btn red" data-action="del-transfer" data-id="${tf.id}">🗑 Delete</button>
+    </div></article>`;
+  }
+  if(isLoanPayment(tf)){
+    const meta = loanMeta(tf);
+    const from = accountById(tf.from_account_id);
+    const cur = from?.currency || "";
+    const allocs = loanAllocationsOf(tf);
+    const lotBdt = r2(allocs.reduce((sm,x)=>sm+n(x.bdt),0));
+    const lotCost = r2(allocs.reduce((sm,x)=>sm+n(x.costSar),0));
+    return `<article class="card neu">
+    <div class="card-top">
+      <div class="avatar-c" style="color:#fff;background:linear-gradient(135deg,#f04438,#b42318)">🏦</div>
+      <div class="tt"><div class="t1">Bank Loan Payment · ${esc(meta.bank || "Bank loan")}</div>
+      <div class="t2">${dFmt(tf.txn_date)}${meta.note ? " · "+esc(meta.note) : ""}</div></div>
+      <span class="pill pill-loan">Loan Paid</span>
+    </div>
+    <div class="kv-grid">
+      <div class="kv"><div class="l">Paid Out</div><div class="v neg">−${fmt(tf.amount)} <small>${cur}</small></div></div>
+      <div class="kv"><div class="l">From Account</div><div class="v" style="font-size:12.5px">${esc(from?.name || "—")}</div></div>
+      ${cur==="BDT" ? `<div class="kv"><div class="l">Opening / Free Used</div><div class="v">${fmt(meta.openingUsed || 0)} <small>BDT</small></div></div>
+      <div class="kv"><div class="l">Stock Lots Used</div><div class="v">${fmt(lotBdt)} <small>BDT</small></div></div>` : ""}
+      ${n(tf.fee)>0.004 ? `<div class="kv"><div class="l">Fee / Charge</div><div class="v">${fmt(tf.fee)} <small>${cur}</small></div></div>` : ""}
+      ${lotCost>0.004 ? `<div class="kv"><div class="l">Lot Cost Taken Out</div><div class="v">${fmt(lotCost)} <small>SAR</small></div></div>` : ""}
+    </div>
+    ${allocs.length ? `<div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.55">${allocs.map(x=>{const l=D.lotMap.get(x.lot); return `${esc(l?lotDisplayNo(l):"Lot")} · ${fmt(x.bdt)} BDT`;}).join(" · ")}</div>` : ""}
+    <div class="card-actions">
+      <button class="mini-btn" data-action="edit-transfer" data-id="${tf.id}">✎ Edit</button>
       <button class="mini-btn red" data-action="del-transfer" data-id="${tf.id}">🗑 Delete</button>
     </div></article>`;
   }
@@ -1606,26 +1683,27 @@ function tradeSummaryCard(t){
 }
 
 function lotCard(l, full=true){
-  const soldPct = n(l.total_bdt) ? Math.min(100, Math.round(l.usedBdt / n(l.total_bdt) * 100)) : 0;
+  const soldPct = n(l.total_bdt) ? Math.min(100, Math.round((l.consumedBdt ?? l.usedBdt) / n(l.total_bdt) * 100)) : 0;
   const open = ui.expandedLots?.has(l.id);
   return `<article class="card neu lot-summary-card${open ? " open" : ""}">
     <button type="button" class="lot-summary-top" data-action="toggle-lot" data-id="${l.id}" aria-expanded="${open ? "true" : "false"}">
       <span class="avatar-c" style="color:#fff;background:var(--grad)">⇩</span>
       <span class="tt"><span class="t1" style="display:block">${esc(lotDisplayNo(l))}</span>
       <span class="t2" style="display:block">${dFmt(l.txn_date)}${l.source ? " · "+esc(l.source) : ""}${l.bdt_account_id ? " · "+esc(accountName(l.bdt_account_id)) : ""} · Eff. ${fmtRate(l.effective_rate)}</span></span>
-      <span class="lot-remain"><span class="v">${fmt(l.remainingBdt)}</span><small>BDT left${l.remainingBdt <= 0.005 ? " · Sold out" : ""}</small></span>
+      <span class="lot-remain"><span class="v">${fmt(l.remainingBdt)}</span><small>BDT left${l.remainingBdt <= 0.005 ? " · Used up" : ""}</small></span>
       <span class="lot-chev">⌄</span>
     </button>
     <div class="lot-expanded">
       <div class="kv-grid">
         <div class="kv"><div class="l">BDT Deposited</div><div class="v">${fmt(l.total_bdt)}</div></div>
         <div class="kv"><div class="l">Sold</div><div class="v">${fmt(l.usedBdt)}</div></div>
+        ${n(l.loanUsedBdt) > 0.004 ? `<div class="kv"><div class="l">Loan Paid</div><div class="v">${fmt(l.loanUsedBdt)}</div></div>` : ""}
         <div class="kv"><div class="l">Sent</div><div class="v">${fmt(l.sar_amount)} <small>SAR</small></div></div>
         <div class="kv"><div class="l">Base + Incentive</div><div class="v" style="font-size:12.5px">${fmtRate(l.base_rate)} + ${fmt(l.incentive_pct,2)}%</div></div>
       </div>
       <div style="font-size:12.5px;color:var(--muted);margin-top:11px;line-height:1.55">${n(l.fee_sar) ? `Fee ${fmt(l.fee_sar)} SAR · ` : ""}${l.kind==="opening" ? "Historical lot · " : ""}${l.sar_account_id ? "SAR debit: "+esc(accountName(l.sar_account_id)) : "SAR A/C not assigned"} → ${l.bdt_account_id ? "BDT credit: "+esc(accountName(l.bdt_account_id)) : "BD A/C not assigned"}</div>
       <div class="progress" style="margin-top:11px"><i style="width:${soldPct}%"></i></div>
-      <div style="font-size:12px;color:var(--muted);margin-top:7px">${soldPct}% sold</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:7px">${soldPct}% used${n(l.loanUsedBdt)>0.004 ? ` (sold + loan paid)` : ""}</div>
       ${l.note ? `<p style="font-size:12.5px;color:var(--muted);margin:8px 2px 0">📝 ${esc(l.note)}</p>` : ""}
       ${full ? `<div class="card-actions"><button class="mini-btn" data-action="edit-lot" data-id="${l.id}">✎ Edit</button><button class="mini-btn red" data-action="del-lot" data-id="${l.id}">🗑 Delete</button></div>` : ""}
     </div>
@@ -1705,6 +1783,16 @@ function renderDashboard(){
         ? `Realized profit still in business <b class="pos">${fmt(t.profitLeftInBusiness)} SAR</b>`
         : `⚠️ <b class="neg">${fmt(-t.profitLeftInBusiness)} SAR beyond realized profit</b> — spending capital`)
     : `Realized profit <b class="${signedCls(t.netActualProfit)}">${fmt(t.netActualProfit)} SAR</b> available to send`;
+  const loanBits = [];
+  if(t.loanPaidBdt > 0.004) loanBits.push(`${fmt(t.loanPaidBdt)} BDT`);
+  if(t.loanPaidSar > 0.004) loanBits.push(`${fmt(t.loanPaidSar)} SAR`);
+  const loanMonthBits = [];
+  if(t.loanMonthBdt > 0.004) loanMonthBits.push(`${fmt(t.loanMonthBdt)} BDT`);
+  if(t.loanMonthSar > 0.004) loanMonthBits.push(`${fmt(t.loanMonthSar)} SAR`);
+  $("#dLoanOut").innerHTML = `🏦 Bank loan paid <b style="color:var(--ink)">${loanBits.length ? loanBits.join(" · ") : "0"}</b>${loanMonthBits.length ? ` (${loanMonthBits.join(" · ")} this month)` : ""}`;
+  $("#dLoanStock").innerHTML = t.loanLotBdt > 0.004
+    ? `Stock taken out <b>${fmt(t.loanLotBdt)} BDT</b>${t.loanOpeningUsedBdt > 0.004 ? ` · opening/free ${fmt(t.loanOpeningUsedBdt)} BDT` : ""}`
+    : (t.loanOpeningUsedBdt > 0.004 ? `From opening/free <b>${fmt(t.loanOpeningUsedBdt)} BDT</b>` : "");
 
   $("#dashAccounts").innerHTML = renderBankSection("SAR") + renderBankSection("BDT");
 
@@ -1722,10 +1810,12 @@ function renderDashboard(){
     ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇩","var(--blue2)", `${esc(lotDisplayNo(x))} · Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
     ...S.pays.map(p=>{ const tr=D.tradeMap.get(p.trade_id); const disc=isDiscountPay(p); return {date:p.txn_date, sort:(p.created_at||p.txn_date), html:activityRow(disc ? "−" : "✓", disc ? "var(--amber)" : "var(--green)", disc ? `Waived ${fmt(p.sar_amount)} SAR discount${tr? " for "+esc(tr.customer?.name||"customer"):""}` : `Received ${fmt(p.sar_amount)} SAR${tr? " from "+esc(tr.customer?.name||"customer"):""}`, disc ? "Written off — not collected" : esc(p.method) + (p.account_id ? " → "+esc(accountName(p.account_id)) : ""), dFmt(p.txn_date))}; }),
     ...D.transfers.map(tf=>{
-      const add = isSarBalanceAddition(tf), sp = isSpendlyTransfer(tf), meta = sp ? spendlyMeta(tf) : {};
-      return {date:tf.txn_date, sort:(tf.created_at||tf.txn_date), html:activityRow(sp ? "💚" : (add ? "＋" : "⇪"), (add||sp) ? "var(--green)" : "#6d28d9",
-        sp ? `Sent ${fmt(tf.amount)} SAR to Spendly` : (add ? `Added ${fmt(tf.amount)} SAR balance` : `Transferred ${fmt(tf.amount)}`),
-        sp ? `${esc(accountName(tf.from_account_id))} → Spendly · ${esc(meta.accName || "account")}` : (add ? `${esc(sarAdditionSource(tf) || "External SAR")} → ${esc(accountName(tf.to_account_id))}` : `${esc(accountName(tf.from_account_id))} → ${esc(accountName(tf.to_account_id))}`),
+      const add = isSarBalanceAddition(tf), sp = isSpendlyTransfer(tf), loan = isLoanPayment(tf);
+      const meta = sp ? spendlyMeta(tf) : (loan ? loanMeta(tf) : {});
+      const cur = accountById(tf.from_account_id)?.currency || accountById(tf.to_account_id)?.currency || "";
+      return {date:tf.txn_date, sort:(tf.created_at||tf.txn_date), html:activityRow(loan ? "🏦" : (sp ? "💚" : (add ? "＋" : "⇪")), loan ? "var(--red)" : ((add||sp) ? "var(--green)" : "#6d28d9"),
+        loan ? `Paid bank loan ${fmt(tf.amount)} ${cur}` : (sp ? `Sent ${fmt(tf.amount)} SAR to Spendly` : (add ? `Added ${fmt(tf.amount)} SAR balance` : `Transferred ${fmt(tf.amount)}`)),
+        loan ? `${esc(accountName(tf.from_account_id))} → ${esc(meta.bank || "Bank loan")}` : (sp ? `${esc(accountName(tf.from_account_id))} → Spendly · ${esc(meta.accName || "account")}` : (add ? `${esc(sarAdditionSource(tf) || "External SAR")} → ${esc(accountName(tf.to_account_id))}` : `${esc(accountName(tf.from_account_id))} → ${esc(accountName(tf.to_account_id))}`)),
         dFmt(tf.txn_date))};
     })
   ].sort((a,b)=> String(b.sort).localeCompare(String(a.sort))).slice(0,7);
@@ -1751,7 +1841,8 @@ function renderTradePage(){
     (!q || [t.customer?.name, t.customer?.phone, t.delivery_method, t.receiver_info, t.note, t.allocs.map(a=>lotDisplayNo(D.lotMap.get(a.lot_id)||{})).join(" ")].join(" ").toLowerCase().includes(q));
   const matchLot = l => !q || [l.source, l.note, l.remit_no, lotDisplayNo(l), accountName(l.sar_account_id), accountName(l.bdt_account_id)].join(" ").toLowerCase().includes(q);
   const matchTf = tf => !q || [accountName(tf.from_account_id), accountName(tf.to_account_id), transferDisplayNote(tf),
-    isSpendlyTransfer(tf) ? `spendly tunnel ${spendlyMeta(tf).accName||""} ${spendlyMeta(tf).cat||""} ${spendlyMeta(tf).note||""}`
+    isLoanPayment(tf) ? `bank loan payment loan paid money out ${loanMeta(tf).bank||""} ${loanMeta(tf).note||""}`
+    : isSpendlyTransfer(tf) ? `spendly tunnel ${spendlyMeta(tf).accName||""} ${spendlyMeta(tf).cat||""} ${spendlyMeta(tf).note||""}`
     : isSarBalanceAddition(tf) ? "additional sar balance sar added external deposit" : "internal transfer"].join(" ").toLowerCase().includes(q);
 
   const matchedTrades = (ui.typeFilter === "all" || ui.typeFilter === "sell") ? D.trades.filter(matchTrade) : [];
@@ -1761,13 +1852,15 @@ function renderTradePage(){
   const lots = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "stock") ? D.lots.filter(matchLot) : [];
   const matchedTransfers = D.transfers.filter(matchTf);
   const internalTransfers = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "transfer")
-    ? matchedTransfers.filter(tf=>!isSarBalanceAddition(tf) && !isSpendlyTransfer(tf)) : [];
+    ? matchedTransfers.filter(tf=>!isSarBalanceAddition(tf) && !isSpendlyTransfer(tf) && !isLoanPayment(tf)) : [];
   const sarAdditions = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "saradd")
     ? matchedTransfers.filter(isSarBalanceAddition) : [];
   const spendlyTransfers = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "spendly")
     ? matchedTransfers.filter(isSpendlyTransfer) : [];
+  const loanPayments = showNonTrades && (ui.typeFilter === "all" || ui.typeFilter === "loan")
+    ? matchedTransfers.filter(isLoanPayment) : [];
 
-  const count = matchedTrades.length + lots.length + internalTransfers.length + sarAdditions.length + spendlyTransfers.length;
+  const count = matchedTrades.length + lots.length + internalTransfers.length + sarAdditions.length + spendlyTransfers.length + loanPayments.length;
   $("#tradeCount").textContent = count + " record" + (count===1?"":"s");
 
   const section = (title, sub, total, totalSub, totalClass, html) => `
@@ -1817,6 +1910,14 @@ function renderTradePage(){
     sections.push(section("Transfers to Spendly 💚",
       `${spendlyTransfers.length} personal transfer${spendlyTransfers.length===1?"":"s"} · realized profit ${fmt(D.tot.netActualProfit)} SAR · ${left >= -0.004 ? `${fmt(left)} SAR profit still in business` : `⚠️ ${fmt(-left)} SAR beyond realized profit (capital)`}`,
       `${fmt(sent)} SAR`, "total sent", "", spendlyTransfers.map(transferCard).join("")));
+  }
+  if(loanPayments.length){
+    const paidBits = [];
+    if(D.tot.loanPaidBdt > 0.004) paidBits.push(`${fmt(D.tot.loanPaidBdt)} BDT`);
+    if(D.tot.loanPaidSar > 0.004) paidBits.push(`${fmt(D.tot.loanPaidSar)} SAR`);
+    sections.push(section("Bank Loan Payments 🏦",
+      `${loanPayments.length} permanent money-out payment${loanPayments.length===1?"":"s"} · opening/free used ${fmt(D.tot.loanOpeningUsedBdt)} BDT · stock lots used ${fmt(D.tot.loanLotBdt)} BDT`,
+      paidBits.join(" · ") || "0", "total paid out", "neg", loanPayments.map(transferCard).join("")));
   }
 
   $("#tradeList").innerHTML = sections.length
@@ -1934,7 +2035,7 @@ function renderAnalytics(){
     const allocs = D.allocByLot.get(l.id)||[];
     let lprofit = 0;
     allocs.forEach(a=>{ const tr=D.tradeMap.get(a.trade_id); if(tr && tr.totalOutBdt>0) lprofit += n(tr.netReceivableSar ?? tr.sar_due)*(n(a.bdt_allocated)/tr.totalOutBdt) - n(a.cost_sar); });
-    return `<tr><td><b>${esc(lotDisplayNo(l))}</b><br><small>${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR${l.source?" · "+esc(l.source):""}${l.bdt_account_id?" · "+esc(accountName(l.bdt_account_id)):""}</small></td>
+    return `<tr><td><b>${esc(lotDisplayNo(l))}</b><br><small>${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR${l.source?" · "+esc(l.source):""}${l.bdt_account_id?" · "+esc(accountName(l.bdt_account_id)):""}${n(l.loanUsedBdt)>0.004?` · Loan paid ${fmt0(l.loanUsedBdt)} BDT`:""}</small></td>
       <td>${fmtRate(l.effective_rate)}</td><td>${fmt0(l.total_bdt)}</td><td>${fmt0(l.usedBdt)}</td><td>${fmt0(l.remainingBdt)}</td>
       <td class="${signedCls(lprofit)}">${signedFmt(lprofit)}</td></tr>`;
   }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No stock lots yet.</td></tr>`;
@@ -2010,6 +2111,7 @@ function populateAccountSelects(){
   setAccountSelect("saAccount", "SAR", "— Saudi SAR account —");
   setAccountSelect("tfFrom", "", "— From account —");
   setAccountSelect("tfSpFrom", "SAR", "— RateX SAR account —");
+  setAccountSelect("tfLoanFrom", "", "— Pay from account —");
   refreshTransferTo();
 }
 function firstAccountId(currency, type=""){
@@ -2108,6 +2210,7 @@ const SPENDLY_FB_CONFIG={apiKey:"AIzaSyCwCqkUTUn-CfTBxyaGz9ziJOmW8pZmejU",authDo
 const SP={fb:null,user:null,authReady:null,loading:false,error:"",accounts:[],categories:[],docExists:false,loaded:false};
 let tfMode="internal";
 let editingSpendlyMeta=null;
+let editingLoanMeta=null;
 const spAdapter=()=> (typeof window!=="undefined" && window.__SPENDLY_TEST_ADAPTER__) || null;
 const spNewTxId=()=> "tx_ratex_"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
@@ -2241,25 +2344,136 @@ function renderSpendlyConnect(){
   box.innerHTML=`<div class="sp-row"><span>💚 <b>Spendly connected</b> · <span class="sp-email">${esc(SP.user.email||"")}</span><br><small>${SP.accounts.length} account(s) loaded from Spendly.</small></span><button type="button" class="mini-btn" id="spRefreshBtn">↻ Refresh</button></div>${SP.error?`<div class="neg" style="margin-top:6px">${esc(SP.error)}</div>`:""}`;
   bindRefresh();
 }
+/* ================= BANK LOAN PAYMENT (MONEY OUT) =================
+   Stored as a one-sided debit in ratex_transfers:
+   from_account_id = paid account, to_account_id = null, note marker JSON.
+   BDT payments are covered by (a) opening/free account balance that is
+   not represented by unsold lots in that account, plus (b) explicit
+   stock-lot amounts. rebuild() subtracts those lot amounts from stock. */
+function rawLotRemaining(lotOrId, excludeTransferId=""){
+  const lot = typeof lotOrId === "object" ? lotOrId : S.lots.find(l=>l.id===lotOrId);
+  if(!lot) return 0;
+  const sold = S.allocs.filter(a=>a.lot_id===lot.id).reduce((sm,a)=>sm+n(a.bdt_allocated),0);
+  const loan = S.transfers.filter(tf=>isLoanPayment(tf) && tf.id!==excludeTransferId)
+    .reduce((sm,tf)=> sm + loanAllocationsOf(tf).filter(x=>x.lot===lot.id).reduce((s2,x)=>s2+n(x.bdt),0), 0);
+  return r2(n(lot.total_bdt) - sold - loan);
+}
+function loanLotsForAccount(accountId, excludeTransferId=""){
+  return S.lots.filter(l=>l.bdt_account_id===accountId)
+    .map(l=>({ ...l, loanAvail: rawLotRemaining(l, excludeTransferId) }))
+    .filter(l=>l.loanAvail > 0.004)
+    .sort((a,b)=> String(a.txn_date||"").localeCompare(String(b.txn_date||"")) || String(a.created_at||"").localeCompare(String(b.created_at||"")));
+}
+function loanLinkedLotRemaining(accountId, excludeTransferId=""){
+  return r2(S.lots.filter(l=>l.bdt_account_id===accountId)
+    .reduce((sm,l)=>sm + rawLotRemaining(l, excludeTransferId), 0));
+}
+function loanFreeAvailable(from, excludeTransferId=""){
+  if(!from || from.currency !== "BDT") return 0;
+  const bal = accountBalance(from.id, {transferId:excludeTransferId});
+  return r2(Math.max(0, bal - loanLinkedLotRemaining(from.id, excludeTransferId)));
+}
+function loanLotInputs(){ return $$("#tfLoanLots input[data-loan-lot]"); }
+function readLoanAllocations(excludeTransferId=""){
+  const allocs = [];
+  let total = 0, cost = 0, hasOver = false;
+  loanLotInputs().forEach(inp=>{
+    const bdt = r2(n(inp.value));
+    const lot = S.lots.find(l=>l.id===inp.dataset.loanLot);
+    const avail = lot ? rawLotRemaining(lot, excludeTransferId) : 0;
+    if(bdt > avail + 0.005) hasOver = true;
+    if(lot && bdt > 0){
+      const rate = n(lot.effective_rate);
+      const costSar = rate > 0 ? r2(bdt / rate) : 0;
+      allocs.push({ lot:lot.id, bdt, rate, costSar });
+      total += bdt; cost += costSar;
+    }
+  });
+  return { allocs, total:r2(total), costSar:r2(cost), hasOver };
+}
+function renderLoanLotRows(){
+  const box = $("#tfLoanLots"); if(!box) return;
+  const from = accountById($("#tfLoanFrom")?.value || "");
+  const isBdt = from?.currency === "BDT";
+  $("#tfLoanBdtFields")?.classList.toggle("hidden", !isBdt);
+  if(!isBdt){ box.innerHTML = ""; return; }
+  const editingId = $("#tfId").value;
+  const prev = new Map(loanLotInputs().map(inp=>[inp.dataset.loanLot, { value:inp.value, manual:inp.dataset.manual==="1" }]));
+  const saved = new Map((editingLoanMeta?.lots || []).map(x=>[x.lot, { value:x.bdt, manual:true }]));
+  const lots = loanLotsForAccount(from.id, editingId);
+  box.innerHTML = lots.length ? lots.map(l=>{
+    const old = prev.get(l.id) || saved.get(l.id) || { value:0, manual:false };
+    return `<div class="loan-lot-row"><div><div class="ll-t">${esc(lotDisplayNo(l))}${l.kind==="opening" ? " · Historical" : ""}</div><div class="ll-s">${dFmt(l.txn_date)} · Eff. ${fmtRate(l.effective_rate)} · Available ${fmt(l.loanAvail)} BDT</div></div><input type="number" min="0" step="any" inputmode="decimal" data-loan-lot="${l.id}" data-manual="${old.manual ? "1" : "0"}" value="${old.value ?? 0}" aria-label="BDT to use from ${esc(lotDisplayNo(l))}"></div>`;
+  }).join("") : `<div class="loan-lot-row"><div class="ll-s">No unsold stock lots are linked to this BD account. The payment can use opening/free balance only.</div></div>`;
+  const openingEl = $("#tfLoanOpeningUsed");
+  if(openingEl && editingLoanMeta && openingEl.dataset.applied !== "1"){
+    openingEl.value = editingLoanMeta.openingUsed || 0;
+    openingEl.dataset.manual = "1";
+    openingEl.dataset.applied = "1";
+  }
+}
+function syncLoanAllocations(){
+  const from = accountById($("#tfLoanFrom")?.value || "");
+  if(!from || from.currency !== "BDT") return;
+  const editingId = $("#tfId").value;
+  const totalOut = r2(n($("#tfAmount").value) + n($("#tfFee").value));
+  const free = loanFreeAvailable(from, editingId);
+  const openingEl = $("#tfLoanOpeningUsed");
+  if(openingEl && openingEl.dataset.manual !== "1") openingEl.value = r2(Math.min(free, Math.max(0,totalOut)));
+  const openingUsed = r2(n(openingEl?.value));
+  let needFromLots = r2(totalOut - openingUsed);
+  const inputs = loanLotInputs();
+  const manualTotal = r2(inputs.filter(i=>i.dataset.manual==="1").reduce((sm,i)=>sm+n(i.value),0));
+  let rest = r2(needFromLots - manualTotal);
+  inputs.filter(i=>i.dataset.manual!=="1").forEach(inp=>{
+    const lot = S.lots.find(l=>l.id===inp.dataset.loanLot);
+    const avail = lot ? rawLotRemaining(lot, editingId) : 0;
+    const use = Math.max(0, Math.min(avail, rest));
+    inp.value = r2(use);
+    rest = r2(rest - use);
+  });
+}
+$("#tfLoanFrom").addEventListener("change", ()=>{
+  const openingEl = $("#tfLoanOpeningUsed");
+  if(openingEl){ delete openingEl.dataset.manual; delete openingEl.dataset.applied; }
+  renderLoanLotRows(); transferPreview();
+});
+$("#tfLoanOpeningUsed").addEventListener("input", e=>{ e.target.dataset.manual = "1"; transferPreview(); });
+$("#tfLoanLots").addEventListener("input", e=>{
+  if(e.target?.matches?.("input[data-loan-lot]")){ e.target.dataset.manual = "1"; transferPreview(); }
+});
+$("#tfLoanAuto").addEventListener("click", ()=>{
+  const openingEl = $("#tfLoanOpeningUsed");
+  if(openingEl) delete openingEl.dataset.manual;
+  loanLotInputs().forEach(i=>{ i.dataset.manual = "0"; });
+  syncLoanAllocations(); transferPreview();
+});
+$("#tfModeLoan").addEventListener("click", ()=>{ if(!$("#tfId").value) setTfMode("loan"); });
+
 function setTfMode(mode){
   tfMode=mode;
   $("#tfModeInternal")?.classList.toggle("active", mode==="internal");
   $("#tfModeSpendly")?.classList.toggle("active", mode==="spendly");
+  $("#tfModeLoan")?.classList.toggle("active", mode==="loan");
   $("#tfInternalFields")?.classList.toggle("hidden", mode!=="internal");
   $("#tfSpendlyFields")?.classList.toggle("hidden", mode!=="spendly");
+  $("#tfLoanFields")?.classList.toggle("hidden", mode!=="loan");
   $("#tfFeeWrap")?.classList.toggle("hidden", mode==="spendly");
   const editing=!!$("#tfId")?.value;
-  if(!editing) $("#tfTitle").textContent = mode==="spendly" ? "Transfer to Spendly 💚" : "Transfer Between Accounts";
+  if(!editing) $("#tfTitle").textContent = mode==="spendly" ? "Transfer to Spendly 💚" : (mode==="loan" ? "Bank Loan Payment 🏦" : "Transfer Between Accounts");
   $("#tfSub").textContent = mode==="spendly"
     ? "Move trading money to your personal Spendly — it lands there as Cash In, ready to spend."
-    : "Example: deposit hand cash (SAR) into your Saudi Bank to remit again.";
+    : (mode==="loan"
+      ? "Money leaves the business permanently. For BDT, choose how much comes from opening/free balance and how much from stock lots."
+      : "Example: deposit hand cash (SAR) into your Saudi Bank to remit again.");
   $("#tfSave").textContent = editing
-    ? (mode==="spendly" ? "UPDATE SPENDLY TRANSFER" : "UPDATE TRANSFER")
-    : (mode==="spendly" ? "SEND TO SPENDLY ➜" : "SAVE TRANSFER");
+    ? (mode==="spendly" ? "UPDATE SPENDLY TRANSFER" : (mode==="loan" ? "UPDATE LOAN PAYMENT" : "UPDATE TRANSFER"))
+    : (mode==="spendly" ? "SEND TO SPENDLY ➜" : (mode==="loan" ? "SAVE LOAN PAYMENT" : "SAVE TRANSFER"));
   if(mode==="spendly"){
     renderSpendlyConnect(); renderSpendlySelects();
     spEnsure().then(async ok=>{ if(ok && !SP.loaded) await spLoadAccounts(); }).catch(()=>{}).finally(()=>transferPreview());
   }
+  if(mode==="loan") renderLoanLotRows();
   transferPreview();
 }
 $("#tfModeInternal").addEventListener("click", ()=>{ if(!$("#tfId").value) setTfMode("internal"); });
@@ -2296,10 +2510,45 @@ function spendlyPreview(box, editingId){
     ${from && amount>0 && !enough ? `<div class="row total"><span class="neg">⚠ Exceeds source balance by ${fmt(amount-fromBal)} SAR</span></div>` : ""}`;
   return {mode:"spendly", from, amount, fee:0, fromBal, enough, spAcc, profitAvail, profitAfter};
 }
+function loanPreview(box, editingId){
+  const from = accountById($("#tfLoanFrom").value);
+  const amount = n($("#tfAmount").value), fee = n($("#tfFee").value);
+  const totalOut = r2(amount + fee);
+  const fromBal = from ? accountBalance(from.id, {transferId:editingId}) : 0;
+  const enough = !from || totalOut <= fromBal + 0.005;
+  const cur = from?.currency || "";
+  let openingUsed = 0, allocs = [], lotBdt = 0, lotCostSar = 0, hasOver = false, freeAvail = 0, covered = totalOut, stockBefore = 0;
+  if(from?.currency === "BDT"){
+    syncLoanAllocations();
+    freeAvail = loanFreeAvailable(from, editingId);
+    openingUsed = r2(n($("#tfLoanOpeningUsed").value));
+    const read = readLoanAllocations(editingId);
+    allocs = read.allocs; lotBdt = read.total; lotCostSar = read.costSar; hasOver = read.hasOver;
+    covered = r2(openingUsed + lotBdt);
+    stockBefore = r2(loanLotsForAccount(from.id, editingId).reduce((sm,l)=>sm+l.loanAvail,0));
+    const hint = $("#tfLoanFreeHint");
+    if(hint) hint.textContent = `Available opening/free in this account: ${fmt(freeAvail)} BDT — this is account balance not represented by unsold lots linked to the account. Historical opening lots are used from the Stock Lots list below.`;
+  }
+  const diff = r2(totalOut - covered);
+  const feeSar = fee > 0 && from ? transferFeeSar({from_account_id:from.id, to_account_id:null, fee, note:""}, n(D?.tot?.allBuyRate)) : 0;
+  box.innerHTML = `
+    <div class="row"><span>${from?esc(from.name):"Account"} balance now → after</span><b class="${enough?"":"neg"}">${from?fmt(fromBal):"—"} → ${from?fmt(fromBal-totalOut):"—"} ${cur}</b></div>
+    <div class="row"><span>Total permanently paid out (amount + fee)</span><b class="neg">−${fmt(totalOut)} ${cur}</b></div>
+    ${from?.currency==="BDT" ? `<div class="row"><span>Covered by opening/free balance</span><b>${fmt(openingUsed)} BDT</b></div>
+    <div class="row"><span>Covered by stock lots${lotCostSar>0.004 ? ` · lot cost ${fmt(lotCostSar)} SAR` : ""}</span><b>${fmt(lotBdt)} BDT</b></div>
+    <div class="row"><span>Stock in this account now → after</span><b>${fmt(stockBefore)} → ${fmt(Math.max(0,stockBefore-lotBdt))} BDT</b></div>` : ""}
+    ${fee>0 ? `<div class="row"><span>Profit impact</span><b class="neg">Fee only: −${fmt(feeSar)} SAR from Net Profit · loan principal is not a trade expense</b></div>` : `<div class="row"><span>Profit impact</span><b>Principal: no trade-profit change</b></div>`}
+    ${from?.currency==="BDT" && openingUsed > freeAvail + 0.005 ? `<div class="row total"><span class="neg">⚠ Opening/free used exceeds available ${fmt(freeAvail)} BDT. Reduce it and use stock lots (including Historical Lots) for the rest.</span></div>` : ""}
+    ${hasOver ? `<div class="row total"><span class="neg">⚠ A lot amount exceeds that lot's available BDT.</span></div>` : ""}
+    ${from?.currency==="BDT" && totalOut>0 && Math.abs(diff)>0.005 ? `<div class="row total"><span class="neg">⚠ Opening/free + lots must equal ${fmt(totalOut)} BDT — currently ${fmt(covered)} BDT (${diff>0 ? `${fmt(diff)} short` : `${fmt(-diff)} extra`}).</span></div>` : ""}
+    ${from && totalOut>0 && !enough ? `<div class="row total"><span class="neg">⚠ Exceeds source balance by ${fmt(totalOut-fromBal)} ${cur}</span></div>` : ""}`;
+  return {mode:"loan", from, amount, fee, totalOut, fromBal, enough, openingUsed, allocs, lotBdt, lotCostSar, hasOver, freeAvail, covered, diff};
+}
 function transferPreview(){
   const box = $("#tfPreview"); if(!box) return;
   const editingId = $("#tfId").value;
   if(tfMode === "spendly") return spendlyPreview(box, editingId);
+  if(tfMode === "loan") return loanPreview(box, editingId);
   const from = accountById($("#tfFrom").value), to = accountById($("#tfTo").value);
   const amount = n($("#tfAmount").value), fee = n($("#tfFee").value);
   const fromBal = from ? accountBalance(from.id, {transferId:editingId}) : 0;
@@ -2320,7 +2569,11 @@ function openTransfer(tf=null){
   }
   formErr("tfErr","");
   const isSp = !!tf && isSpendlyTransfer(tf);
+  const isLoan = !!tf && isLoanPayment(tf);
   editingSpendlyMeta = isSp ? spendlyMeta(tf) : null;
+  editingLoanMeta = isLoan ? loanMeta(tf) : null;
+  const openingEl = $("#tfLoanOpeningUsed");
+  if(openingEl){ delete openingEl.dataset.manual; delete openingEl.dataset.applied; openingEl.value = 0; }
   $("#tfId").value = tf?.id || "";
   $("#tfDate").value = tf?.txn_date || todayStr();
   populateAccountSelects();
@@ -2329,13 +2582,16 @@ function openTransfer(tf=null){
   $("#tfTo").value = (!isSp ? tf?.to_account_id : "") || firstAccountId("SAR","Saudi Bank") || "";
   if($("#tfTo").value === $("#tfFrom").value) $("#tfTo").value = "";
   $("#tfSpFrom").value = (isSp ? tf.from_account_id : "") || firstAccountId("SAR","Saudi Bank") || firstAccountId("SAR") || "";
+  $("#tfLoanFrom").value = (isLoan ? tf.from_account_id : "") || firstAccountId("BDT","BD Bank") || firstAccountId("BDT") || firstAccountId("SAR") || "";
+  $("#tfLoanName").value = isLoan ? (editingLoanMeta?.bank || "") : "";
   $("#tfAmount").value = tf?.amount ?? "";
   $("#tfFee").value = isSp ? 0 : (tf?.fee ?? 0);
-  $("#tfNote").value = isSp ? (editingSpendlyMeta?.note || "") : (tf?.note || "");
+  $("#tfNote").value = isSp ? (editingSpendlyMeta?.note || "") : (isLoan ? (editingLoanMeta?.note || "") : (tf?.note || ""));
   $("#tfModeInternal").disabled = !!tf;
   $("#tfModeSpendly").disabled = !!tf;
-  setTfMode(isSp ? "spendly" : "internal");
-  if(tf) $("#tfTitle").textContent = isSp ? "Edit Spendly Transfer" : "Edit Transfer";
+  $("#tfModeLoan").disabled = !!tf;
+  setTfMode(isSp ? "spendly" : (isLoan ? "loan" : "internal"));
+  if(tf) $("#tfTitle").textContent = isSp ? "Edit Spendly Transfer" : (isLoan ? "Edit Loan Payment" : "Edit Transfer");
   transferPreview();
   openSheet("transferOverlay");
 }
@@ -2404,9 +2660,43 @@ async function saveSpendlyTransfer(){
   afterLocalChange();
   spLoadAccounts().catch(()=>{});
 }
+function saveLoanPayment(){
+  const pv = transferPreview();
+  if(!pv.from) return formErr("tfErr","Select the account to pay from.");
+  if(!(pv.amount > 0)) return formErr("tfErr","Enter the loan payment amount.");
+  if(pv.fee < 0) return formErr("tfErr","Fee cannot be negative.");
+  if(!pv.enough) return formErr("tfErr",`Not enough balance in ${pv.from.name}: available ${fmt(pv.fromBal)} ${pv.from.currency}, needed ${fmt(pv.totalOut)} (amount + fee).`);
+  const dateStr = $("#tfDate").value;
+  if(dateBeforeOpening(pv.from.id, dateStr))
+    return formErr("tfErr","Date is before this account's opening date. Change the date or the account opening date.");
+  if(pv.from.currency === "BDT"){
+    if(pv.openingUsed > pv.freeAvail + 0.005)
+      return formErr("tfErr",`Opening/free balance available in this account is ${fmt(pv.freeAvail)} BDT. Reduce “Use from Opening / Free Balance” and cover the rest from stock lots (Historical opening lots are in the lot list).`);
+    if(pv.hasOver) return formErr("tfErr","A stock-lot amount exceeds that lot's available BDT.");
+    if(Math.abs(pv.diff) > 0.005)
+      return formErr("tfErr",`Opening/free + stock lots must exactly cover amount + fee (${fmt(pv.totalOut)} BDT). Currently covered: ${fmt(pv.covered)} BDT.`);
+  }
+  const editingId = $("#tfId").value;
+  const meta = {
+    v:1,
+    bank: $("#tfLoanName").value.trim() || "Bank loan",
+    note: $("#tfNote").value.trim(),
+    openingUsed: pv.from.currency === "BDT" ? r2(pv.openingUsed) : 0,
+    lots: pv.from.currency === "BDT" ? pv.allocs : []
+  };
+  const payload = { user_id:S.user.id, txn_date:dateStr, from_account_id:pv.from.id, to_account_id:null,
+    amount:r2(pv.amount), fee:r2(pv.fee), note:LOAN_PAYMENT_MARKER + JSON.stringify(meta) };
+  if(editingId) payload.id = editingId;
+  saveLocalRow("transfers", "ratex_transfers", payload);
+  editingLoanMeta = meta;
+  closeSheet("transferOverlay");
+  toast(editingId ? "Loan payment updated 🏦" : `Paid ${fmt(pv.amount)} ${pv.from.currency} to bank loan 🏦`, "success");
+  afterLocalChange(); populateAccountSelects();
+}
 $("#transferForm").addEventListener("submit", async e=>{
   e.preventDefault(); formErr("tfErr","");
   if(tfMode === "spendly"){ await saveSpendlyTransfer(); return; }
+  if(tfMode === "loan"){ saveLoanPayment(); return; }
   const pv = transferPreview();
   if(!pv.from || !pv.to) return formErr("tfErr","Select both From and To accounts.");
   if(pv.from.id === pv.to.id) return formErr("tfErr","From and To accounts must be different.");
@@ -2548,7 +2838,7 @@ $("#stockForm").addEventListener("submit", async e=>{
     return formErr("stErr",`Remit No. ${remitNo} is already used by another lot — change it.`);
   if(id){
     const lot = D.lotMap.get(id);
-    if(lot && total < lot.usedBdt - 0.005) return formErr("stErr",`Already ${fmt(lot.usedBdt)} BDT from this lot is sold — total BDT cannot be less than that.`);
+    if(lot && total < (lot.consumedBdt ?? lot.usedBdt) - 0.005) return formErr("stErr",`Already ${fmt(lot.consumedBdt ?? lot.usedBdt)} BDT from this lot is used (sold + loan paid) — total BDT cannot be less than that.`);
   }
   const sarAccId = $("#stSarAcc").value || null;
   const bdtAccId = $("#stBdtAcc").value || null;
@@ -3054,7 +3344,7 @@ document.addEventListener("click", async e=>{
   }
   if(action==="del-lot"){
     const l=D.lotMap.get(id); if(!l) return;
-    if(l.usedBdt > 0.005) return toast(`This lot already supplied ${fmt(l.usedBdt)} BDT to sell trades — delete/edit those trades first.`, "error");
+    if((l.consumedBdt ?? l.usedBdt) > 0.005) return toast(`This lot already supplied ${fmt(l.consumedBdt ?? l.usedBdt)} BDT (sold + loan paid) — delete/edit those records first.`, "error");
     if(await deleteConfirm("⚠ Delete this remittance lot?",
       "The lot and its account postings will be reversed permanently:",
       [["Remit No.", lotDisplayNo(l)],
@@ -3082,7 +3372,22 @@ document.addEventListener("click", async e=>{
   }
   if(action==="del-transfer"){
     const tf=S.transfers.find(x=>x.id===id); if(!tf) return;
-    if(isSpendlyTransfer(tf)){
+    if(isLoanPayment(tf)){
+      const meta = loanMeta(tf);
+      const cur = accountById(tf.from_account_id)?.currency || "";
+      const lotBdt = r2(loanAllocationsOf(tf).reduce((sm,x)=>sm+n(x.bdt),0));
+      if(await deleteConfirm("⚠ Delete this loan payment?",
+        "The payment will be reversed: the source account is credited back and any BDT taken from stock lots returns to those lots:",
+        [["Bank / loan", meta.bank || "Bank loan"],
+         ["Account credited back", `${accountName(tf.from_account_id)} +${fmt(n(tf.amount)+n(tf.fee))} ${cur}`],
+         ["Opening/free restored", cur==="BDT" ? `${fmt(meta.openingUsed || 0)} BDT` : "—"],
+         ["Stock lots restored", lotBdt > 0.004 ? `${fmt(lotBdt)} BDT` : "No lots used"] ])){
+        deleteLocalRow("transfers", "ratex_transfers", tf.id);
+        toast("Loan payment deleted. Account and stock restored.", "success");
+        afterLocalChange(); populateAccountSelects();
+      }
+    }
+    else if(isSpendlyTransfer(tf)){
       const meta = spendlyMeta(tf);
       if(await deleteConfirm("⚠ Delete this Spendly transfer?",
         "This reverses BOTH apps: the Cash-In entry is removed from Spendly and the RateX account is credited back:",
