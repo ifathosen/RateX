@@ -1446,7 +1446,8 @@ function lotInfoItems(l, avail, { using=0, compact=false }={}){
     ["Effective buy rate", fmtRate(l.effective_rate)],
     ["Sent", sent],
     ["Total deposited", `${fmt(l.total_bdt)} BDT`],
-    ["Used by other trades", `${fmt(usedByOthers)} BDT`],
+    ["Already used (sold + loan)", `${fmt(usedByOthers)} BDT`],
+    ...(n(l.loanUsedBdt) > 0.004 ? [["Loan paid from this lot", `${fmt(l.loanUsedBdt)} BDT`]] : []),
     ["Base rate + incentive", `${fmtRate(l.base_rate)} + ${fmt(l.incentive_pct,2)}%`],
     ["Channel", l.source || "—"],
     ["SAR debit A/C", l.sar_account_id ? accountName(l.sar_account_id) : "Not assigned"],
@@ -2890,8 +2891,9 @@ function tradeAmounts(){
 function tradeNeeded(){ return r2(n($("#trBdt").value) + n($("#trCharge").value)); }
 function lotAvailable(lotId, editingTradeId=""){
   const lot = D?.lotMap.get(lotId); if(!lot) return 0;
-  const usedByOthers = S.allocs.filter(a=>a.lot_id===lotId && a.trade_id!==editingTradeId).reduce((s,a)=>s+n(a.bdt_allocated),0);
-  return r2(n(lot.total_bdt) - usedByOthers);
+  const soldByOthers = S.allocs.filter(a=>a.lot_id===lotId && a.trade_id!==editingTradeId).reduce((s,a)=>s+n(a.bdt_allocated),0);
+  const loanUsed = n(lot.loanUsedBdt ?? D?.loanUseByLot?.get(lotId));
+  return r2(n(lot.total_bdt) - soldByOthers - loanUsed);
 }
 function allocRowHtml(selectedId="", amount="", auto=true){
   const editingId = $("#trId").value;
@@ -2945,7 +2947,7 @@ function renderLotPicker(){
     const badge = already ? `<span class="pill pill-partial">Already selected</span>`
       : soldOut ? `<span class="pill pill-partial">Sold out</span>`
       : l.id === selectedId ? `<span class="pill pill-settled">Selected ✓</span>` : "";
-    const detailItems = lotInfoItems(l, avail).filter(([label])=>["Total deposited","Used by other trades","Base rate + incentive","SAR debit A/C","Lot type"].includes(label));
+    const detailItems = lotInfoItems(l, avail).filter(([label])=>["Total deposited","Already used (sold + loan)","Loan paid from this lot","Base rate + incentive","SAR debit A/C","Lot type"].includes(label));
     return `<div class="lot-choice${l.id===selectedId ? " selected" : ""}${disabled ? " is-disabled" : ""}${detailsOpen ? " details-open" : ""}">
       <button type="button" class="lot-select" data-lot-id="${l.id}" ${disabled ? "disabled" : ""}>
         <span class="lot-choice-head"><span><span class="rt">${esc(lotDisplayNo(l))}</span><span class="rs" style="display:block">${dFmt(l.txn_date)}${l.source ? " · "+esc(l.source) : ""}${l.bdt_account_id ? " · "+esc(accountName(l.bdt_account_id)) : ""}</span></span>${badge}</span>
@@ -2955,7 +2957,7 @@ function renderLotPicker(){
       <div class="lot-more-body">
         ${lotInfoGridHtml(detailItems)}
         <div class="progress"><i style="width:${usedPct}%"></i></div>
-        <div class="lot-choice-note">${usedPct}% already used by other trades${l.note ? ` · 📝 ${esc(l.note)}` : ""}</div>
+        <div class="lot-choice-note">${usedPct}% already used (sold + loan paid)${l.note ? ` · 📝 ${esc(l.note)}` : ""}</div>
       </div>
     </div>`;
   }).join("") : `<div class="bank-empty neu-in" style="margin-top:12px">${showSoldOut ? "No stock lot matches your search." : "No available lot matches. Tick “Show sold-out lots” to see everything."}</div>`;
