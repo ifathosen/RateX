@@ -130,10 +130,76 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .page-head p{margin:5px 0 0; color:var(--muted); font-size:13.5px}
 .head-actions{display:flex; gap:10px; flex-wrap:wrap}
 
-.bottom-nav{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(12px + env(safe-area-inset-bottom)); z-index:50; width:min(560px,calc(100% - 20px)); background:var(--surface2); border-radius:26px; box-shadow:12px 12px 30px rgba(163,176,199,.65), -8px -8px 22px rgba(255,255,255,1); display:grid; grid-template-columns:repeat(4,1fr); padding:9px}
-.bottom-nav button{display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 2px 7px; border-radius:18px; font-size:11px; font-weight:800; letter-spacing:.4px; color:var(--muted)}
-.bottom-nav button svg{width:22px; height:22px}
-.bottom-nav button.active{color:var(--blue2); box-shadow:var(--sh-in-sm)}
+.bottom-nav{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(12px + env(safe-area-inset-bottom)); z-index:50; width:min(560px,calc(100% - 20px)); background:var(--surface2); border-radius:26px; box-shadow:12px 12px 30px rgba(163,176,199,.65), -8px -8px 22px rgba(255,255,255,1); display:grid; grid-template-columns:repeat(5,1fr); padding:9px; isolation:isolate}
+.bottom-nav button{display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 1px 7px; border-radius:18px; font-size:clamp(9px,2.5vw,11px); font-weight:800; letter-spacing:.2px; color:var(--muted); position:relative; z-index:2; transition:color .25s; white-space:nowrap}
+.bottom-nav button svg{width:21px; height:21px}
+.bottom-nav button.active{color:var(--blue2); box-shadow:none}
+/* glowing "light" indicator that slides behind the active tab */
+.nav-glow{position:absolute; left:0; top:0; z-index:1; width:0; height:0; border-radius:18px; pointer-events:none;
+  background:radial-gradient(65% 85% at 50% 28%, rgba(34,184,240,.30), rgba(34,184,240,0) 72%);
+  box-shadow:0 0 20px rgba(34,184,240,.45), inset 0 0 0 1px rgba(255,255,255,.9), inset 0 0 16px rgba(34,184,240,.22);
+  transition:transform .42s cubic-bezier(.22,1,.36,1), width .42s cubic-bezier(.22,1,.36,1), height .3s}
+.nav-glow::after{content:""; position:absolute; left:50%; bottom:5px; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--blue); box-shadow:0 0 10px rgba(34,184,240,.95)}
+@media(prefers-reduced-motion:reduce){.nav-glow{transition:none}}
+
+/* ---------- statement ---------- */
+.stmt-controls{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px}
+.stmt-controls input,.stmt-controls select{min-width:0; max-width:100%}
+.stmt-controls .field{margin-top:0}
+.stmt-controls .field>label{background:var(--surface)}
+.stmt-controls .stmt-month{grid-column:1/-1}
+.stmt-chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:14px}
+.stmt-chips .chip{padding:8px 13px; font-size:12px}
+.stmt-mail{display:grid; grid-template-columns:1fr auto auto; gap:9px; margin-top:16px; align-items:center}
+.stmt-mail input{padding:14px 16px; border:none; outline:none; border-radius:14px; background:var(--surface); box-shadow:var(--sh-in); font-size:14px; min-width:0}
+.stmt-mail .mini-btn{white-space:nowrap}
+@media(max-width:560px){.stmt-mail{grid-template-columns:1fr 1fr}.stmt-mail input{grid-column:1/-1}}
+.stmt-note{font-size:12px; color:var(--muted); margin:11px 2px 0; line-height:1.55}
+.stmt-range-badge{display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:800; color:var(--blue2); background:#dbeafe; border-radius:999px; padding:6px 13px}
+.stmt-sec{margin-top:16px}
+.stmt-sec .neu{padding:18px}
+.stmt-tbl{font-size:12.5px; table-layout:auto}
+.stmt-tbl td,.stmt-tbl th{padding:9px 5px; font-size:11.5px}
+.stmt-tbl td{white-space:normal}
+.stmt-tbl th{font-size:9px; letter-spacing:.5px}
+.stmt-tbl td small{font-size:10px}
+@media(max-width:640px){
+  .stmt-sec .stmt-tbl thead{display:none}
+  .stmt-sec .stmt-tbl, .stmt-sec .stmt-tbl tbody, .stmt-sec .stmt-tbl tr, .stmt-sec .stmt-tbl td{display:block; width:100%}
+  .stmt-sec .stmt-tbl tr{border-bottom:1px dashed #ccd3e2; padding:9px 0}
+  .stmt-sec .stmt-tbl tr:last-child{border-bottom:none}
+  .stmt-sec .stmt-tbl td{border:none; text-align:left; padding:2px 0; display:flex; justify-content:space-between; align-items:baseline; gap:12px; white-space:normal; font-size:12.5px}
+  .stmt-sec .stmt-tbl td::before{content:attr(data-label); font-size:9.5px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); font-weight:800; flex:none}
+  .stmt-sec .stmt-tbl td:first-child{display:block; border-bottom:1px dashed #d8dfec; padding-bottom:5px; margin-bottom:4px; font-weight:800}
+  .stmt-sec .stmt-tbl td:first-child::before{display:none}
+  .stmt-sec .stmt-tbl td:first-child small{font-weight:600}
+  .stmt-sec .tbl-wrap{box-shadow:none; background:none; padding:0}
+}
+.stmt-sec .section-head{align-items:baseline; flex-wrap:wrap; row-gap:2px}
+.stmt-sec .section-head small{font-size:11px}
+.stmt-empty{padding:16px 6px; text-align:center; color:var(--muted); font-size:13px}
+.stmt-acct-row{padding:12px 0; border-bottom:1px dashed #ccd3e2}
+.stmt-acct-row:last-child{border-bottom:none; padding-bottom:2px}
+.stmt-acct-row.total{border-top:2px solid #d3dae8; border-bottom:none; margin-top:4px}
+.stmt-acct-name{font-size:13.5px}
+.stmt-acct-name b{font-weight:900}
+.stmt-acct-name small{font-size:11px; color:var(--muted)}
+.stmt-acct-nums{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; margin-top:8px}
+.stmt-acct-nums .n{min-width:0}
+.stmt-acct-nums span{display:block; font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); font-weight:800}
+.stmt-acct-nums b{font-size:12.5px; font-weight:800; overflow-wrap:anywhere}
+.stmt-amount-in{color:var(--green)}
+.stmt-amount-out{color:var(--red)}
+.stmt-tag{display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.4px; padding:3px 8px; border-radius:999px; background:#e4e9f2; color:var(--ink2)}
+.stmt-sum{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+@media(max-width:640px){.stmt-sum{grid-template-columns:1fr 1fr}}
+.stmt-sum .cell{background:var(--surface); border-radius:16px; box-shadow:var(--sh-in-sm); padding:12px 13px}
+.stmt-sum .cell .l{font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); font-weight:800}
+.stmt-sum .cell .v{font-size:19px; font-weight:900; margin-top:5px}
+.stmt-sum .cell .s{font-size:11px; color:var(--muted); margin-top:3px}
+@media(max-width:420px){.stmt-sum .cell .s{font-size:10px}}
+.stmt-month-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px}
+@media(max-width:480px){.stmt-month-grid{grid-template-columns:1fr}}
 
 /* ---------- dashboard ---------- */
 .hero-card{background:var(--grad); color:#fff; border-radius:26px; padding:24px 24px 20px; box-shadow:0 18px 38px rgba(10,110,255,.35), inset 0 1px 0 rgba(255,255,255,.4); position:relative; overflow:hidden}
@@ -180,6 +246,8 @@ main{max-width:1120px; margin:0 auto; padding:20px 16px 118px}
 .pill-sar-add{background:#dcfce7; color:#067a51}
 .pill-spendly{background:#d9f5e9; color:#067a51}
 .pill-loan{background:#fee2e2; color:#b42318}
+.pill-open-stock{background:#d9f5e9; color:#067a51; text-transform:none; letter-spacing:0; font-size:10px; padding:3px 9px; display:inline-block; margin-top:4px}
+.opening-lot .lot-summary-top .avatar-c{background:linear-gradient(135deg,#12b981,#0a9d6c) !important}
 .seg.three{grid-template-columns:repeat(3,1fr)}
 .seg.three button{font-size:12px; padding:12px 4px}
 .loan-lot-list{display:flex; flex-direction:column; gap:9px}
@@ -515,6 +583,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
           <span>Active lots <b id="dLotCount">0</b></span>
           <span>Avg. cost rate <b id="dAvgCost">—</b></span>
           <span>Total stock bought <b id="dBought">0</b> BDT</span>
+          <span id="dOpenStockWrap">Opening-balance stock <b id="dOpenStock">0</b> BDT</span>
         </div>
       </div>
 
@@ -530,6 +599,18 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <button data-open-trade><span class="qic" style="background:linear-gradient(135deg,#f59e0b,#d97706)">⇄</span>Sell BDT<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">New trade</span></button>
         <button data-goto="settlement"><span class="qic" style="background:linear-gradient(135deg,#12b981,#0a9d6c)">✓</span>Collect<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">Add payment</span></button>
         <button data-open-transfer><span class="qic" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)">⇪</span>Transfer<span style="font-weight:500;font-size:11px;color:var(--muted);margin-top:-5px">Cash → Bank</span></button>
+      </div>
+
+      <div class="section" style="margin-top:20px">
+        <div class="section-head"><h3>This Month</h3><button class="link" data-goto="statement">Statement →</button></div>
+        <div class="neu-sm" style="padding:16px">
+          <div class="stmt-sum" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+            <div class="cell"><div class="l">Income</div><div class="v" id="dMonthIncome" style="font-size:clamp(14px,4vw,19px)">0.00</div><div class="s">SAR collected</div></div>
+            <div class="cell"><div class="l">Expenses</div><div class="v" id="dMonthExpense" style="font-size:clamp(14px,4vw,19px)">0.00</div><div class="s">SAR fees</div></div>
+            <div class="cell"><div class="l">Profit</div><div class="v" id="dMonthProfit" style="font-size:clamp(14px,4vw,19px)">0.00</div><div class="s">Net this month</div></div>
+          </div>
+          <p class="stmt-note" id="dMonthNote" style="margin-bottom:0">Monthly figures start fresh on the 1st — no transaction is ever deleted.</p>
+        </div>
       </div>
 
       <div class="flow-card neu">
@@ -678,12 +759,57 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
         <div id="aCustomers"></div>
       </div>
     </section>
+
+    <!-- ============ STATEMENT ============ -->
+    <section class="page hidden" id="page-statement">
+      <div class="page-head">
+        <div><h2>Statement</h2><p>Any date range — income, expenses, profit and every transaction.</p></div>
+      </div>
+
+      <div class="neu" style="padding:18px">
+        <div class="stmt-controls">
+          <div class="field"><label for="stmtFrom">From</label><input type="date" id="stmtFrom"></div>
+          <div class="field"><label for="stmtTo">To</label><input type="date" id="stmtTo"></div>
+          <div class="field stmt-month"><label for="stmtMonth">Or pick a month</label><select id="stmtMonth"></select></div>
+        </div>
+        <div class="stmt-chips" id="stmtQuick">
+          <button type="button" class="chip" data-stmt-quick="month">This month</button>
+          <button type="button" class="chip" data-stmt-quick="last">Last month</button>
+          <button type="button" class="chip" data-stmt-quick="30">Last 30 days</button>
+          <button type="button" class="chip" data-stmt-quick="year">This year</button>
+          <button type="button" class="chip" data-stmt-quick="all">All time</button>
+        </div>
+        <div class="stmt-mail">
+          <input type="email" id="stmtEmail" inputmode="email" autocomplete="email" placeholder="Email address (any)">
+          <button type="button" class="mini-btn blue" id="stmtEmailBtn">✉️ Email</button>
+          <button type="button" class="mini-btn" id="stmtDownloadBtn">⬇️ Download</button>
+        </div>
+        <button type="button" class="mini-btn" id="stmtShareBtn" style="margin-top:10px">📤 Share / attach the statement file</button>
+        <p class="stmt-note">Nothing is ever deleted — every past transaction stays saved. <b>Email</b> opens your mail app with the summary for the selected dates; <b>Download</b> saves a complete statement file you can print, keep as PDF or attach to that email.</p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--green)"></i>Income</div><div class="vl"><span id="stmtIncome">0.00</span> <small>SAR</small></div><div class="sb" id="stmtIncomeSub">Collected in range</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--red)"></i>Expenses</div><div class="vl"><span id="stmtExpense">0.00</span> <small>SAR</small></div><div class="sb" id="stmtExpenseSub">Transfer &amp; loan fees</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--blue)"></i>Profit</div><div class="vl"><span id="stmtProfit">0.00</span> <small>SAR</small></div><div class="sb" id="stmtProfitSub">Net, expenses deducted</div></div>
+        <div class="stat neu-sm"><div class="lb"><i class="dot" style="background:var(--amber)"></i>BDT Sold</div><div class="vl"><span id="stmtBdtSold">0.00</span> <small>BDT</small></div><div class="sb" id="stmtSoldSub">Delivered in range</div></div>
+      </div>
+
+      <div class="stmt-sec"><div class="neu" style="padding:18px">
+        <div class="section-head"><h3>Period Summary</h3><span class="stmt-range-badge" id="stmtRangeBadge">—</span></div>
+        <div class="stmt-sum" id="stmtSummary"></div>
+      </div></div>
+
+      <div id="stmtBody"></div>
+    </section>
   </main>
 
   <nav class="bottom-nav" aria-label="Main">
+    <span class="nav-glow" id="navGlow" aria-hidden="true"></span>
     <button data-tab="dashboard" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="2"/><rect x="3" y="15" width="7.5" height="6" rx="2"/></svg>Dashboard</button>
     <button data-tab="trade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13M13.5 3.5 17 7l-3.5 3.5M20 17H7M10.5 13.5 7 17l3.5 3.5"/></svg>Trade</button>
     <button data-tab="settlement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2.5" y="6" width="19" height="13" rx="3"/><path d="M2.5 10.5h19M6 15.5h4"/></svg>Settlement</button>
+    <button data-tab="statement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h8.5L19 7v14.5H6z"/><path d="M14 2.5V7h5M9 11h7M9 14.5h7M9 18h4"/></svg>Statement</button>
     <button data-tab="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Analytics</button>
   </nav>
 </section>
@@ -825,7 +951,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 <div class="overlay" id="accountOverlay" style="z-index:95">
   <form class="sheet" id="accountForm">
     <div class="grab"></div>
-    <div class="sheet-head"><div><h3 id="accTitle">Add Account</h3><p id="accSub">Post the bank/wallet name and its opening balance.</p></div><button type="button" class="icon-btn close-x" data-close="accountOverlay">✕</button></div>
+    <div class="sheet-head"><div><h3 id="accTitle">Add Account</h3><p id="accSub">Post the bank/wallet name — opening balance is optional.</p></div><button type="button" class="icon-btn close-x" data-close="accountOverlay">✕</button></div>
     <input type="hidden" id="accId">
     <div class="field"><label for="accCurrency">Country Section</label><select id="accCurrency"><option value="SAR">Saudi Arabia · SAR</option><option value="BDT">Bangladesh · BDT</option></select></div>
     <div class="grid2">
@@ -834,11 +960,11 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
     </div>
     <div class="field"><label for="accType">Account Type</label><select id="accType"></select><p class="hint">Use the label to separate multiple accounts at the same bank.</p></div>
     <div class="grid2">
-      <div class="field"><label for="accOpening">Opening Balance · <span id="accOpeningCur">SAR</span></label><input type="number" id="accOpening" required step="any" inputmode="decimal" placeholder="0.00"></div>
+      <div class="field"><label for="accOpening">Opening Balance · <span id="accOpeningCur">SAR</span> · optional</label><input type="number" id="accOpening" step="any" inputmode="decimal" placeholder="Leave blank if not needed"></div>
       <div class="field"><label for="accOpeningDate">Opening Date</label><input type="date" id="accOpeningDate" required></div>
     </div>
-    <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">Post the balance exactly as it stood on the opening date, <b>before</b> the transactions you record in RateX. Later remittances/trades are posted on top of it.</p>
-    <div class="field"><label for="accNote">Branch / Account No. Note (optional)</label><input type="text" id="accNote" placeholder="Branch, IBAN/account hint… (private note)"></div>
+    <p class="hint" style="margin:9px 4px 0;font-size:12px;color:var(--muted)">Opening balance is <b>optional</b> — leave it blank to add only the bank/wallet name (treated as 0). If you do enter it, post the balance exactly as it stood on the opening date, <b>before</b> the transactions you record in RateX.</p>
+    <div class="field"><label for="accNote">Branch / Account No. Note (optional)</label><input type="text" id="accNote" placeholder="Branch / account hint (optional)"></div>
     <label class="remember" style="margin-top:18px"><input type="checkbox" id="accArchived"> Archived (hide from new entries)</label>
     <div class="form-err" id="accErr"></div>
     <div class="save-row"><button type="submit" class="btn btn-grad btn-wide" id="accSave">SAVE ACCOUNT</button></div>
@@ -1114,6 +1240,7 @@ function deleteLocalRow(collection, table, id){
   enqueue("delete", table, { id });
 }
 function afterLocalChange(){
+  syncOpeningStockLots();      // opening balance → auto stock lot (BDT accounts)
   persistLocal(); renderAll(); updateSyncUI();
   syncNow(); // background backup if online; stays queued if offline
 }
@@ -1310,7 +1437,10 @@ function rebuild(){
     const used = (allocByLot.get(l.id)||[]).reduce((s,a)=>s+n(a.bdt_allocated),0);
     const loanUsed = loanUseByLot.get(l.id) || 0;
     const consumed = r2(used + loanUsed);
-    return { ...l, usedBdt:r2(used), loanUsedBdt:r2(loanUsed), consumedBdt:consumed, remainingBdt:r2(n(l.total_bdt)-consumed), sarCost:r2(n(l.sar_amount)+n(l.fee_sar)) };
+    const isOpeningStock = isOpeningStockLot(l);
+    return { ...l, isOpeningStock, usedBdt:r2(used), loanUsedBdt:r2(loanUsed), consumedBdt:consumed,
+      remainingBdt:r2(n(l.total_bdt)-consumed),
+      sarCost: isOpeningStock ? 0 : r2(n(l.sar_amount)+n(l.fee_sar)) };
   }).sort((a,b)=> (b.txn_date||"").localeCompare(a.txn_date||"") || (b.created_at||"").localeCompare(a.created_at||""));
   lots.forEach(l => lotMap.set(l.id, l));
 
@@ -1346,9 +1476,12 @@ function rebuild(){
       openCount: ct.filter(t=>t.status!=="Settled").length };
   });
 
+  const boughtLots = lots.filter(l => !l.isOpeningStock);   // opening balances were never "bought"
   const tot = {
     bdtBalance: r2(lots.reduce((s,l)=>s+l.remainingBdt,0)),
-    bdtBought:  r2(lots.reduce((s,l)=>s+n(l.total_bdt),0)),
+    bdtBought:  r2(boughtLots.reduce((s,l)=>s+n(l.total_bdt),0)),
+    openingStockBdt:   r2(lots.filter(l=>l.isOpeningStock).reduce((s,l)=>s+n(l.total_bdt),0)),
+    openingStockLeft:  r2(lots.filter(l=>l.isOpeningStock).reduce((s,l)=>s+l.remainingBdt,0)),
     investedSar:r2(lots.reduce((s,l)=>s+l.sarCost,0)),
     collectedSar:r2(S.pays.filter(p=>!isDiscountPay(p)).reduce((s,p)=>s+n(p.sar_amount),0)),
     discountSar:r2(trades.reduce((s,t)=>s+t.discountSar,0)),
@@ -1379,7 +1512,7 @@ function rebuild(){
   tot.loanOpeningUsedBdt = r2(loanTfs.reduce((sm,tf)=>sm+n(loanMeta(tf).openingUsed),0));
   tot.loanLotBdt = r2(loanTfs.reduce((sm,tf)=>sm+loanAllocationsOf(tf).reduce((s2,x)=>s2+n(x.bdt),0),0));
   tot.loanLotCostSar = r2(loanTfs.reduce((sm,tf)=>sm+loanAllocationsOf(tf).reduce((s2,x)=>s2+n(x.costSar),0),0));
-  const remainLots = lots.filter(l=>l.remainingBdt > 0.005);
+  const remainLots = lots.filter(l=>l.remainingBdt > 0.005 && !l.isOpeningStock);
   const remainSarCost = remainLots.reduce((s,l)=> s + (n(l.effective_rate) ? l.remainingBdt / n(l.effective_rate) : 0), 0);
   tot.avgCostRate = remainSarCost > 0 ? tot.bdtBalance / remainSarCost : 0;
 
@@ -1395,6 +1528,494 @@ function rebuild(){
   return D;
 }
 
+/* ================= STATEMENT =================
+   A statement is a pure VIEW: it filters by date and never deletes or
+   edits anything. Income / expenses / profit are scoped to the chosen
+   range, so the monthly figures start fresh on the 1st while every
+   older transaction stays saved in the database. */
+function stmtIso(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function stmtFirstOfMonth(dateStr){ return monthKey(dateStr || todayStr()) + "-01"; }
+function stmtLastOfMonth(key){
+  const d = new Date(key + "-01T12:00:00");
+  d.setMonth(d.getMonth() + 1); d.setDate(0);
+  return stmtIso(d);
+}
+function stmtMonthName(key){
+  return new Date(key + "-15T12:00:00").toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+}
+function stmtInRange(dateStr, from, to){
+  const d = String(dateStr || "");
+  return !!d && d >= from && d <= to;
+}
+function stmtRange(){
+  let from = ui.stmtFrom || stmtFirstOfMonth(todayStr());
+  let to = ui.stmtTo || stmtLastOfMonth(monthKey(todayStr()));
+  if(from > to){ const t = from; from = to; to = t; }
+  return { from, to };
+}
+function stmtPeriodLabel(from, to){
+  if(from === stmtFirstOfMonth(from) && to === stmtLastOfMonth(monthKey(from))) return stmtMonthName(monthKey(from));
+  return `${dFmt(from)} → ${dFmt(to)}`;
+}
+function stmtAllDates(){
+  const all = [...S.lots.map(x=>x.txn_date), ...S.trades.map(x=>x.txn_date), ...S.pays.map(x=>x.txn_date), ...S.transfers.map(x=>x.txn_date)]
+    .filter(Boolean).sort();
+  return { min: all[0] || "", max: all[all.length-1] || "" };
+}
+function stmtMonthOptions(){
+  const set = new Set([monthKey(todayStr())]);
+  [...S.lots, ...S.trades, ...S.pays, ...S.transfers].forEach(x=>{
+    const k = monthKey(x.txn_date);
+    if(k) set.add(k);
+  });
+  return [...set].sort((a,b)=> b.localeCompare(a));
+}
+function stmtDetectedMonth(from, to){
+  const k = monthKey(from);
+  return (from === k + "-01" && to === stmtLastOfMonth(k)) ? k : "custom";
+}
+function stmtCustomerName(tradeId){ return D?.tradeMap?.get(tradeId)?.customer?.name || "—"; }
+function tfCurrency(tf){
+  const a = accountById(tf.from_account_id) || accountById(tf.to_account_id);
+  return a?.currency || "SAR";
+}
+function stmtTransferKind(tf){
+  if(isLoanPayment(tf)) return "Loan";
+  if(isSpendlyTransfer(tf)) return "Spendly";
+  if(isSarBalanceAddition(tf)) return "SAR added";
+  return "Transfer";
+}
+function stmtTransferTarget(tf){
+  if(isLoanPayment(tf)) return loanMeta(tf).bank ? `Bank · ${loanMeta(tf).bank}` : "Bank loan payment";
+  if(isSpendlyTransfer(tf)) return "Spendly";
+  if(isSarBalanceAddition(tf)) return sarAdditionSource(tf) || "Added balance";
+  return tf.to_account_id ? accountName(tf.to_account_id) : "—";
+}
+/* Every movement on one account, mirroring the rules used by accountTotals(). */
+function accountPostings(a){
+  const rows = [];
+  const afterOpen = d => !a.opening_date || !d || String(d) >= String(a.opening_date);
+  S.lots.forEach(l=>{
+    if((l.kind || "remittance") === "opening" || !afterOpen(l.txn_date)) return;
+    if(a.currency === "SAR" && l.sar_account_id === a.id)
+      rows.push({ date:l.txn_date, dir:"out", amount:r2(n(l.sar_amount)+n(l.fee_sar)), type:"Remittance", label:`Sent SAR · ${lotDisplayNo(l)}` });
+    if(a.currency === "BDT" && l.bdt_account_id === a.id)
+      rows.push({ date:l.txn_date, dir:"in", amount:r2(n(l.total_bdt)), type:"Remittance", label:`Received · ${lotDisplayNo(l)}` });
+  });
+  if(a.currency === "BDT"){
+    S.trades.forEach(t=>{
+      if(!afterOpen(t.txn_date)) return;
+      if(t.source_account_id){
+        if(t.source_account_id === a.id)
+          rows.push({ date:t.txn_date, dir:"out", amount:r2(n(t.bdt_amount)+n(t.delivery_charge_bdt)), type:"Sell Trade", label:stmtCustomerName(t.id) });
+      } else {
+        S.allocs.filter(x=>x.trade_id === t.id).forEach(x=>{
+          const lot = S.lots.find(l=>l.id === x.lot_id);
+          if(lot?.bdt_account_id === a.id)
+            rows.push({ date:t.txn_date, dir:"out", amount:r2(n(x.bdt_allocated)), type:"Sell Trade", label:stmtCustomerName(t.id) });
+        });
+      }
+    });
+  }
+  if(a.currency === "SAR"){
+    S.pays.forEach(p=>{
+      if(!afterOpen(p.txn_date) || isDiscountPay(p)) return;
+      if(p.account_id === a.id)
+        rows.push({ date:p.txn_date, dir:"in", amount:r2(n(p.sar_amount)), type:"Collection", label:stmtCustomerName(p.trade_id) });
+    });
+  }
+  S.transfers.forEach(tf=>{
+    if(!afterOpen(tf.txn_date)) return;
+    const label = stmtTransferKind(tf);
+    if(tf.to_account_id === a.id)
+      rows.push({ date:tf.txn_date, dir:"in", amount:r2(n(tf.amount)), type:"Transfer", label });
+    if(tf.from_account_id === a.id)
+      rows.push({ date:tf.txn_date, dir:"out", amount:r2(n(tf.amount)+n(tf.fee)), type:"Transfer", label });
+  });
+  return rows.filter(r=>!!r.date).sort((x,y)=> String(x.date).localeCompare(String(y.date)));
+}
+function accountRange(a, from, to){
+  let opening = n(a.opening_balance), inAmt = 0, outAmt = 0;
+  const posts = [];
+  accountPostings(a).forEach(p=>{
+    if(p.date < from){ opening += (p.dir === "in" ? p.amount : -p.amount); }
+    else if(p.date <= to){
+      if(p.dir === "in") inAmt += p.amount; else outAmt += p.amount;
+      posts.push(p);
+    }
+  });
+  return { opening:r2(opening), inAmt:r2(inAmt), outAmt:r2(outAmt), closing:r2(opening + inAmt - outAmt), posts };
+}
+function statementData(fromArg, toArg){
+  const rng = (fromArg && toArg) ? { from: fromArg, to: toArg } : stmtRange();
+  const { from, to } = rng;
+  const allTrades = D?.trades || [];
+  const rate = D?.tot?.allBuyRate || 0;
+  const lotsIn = S.lots.filter(l=>stmtInRange(l.txn_date, from, to) && !isOpeningStockLot(l))
+    .sort((a,b)=> String(b.txn_date).localeCompare(String(a.txn_date)));
+  const tradesIn = allTrades.filter(t=>stmtInRange(t.txn_date, from, to));
+  const paysIn = S.pays.filter(p=>stmtInRange(p.txn_date, from, to))
+    .sort((a,b)=> String(b.txn_date).localeCompare(String(a.txn_date)));
+  const tfsIn = (D?.transfers || []).filter(tf=>stmtInRange(tf.txn_date, from, to));
+
+  const collected = r2(paysIn.filter(p=>!isDiscountPay(p)).reduce((s,p)=>s+n(p.sar_amount),0));
+  const discount = r2(paysIn.filter(isDiscountPay).reduce((s,p)=>s+n(p.sar_amount),0));
+  const fees = r2(tfsIn.reduce((s,tf)=>s+transferFeeSar(tf, rate),0));
+  const soldBdt = r2(tradesIn.reduce((s,t)=>s+n(t.bdt_amount),0));
+  const billedSar = r2(tradesIn.reduce((s,t)=>s+n(t.sar_due),0));
+  const costSar = r2(tradesIn.reduce((s,t)=>s+t.costSar,0));
+  const grossProfit = r2(tradesIn.reduce((s,t)=>s+t.profitSar,0));
+  // Cash-basis profit: only the share of each trade's profit covered by payments received in this range.
+  const realized = r2(allTrades.reduce((sum,t)=>{
+    const receivable = n(t.netReceivableSar);
+    if(!(receivable > 0)) return sum;
+    const paidIn = (t.pays || []).filter(p=>!isDiscountPay(p) && stmtInRange(p.txn_date, from, to))
+      .reduce((s,p)=>s+n(p.sar_amount),0);
+    if(!(paidIn > 0)) return sum;
+    return sum + n(t.profitSar) * Math.min(1, paidIn / receivable);
+  }, 0));
+  const feesSafe = fees;
+  const netProfit = r2(grossProfit - feesSafe);
+  const netRealized = r2(realized - feesSafe);
+  const pendingNow = r2(allTrades.reduce((s,t)=>s+n(t.dueLeft),0));
+  const accounts = (D?.accounts || []).map(a=>({ a, ...accountRange(a, from, to) }));
+  return { from, to, label:stmtPeriodLabel(from, to), lotsIn, tradesIn, paysIn, tfsIn,
+    collected, discount, fees, expense:fees, soldBdt, billedSar, costSar, grossProfit,
+    netProfit, realized, netRealized, pendingNow, accounts,
+    tradeCount:tradesIn.length, paymentCount:paysIn.filter(p=>!isDiscountPay(p)).length };
+}
+function stmtTableHtml(headers, rows, emptyText){
+  if(!rows.length) return `<div class="stmt-empty">${esc(emptyText)}</div>`;
+  const label = h => String(h).replace(/<[^>]*>/g,"").replace(/\s*\/.*$/,"").trim();
+  return `<div class="tbl-wrap"><table class="tbl stmt-tbl"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(cells=>`<tr>${cells.map((c,i2)=>`<td data-label="${esc(label(headers[i2] || ""))}">${c}</td>`).join("")}</tr>`).join("")
+  }</tbody></table></div>`;
+}
+function stmtAccountSection(cur, st){
+  const list = st.accounts.filter(x=>x.a.currency === cur);
+  const title = cur === "SAR" ? "Saudi Banks &amp; Cash — SAR" : "Bangladesh Banks &amp; Wallets — BDT";
+  const row = ({ a, opening, inAmt, outAmt, closing }, total=false) => {
+    const p = splitAccountName(a.name || "");
+    return `<div class="stmt-acct-row${total ? " total" : ""}">
+      <div class="stmt-acct-name">${total ? `<b>Total ${cur}</b>` : `<b>${esc(p.bank || a.name)}</b>${p.label ? ` <small>(${esc(p.label)})</small>` : ""}<br><small>${esc(a.type || "")}</small>`}</div>
+      <div class="stmt-acct-nums">
+        <div class="n"><span>Opening</span><b>${fmt(opening)}</b></div>
+        <div class="n"><span>In</span><b class="pos">+${fmt(inAmt)}</b></div>
+        <div class="n"><span>Out</span><b class="neg">−${fmt(outAmt)}</b></div>
+        <div class="n"><span>Closing</span><b class="${signedCls(closing)}">${fmt(closing)}</b></div>
+      </div></div>`;
+  };
+  let body = list.map(x=>row(x)).join("");
+  if(list.length){
+    const t = list.reduce((acc,x)=>({ opening:acc.opening+x.opening, inAmt:acc.inAmt+x.inAmt, outAmt:acc.outAmt+x.outAmt, closing:acc.closing+x.closing }), { opening:0, inAmt:0, outAmt:0, closing:0 });
+    body += row({ a:{ name:"", type:"" }, ...t }, true);
+  } else {
+    body = `<div class="stmt-empty">No ${cur} accounts posted yet.</div>`;
+  }
+  return `<div class="stmt-sec"><div class="neu" style="padding:18px">
+    <div class="section-head"><h3>${title}</h3><small>Opening on ${dFmt(st.from)} · closing ${dFmt(st.to)}</small></div>
+    ${body}
+  </div></div>`;
+}
+function stmtTradesSection(st){
+  const rows = st.tradesIn.map(t=>[
+    `${dFmt(t.txn_date)}<br><small>${esc(t.customer?.name || "—")}</small>`,
+    fmt(t.bdt_amount),
+    fmtRate(t.sell_rate),
+    fmt(t.sar_due),
+    fmt(t.paidSar),
+    `<span style="font-weight:900" class="${t.dueLeft > 0.005 ? "" : "pos"}">${fmt(t.dueLeft)}</span>`
+  ]);
+  return `<div class="stmt-sec"><div class="neu" style="padding:18px">
+    <div class="section-head"><h3>Sell Trades</h3><small>${st.tradeCount} trade(s) · ${fmt(st.soldBdt)} BDT</small></div>
+    ${stmtTableHtml(["Date / Customer","BDT","Sell rate","SAR billed","Paid to date","Due now"], rows, "No sell trades in this range.")}
+  </div></div>`;
+}
+function stmtCollectionsSection(st){
+  const rows = st.paysIn.map(p=>{
+    const disc = isDiscountPay(p);
+    return [
+      `${dFmt(p.txn_date)}<br><small>${esc(stmtCustomerName(p.trade_id))}</small>`,
+      disc ? `<span class="stmt-tag">Discount</span>` : esc(p.method || "Payment"),
+      `<small>${esc(disc ? "—" : accountName(p.account_id))}</small>`,
+      `<span class="${disc ? "" : "pos"}">${fmt(p.sar_amount)}</span>`
+    ];
+  });
+  return `<div class="stmt-sec"><div class="neu" style="padding:18px">
+    <div class="section-head"><h3>Collections</h3><small>Received ${fmt(st.collected)} SAR${st.discount > 0.004 ? ` · waived ${fmt(st.discount)} SAR` : ""}</small></div>
+    ${stmtTableHtml(["Date / Customer","Method","Account","SAR"], rows, "No payments received in this range.")}
+  </div></div>`;
+}
+function stmtRemittanceSection(st){
+  const rows = st.lotsIn.map(l=>[
+    `${dFmt(l.txn_date)}<br><small>${esc(lotDisplayNo(l))}${l.kind === "opening" ? " · Historical" : ""}</small>`,
+    fmt(l.sar_amount),
+    fmt(l.fee_sar),
+    fmt0(l.total_bdt),
+    fmtRate(l.effective_rate),
+    `<small>${esc(accountName(l.bdt_account_id))}</small>`
+  ]);
+  return `<div class="stmt-sec"><div class="neu" style="padding:18px">
+    <div class="section-head"><h3>Remittances &amp; Stock</h3><small>${st.lotsIn.length} lot(s) in range</small></div>
+    ${stmtTableHtml(["Date / Lot","Sent SAR","Fee","BDT credited","Eff. rate","BD credit A/C"], rows, "No remittances or stock lots in this range.")}
+  </div></div>`;
+}
+function stmtTransfersSection(st){
+  const rows = st.tfsIn.map(tf=>[
+    `${dFmt(tf.txn_date)}<br><small>${esc(stmtTransferKind(tf))}</small>`,
+    `<small>${esc(accountById(tf.from_account_id)?.name || "—")}</small>`,
+    `<small>${esc(stmtTransferTarget(tf))}</small>`,
+    `${fmt(tf.amount)} <small>${esc(tfCurrency(tf))}</small>`,
+    fmt(tf.fee),
+    `<small>${esc(transferDisplayNote(tf) || "—")}</small>`
+  ]);
+  return `<div class="stmt-sec"><div class="neu" style="padding:18px">
+    <div class="section-head"><h3>Transfers, Loans &amp; Spendly</h3><small>${st.tfsIn.length} record(s)</small></div>
+    ${stmtTableHtml(["Date / Type","From","To","Amount","Fee","Note"], rows, "No transfers, loan payments or Spendly moves in this range.")}
+  </div></div>`;
+}
+function stmtBodyHtml(st){
+  return stmtAccountSection("SAR", st) + stmtAccountSection("BDT", st) +
+    stmtTradesSection(st) + stmtCollectionsSection(st) + stmtRemittanceSection(st) + stmtTransfersSection(st);
+}
+function stmtCellHtml(label, value, sub, cls=""){
+  return `<div class="cell"><div class="l">${esc(label)}</div><div class="v ${cls}">${value}</div><div class="s">${sub || ""}</div></div>`;
+}
+function stmtSummaryCells(st){
+  return [
+    stmtCellHtml("Collected", `${fmt(st.collected)} <small>SAR</small>`, `${st.paymentCount} payment(s)`),
+    stmtCellHtml("BDT delivered", `${fmt0(st.soldBdt)} <small>BDT</small>`, `${st.tradeCount} trade(s)`),
+    stmtCellHtml("SAR billed", `${fmt(st.billedSar)} <small>SAR</small>`, "trades in range"),
+    stmtCellHtml("Cost of BDT sold", `${fmt(st.costSar)} <small>SAR</small>`, "lot cost, fees included"),
+    stmtCellHtml("Gross profit", `${fmt(st.grossProfit)} <small>SAR</small>`, "before other expenses"),
+    stmtCellHtml("Discount given", `${fmt(st.discount)} <small>SAR</small>`, "waived in range"),
+    stmtCellHtml("Other expenses", `${fmt(st.expense)} <small>SAR</small>`, "transfer &amp; loan fees"),
+    stmtCellHtml("Net profit", `${fmt(st.netProfit)} <small>SAR</small>`, "gross − expenses", signedCls(st.netProfit))
+  ].join("");
+}
+function stmtPlainSummary(st){
+  const lines = [
+    `RateX statement · ${st.label}`,
+    `Period: ${dFmt(st.from)} → ${dFmt(st.to)}`,
+    ``,
+    `Income (collected): ${fmt(st.collected)} SAR`,
+    `Expenses (fees): ${fmt(st.expense)} SAR`,
+    `Profit (net booked): ${fmt(st.netProfit)} SAR`,
+    `Profit (realized by collections): ${fmt(st.netRealized)} SAR`,
+    `BDT sold: ${fmt(st.soldBdt)} BDT over ${st.tradeCount} trade(s)`,
+    `SAR billed: ${fmt(st.billedSar)} SAR`,
+    `Cost of BDT sold: ${fmt(st.costSar)} SAR`,
+    `Discount given: ${fmt(st.discount)} SAR`,
+    `Outstanding receivable now: ${fmt(st.pendingNow)} SAR`,
+    ``,
+    `Account closing balances on ${dFmt(st.to)}:`
+  ];
+  st.accounts.forEach(({ a, closing })=> lines.push(`  - ${a.name} (${a.currency}): ${fmt(closing)}`));
+  lines.push(``, `Generated by RateX · ${new Date().toLocaleString("en-GB")}`);
+  return lines.join("\n");
+}
+function stmtFileName(st){ return `RateX-Statement-${st.from}_to_${st.to}.html`; }
+function stmtDocumentHtml(st){
+  const generated = new Date().toLocaleString("en-GB",{dateStyle:"medium", timeStyle:"short"});
+  const cards = [
+    ["Income (collected)", `${fmt(st.collected)} SAR`, `${st.paymentCount} payment(s)`],
+    ["Expenses (fees)", `${fmt(st.expense)} SAR`, "transfer & loan fees"],
+    ["Profit (net)", `${fmt(st.netProfit)} SAR`, `booked ${fmt(st.grossProfit)} SAR`],
+    ["BDT sold", `${fmt(st.soldBdt)} BDT`, `${st.tradeCount} trade(s)`]
+  ].map(([l,v,s])=>`<div class="card"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join("");
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RateX Statement · ${esc(st.label)}</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f8;color:#182138;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding:24px 14px 46px}
+.wrap{max-width:900px;margin:0 auto}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.brand{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#0a84ff;font-weight:800}
+h1{font-size:25px;margin:5px 0 4px}
+.period{font-weight:800;color:#3c4763}
+.btn{border:none;background:#0a84ff;color:#fff;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer;font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+.card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(24,33,56,.08)}
+.card .l{font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:#7a8499;font-weight:800}
+.card .v{font-size:20px;font-weight:900;margin-top:6px}
+.card .s{font-size:11px;color:#7a8499;margin-top:3px}
+.summary{background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 2px 10px rgba(24,33,56,.08);margin-bottom:16px}
+.summary h2{font-size:15px;margin:0 0 11px}
+.stmt-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stmt-sum .cell{background:#f4f7fc;border-radius:10px;padding:10px 12px}
+.stmt-sum .cell .l{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#7a8499;font-weight:800}
+.stmt-sum .cell .v{font-size:16.5px;font-weight:900;margin-top:4px}
+.stmt-sum .cell .s{font-size:10.5px;color:#7a8499;margin-top:2px}
+.stmt-sec{margin-bottom:16px}
+.stmt-sec .neu{background:#fff;border-radius:16px;padding:16px 18px;box-shadow:0 2px 10px rgba(24,33,56,.08)}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.section-head h3{font-size:15px;margin:0}
+.section-head small{color:#7a8499;font-size:11px}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#7a8499;text-align:right;padding:8px;border-bottom:2px solid #d3dae8}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:8px;border-bottom:1px solid #e6ebf4;text-align:right;font-weight:600;white-space:nowrap}
+.tbl td small{color:#7a8499}
+.stmt-empty{color:#7a8499;text-align:center;padding:14px;font-size:12.5px}
+.stmt-note{font-size:12px;color:#7a8499;line-height:1.6}
+.stmt-tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:99px;background:#fef3c7;color:#b45309}
+.stmt-acct-row{padding:11px 0; border-bottom:1px dashed #d8dfec}
+.stmt-acct-row:last-child{border-bottom:none; padding-bottom:2px}
+.stmt-acct-row.total{border-top:2px solid #d3dae8; border-bottom:none; margin-top:4px}
+.stmt-acct-name{font-size:13px}
+.stmt-acct-name b{font-weight:800}
+.stmt-acct-name small{font-size:11px; color:#7a8499}
+.stmt-acct-nums{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:7px}
+.stmt-acct-nums span{display:block; font-size:9px; letter-spacing:.6px; text-transform:uppercase; color:#7a8499; font-weight:800}
+.stmt-acct-nums b{font-size:12.5px; font-weight:800}
+.pos{color:#0a9d6c}.neg{color:#e5484d}
+@media(max-width:640px){
+  .stmt-sec .tbl thead{display:none}
+  .stmt-sec .tbl, .stmt-sec .tbl tbody, .stmt-sec .tbl tr, .stmt-sec .tbl td{display:block; width:100%}
+  .stmt-sec .tbl tr{border-bottom:1px dashed #d8dfec; padding:9px 0}
+  .stmt-sec .tbl td{border:none; text-align:left; padding:2px 0; display:flex; justify-content:space-between; align-items:baseline; gap:12px; white-space:normal; font-size:12.5px}
+  .stmt-sec .tbl td::before{content:attr(data-label); font-size:9.5px; letter-spacing:.6px; text-transform:uppercase; color:#7a8499; font-weight:800; flex:none}
+  .stmt-sec .tbl td:first-child{display:block; border-bottom:1px dashed #d8dfec; padding-bottom:5px; margin-bottom:4px; font-weight:800}
+  .stmt-sec .tbl td:first-child::before{display:none}
+  .stmt-sec .tbl-wrap{overflow:visible}
+}
+footer{margin-top:22px;text-align:center;color:#7a8499;font-size:11px;line-height:1.6}
+@media(max-width:640px){.cards,.stmt-sum{grid-template-columns:1fr 1fr}}
+@media print{body{background:#fff;padding:0}.btn{display:none}.card,.summary,.stmt-sec .neu{box-shadow:none;border:1px solid #e3e8f1}.stmt-sec{page-break-inside:avoid}}
+</style></head>
+<body><div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand">RateX · SAR ⇄ BDT Ledger</div>
+      <h1>Account Statement</h1>
+      <div class="period">${esc(dFmt(st.from))} → ${esc(dFmt(st.to))} · ${esc(st.label)}</div>
+    </div>
+    <button class="btn" onclick="window.print()">Print / Save PDF</button>
+  </header>
+  <div class="cards">${cards}</div>
+  <div class="summary">
+    <h2>Period Summary</h2>
+    <div class="stmt-sum">${stmtSummaryCells(st)}</div>
+    <p class="stmt-note">Realized profit (cash basis): <b>${fmt(st.netRealized)} SAR</b> · Outstanding receivable now: <b>${fmt(st.pendingNow)} SAR</b></p>
+  </div>
+  ${stmtBodyHtml(st)}
+  <footer>Generated by RateX on ${esc(generated)}.<br>This statement covers only the selected dates — every other transaction remains safely stored.</footer>
+</div></body></html>`;
+}
+function renderStatement(){
+  if(!D) return;
+  if(!ui.stmtFrom) ui.stmtFrom = stmtFirstOfMonth(todayStr());
+  if(!ui.stmtTo) ui.stmtTo = stmtLastOfMonth(monthKey(todayStr()));
+  const st = statementData();
+  $("#stmtFrom").value = st.from;
+  $("#stmtTo").value = st.to;
+  const monthSel = $("#stmtMonth");
+  monthSel.innerHTML = `<option value="custom">Custom range</option>` +
+    stmtMonthOptions().map(k=>`<option value="${k}">${stmtMonthName(k)}</option>`).join("");
+  monthSel.value = stmtDetectedMonth(st.from, st.to);
+
+  $("#stmtIncome").textContent = fmt(st.collected);
+  $("#stmtExpense").textContent = fmt(st.expense);
+  $("#stmtProfit").textContent = fmt(st.netProfit);
+  $("#stmtProfit").className = signedCls(st.netProfit);
+  $("#stmtBdtSold").textContent = fmt0(st.soldBdt);
+  $("#stmtIncomeSub").textContent = `${st.paymentCount} payment(s) received`;
+  $("#stmtExpenseSub").textContent = st.fees > 0.004 ? "Transfer & loan fees" : "No fees in range";
+  $("#stmtProfitSub").innerHTML = `Booked ${fmt(st.grossProfit)} − fees ${fmt(st.fees)} · Realized <b>${fmt(st.netRealized)}</b>`;
+  $("#stmtSoldSub").textContent = `${st.tradeCount} trade(s) · ${fmt(st.billedSar)} SAR billed`;
+  $("#stmtRangeBadge").textContent = st.label;
+
+  $("#stmtSummary").innerHTML = stmtSummaryCells(st);
+  $("#stmtBody").innerHTML =
+    `<p class="stmt-note" style="margin:14px 4px 0">Realized profit (cash basis): <b>${fmt(st.netRealized)} SAR</b> · Outstanding receivable now: <b>${fmt(st.pendingNow)} SAR</b></p>` +
+    stmtBodyHtml(st);
+}
+function stmtApplyQuick(kind){
+  const today = todayStr();
+  if(kind === "month"){
+    ui.stmtFrom = stmtFirstOfMonth(today);
+    ui.stmtTo = stmtLastOfMonth(monthKey(today));
+  } else if(kind === "last"){
+    const d = new Date(today + "T12:00:00");
+    d.setDate(1); d.setMonth(d.getMonth() - 1);
+    const k = monthKey(stmtIso(d));
+    ui.stmtFrom = k + "-01";
+    ui.stmtTo = stmtLastOfMonth(k);
+  } else if(kind === "30"){
+    const d = new Date(today + "T12:00:00");
+    d.setDate(d.getDate() - 29);
+    ui.stmtFrom = stmtIso(d);
+    ui.stmtTo = today;
+  } else if(kind === "year"){
+    ui.stmtFrom = today.slice(0,4) + "-01-01";
+    ui.stmtTo = today;
+  } else {
+    const all = stmtAllDates();
+    ui.stmtFrom = all.min || stmtFirstOfMonth(today);
+    ui.stmtTo = all.max || today;
+  }
+  renderStatement();
+}
+function stmtEmailNow(){
+  const st = statementData();
+  const email = String($("#stmtEmail").value || "").trim();
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))
+    return toast("Enter a valid email address (or leave it blank)", "error");
+  const subject = encodeURIComponent(`RateX Statement · ${st.label}`);
+  const body = encodeURIComponent(stmtPlainSummary(st));
+  const a = document.createElement("a");
+  a.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  a.style.display = "none";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Opening your mail app with the statement summary ✉️", "success");
+}
+function stmtDownloadNow(){
+  const st = statementData();
+  const blob = new Blob([stmtDocumentHtml(st)], { type:"text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = stmtFileName(st); a.style.display = "none";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(e){} }, 5000);
+  toast("Statement downloaded — attach it to your email ✅", "success");
+}
+async function stmtShareNow(){
+  const st = statementData();
+  try{
+    if(typeof File !== "undefined" && navigator.canShare){
+      const file = new File([stmtDocumentHtml(st)], stmtFileName(st), { type:"text/html" });
+      if(navigator.canShare({ files:[file] })){
+        await navigator.share({ files:[file], title:`RateX Statement · ${st.label}`, text:stmtPlainSummary(st) });
+        return;
+      }
+    }
+  }catch(e){
+    if(e && e.name === "AbortError") return;
+  }
+  stmtDownloadNow();
+  toast("Sharing files is not supported here — the statement was downloaded instead", "");
+}
+$("#stmtFrom").addEventListener("change", e=>{ ui.stmtFrom = e.target.value || stmtFirstOfMonth(todayStr()); renderStatement(); });
+$("#stmtTo").addEventListener("change", e=>{ ui.stmtTo = e.target.value || stmtLastOfMonth(monthKey(todayStr())); renderStatement(); });
+$("#stmtMonth").addEventListener("change", e=>{
+  const k = e.target.value;
+  if(k === "custom") return;
+  ui.stmtFrom = k + "-01";
+  ui.stmtTo = stmtLastOfMonth(k);
+  renderStatement();
+});
+$("#stmtQuick").addEventListener("click", e=>{
+  const b = e.target.closest("[data-stmt-quick]");
+  if(b) stmtApplyQuick(b.dataset.stmtQuick);
+});
+$("#stmtEmailBtn").addEventListener("click", stmtEmailNow);
+$("#stmtDownloadBtn").addEventListener("click", stmtDownloadNow);
+$("#stmtShareBtn").addEventListener("click", ()=>{ stmtShareNow(); });
+
 /* ---------- data (offline-first) ---------- */
 async function loadData(showSpin=true){
   if(!S.user) return;
@@ -1404,6 +2025,7 @@ async function loadData(showSpin=true){
   if(showSpin && !hasLocal) setLoading(true);
   try{
     if(sb && navigator.onLine) await syncNow({ pull:true });  // backup queue, then refresh from server
+    syncOpeningStockLots(); renderAll();                        // make sure every BDT opening balance is sellable stock
   } finally { setLoading(false); }
 }
 
@@ -1413,8 +2035,19 @@ function switchTab(tab){
   $$(".page").forEach(p => p.classList.toggle("hidden", p.id !== "page-"+tab));
   $$(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
   window.scrollTo({top:0, behavior:"smooth"});
+  moveNavGlow();
+}
+/* soft light that slides behind the active tab (like the reference UI) */
+function moveNavGlow(){
+  const nav = $(".bottom-nav"), active = $(".bottom-nav button.active"), glow = $("#navGlow");
+  if(!nav || !active || !glow) return;
+  glow.style.width = active.offsetWidth + "px";
+  glow.style.height = active.offsetHeight + "px";
+  glow.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
 }
 $$(".bottom-nav button").forEach(b => b.addEventListener("click", ()=> switchTab(b.dataset.tab)));
+window.addEventListener("resize", ()=> requestAnimationFrame(moveNavGlow));
+requestAnimationFrame(()=> setTimeout(moveNavGlow, 80));
 document.addEventListener("click", e => {
   const g = e.target.closest("[data-goto]"); if(g) switchTab(g.dataset.goto);
   if(e.target.closest("[data-open-stock]")) openStock();
@@ -1428,7 +2061,7 @@ document.addEventListener("click", e => {
 });
 
 /* ================= RENDER ================= */
-function renderAll(){ rebuild(); renderDashboard(); renderTradePage(); renderSettlementPage(); renderAnalytics(); renderCustomerDatalist(); }
+function renderAll(){ rebuild(); renderDashboard(); renderTradePage(); renderSettlementPage(); renderStatement(); renderAnalytics(); renderCustomerDatalist(); }
 
 function emptyBox(icon, title, text, btnHtml=""){
   return `<div class="empty neu"><div class="eic">${icon}</div><h4>${title}</h4><p>${text}</p>${btnHtml}</div>`;
@@ -1453,6 +2086,11 @@ function lotInfoItems(l, avail, { using=0, compact=false }={}){
     ["SAR debit A/C", l.sar_account_id ? accountName(l.sar_account_id) : "Not assigned"],
     ["BD credit A/C", l.bdt_account_id ? accountName(l.bdt_account_id) : "Not assigned"]
   );
+  if(isOpeningStockLot(l)){
+    items.splice(1, 0, ["Lot type", "Opening balance · no profit"]);
+    return items.map(([k, v]) => (k === "Effective buy rate" ? [k, "No cost basis"] : [k, v]))
+      .map(([k, v]) => (k === "Sent" ? [k, "— (already in the account)"] : [k, v]));
+  }
   if(l.kind === "opening") items.splice(1, 0, ["Lot type", "Historical lot"]);
   if(!compact) return items;
   const keep = new Set(["Available now", "After this trade", "Effective buy rate", "Sent", "Channel", "BD credit A/C"]);
@@ -1463,7 +2101,8 @@ function lotInfoGridHtml(items){
 }
 function lotPickButtonHtml(l=null, avail=0){
   if(!l) return `<span class="lot-pick-copy"><span class="lot-pick-title">Select stock lot</span><span class="lot-pick-sub">Tap to view complete, organized lot details</span></span><span class="lot-pick-chev">⌄</span>`;
-  return `<span class="lot-pick-copy"><span class="lot-pick-title">${esc(lotDisplayNo(l))}</span><span class="lot-pick-sub">${esc(dFmt(l.txn_date))} · Available ${fmt(avail)} BDT · Eff. ${fmtRate(l.effective_rate)}</span></span><span class="lot-pick-chev">⌄</span>`;
+  const rateTxt = isOpeningStockLot(l) ? "opening balance · no profit" : `Eff. ${fmtRate(l.effective_rate)}`;
+  return `<span class="lot-pick-copy"><span class="lot-pick-title">${esc(lotDisplayNo(l))}${isOpeningStockLot(l) ? ' <span class="pill pill-open-stock">no profit</span>' : ""}</span><span class="lot-pick-sub">${esc(dFmt(l.txn_date))} · Available ${fmt(avail)} BDT · ${rateTxt}</span></span><span class="lot-pick-chev">⌄</span>`;
 }
 
 function splitAccountName(name){
@@ -1471,6 +2110,38 @@ function splitAccountName(name){
   return { bank: (parts[0] || "").trim(), label: parts.slice(1).join(" — ").trim() };
 }
 function isWalletType(t){ return t === "Cash" || t === "Mobile Wallet"; }
+/* What has happened to this BDT account's opening balance?
+   → still unsold as an automatic opening-balance lot (sellable, no profit)
+   → already covered by Historical Lots (sellable, with a cost rate) */
+function openingStockStatusHtml(a){
+  if(a.currency !== "BDT" || n(a.opening_balance) <= 0.005) return "";
+  const histBdt = S.lots.filter(l => l.bdt_account_id === a.id && (l.kind || "remittance") === "opening" && !isOpeningStockLot(l))
+    .reduce((sm, l) => sm + n(l.total_bdt), 0);
+  const autoRow = openingStockLotFor(a.id);
+  const autoLot = autoRow ? (D?.lotMap?.get(autoRow.id) || autoRow) : null;
+  const autoLeft = autoLot ? r2(n(autoLot.remainingBdt)) : 0;
+  const free = openingStockFreeFor(a.id);
+  let html = "";
+  if(free > 0.005){
+    html += `<div class="acct-detail-row"><span>Opening stock lot</span><b>${autoLeft > 0.005 ? `${fmt(autoLeft)} BDT left` : "used up"} · no profit</b></div>`;
+  }
+  if(histBdt > 0.005){
+    html += `<div class="acct-detail-row"><span>Historical lots</span><b class="pos">${fmt(histBdt)} BDT · with cost rate ✓</b></div>`;
+  }
+  if(free <= 0.005 && histBdt > 0.005){
+    html += `<div class="acct-detail-row"><span>Status</span><b class="pos">Whole opening balance is sellable with a cost rate ✓</b></div>`;
+  } else if(free > 0.005){
+    html += `<div class="acct-detail-row"><span>Status</span><b>Sellable now · profit not counted until you set a cost rate</b></div>`;
+  }
+  return html;
+}
+function openingStockBtnHtml(a){
+  if(a.currency !== "BDT" || n(a.opening_balance) <= 0.005) return "";
+  const autoRow = openingStockLotFor(a.id);
+  const autoLot = autoRow ? (D?.lotMap?.get(autoRow.id) || autoRow) : null;
+  if(!autoLot || n(autoLot.remainingBdt) <= 0.005) return "";
+  return `<button class="mini-btn" data-action="acct-opening-rate" data-id="${a.id}" title="Turn the unsold part of the opening balance into a Historical Lot with a real cost rate">🏷️ Set cost rate</button>`;
+}
 function accountCard(a){
   const isSar = a.currency === "SAR";
   const parts = splitAccountName(a.name);
@@ -1491,8 +2162,10 @@ function accountCard(a){
       <div class="acct-detail-row"><span>Total in</span><b class="pos">+${fmt(a.inn)} ${a.currency}</b></div>
       <div class="acct-detail-row"><span>Total out</span><b class="neg">−${fmt(a.out)} ${a.currency}</b></div>
       ${a.note ? `<div class="acct-detail-row"><span>Note</span><b>${esc(a.note)}</b></div>` : ""}
+      ${openingStockStatusHtml(a)}
       <div class="acct-actions">
         ${isSar ? `<button class="mini-btn blue" data-open-sar-add data-id="${a.id}">＋ Add Balance</button>` : ""}
+        ${openingStockBtnHtml(a)}
         <button class="mini-btn" data-action="edit-account" data-id="${a.id}">✎ Edit</button>
         <button class="mini-btn red" data-action="del-account" data-id="${a.id}">🗑 Delete</button>
       </div>
@@ -1683,7 +2356,40 @@ function tradeSummaryCard(t){
   </article>`;
 }
 
+function openingLotCard(l, full=true){
+  const soldPct = n(l.total_bdt) ? Math.min(100, Math.round((l.consumedBdt ?? l.usedBdt) / n(l.total_bdt) * 100)) : 0;
+  const open = ui.expandedLots?.has(l.id);
+  const acct = l.bdt_account_id ? accountName(l.bdt_account_id) : "BD account";
+  return `<article class="card neu lot-summary-card opening-lot${open ? " open" : ""}">
+    <button type="button" class="lot-summary-top" data-action="toggle-lot" data-id="${l.id}" aria-expanded="${open ? "true" : "false"}">
+      <span class="avatar-c" style="color:#fff;background:linear-gradient(135deg,#12b981,#0a9d6c)">🏦</span>
+      <span class="tt"><span class="t1" style="display:block">${esc(lotDisplayNo(l))}</span>
+      <span class="t2" style="display:block">${dFmt(l.txn_date)} · ${esc(acct)}</span>
+      <span class="t2" style="display:block"><b class="pill pill-open-stock">Opening balance · no profit</b></span></span>
+      <span class="lot-remain"><span class="v">${fmt(l.remainingBdt)}</span><small>BDT left${l.remainingBdt <= 0.005 ? " · Used up" : ""}</small></span>
+      <span class="lot-chev">⌄</span>
+    </button>
+    <div class="lot-expanded">
+      <div class="kv-grid">
+        <div class="kv"><div class="l">Opening BDT</div><div class="v">${fmt(l.total_bdt)}</div></div>
+        <div class="kv"><div class="l">Sold</div><div class="v">${fmt(l.usedBdt)}</div></div>
+        ${n(l.loanUsedBdt) > 0.004 ? `<div class="kv"><div class="l">Loan Paid</div><div class="v">${fmt(l.loanUsedBdt)}</div></div>` : ""}
+        <div class="kv"><div class="l">SAR cost</div><div class="v" style="font-size:13px">No cost basis</div></div>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:11px;line-height:1.55">
+        This BDT was already in <b>${esc(acct)}</b> as its opening balance — not a remittance. Selling it only brings your own capital back, so <b>no profit is counted</b> for this part of a trade.
+        It never posts to the account twice.
+      </div>
+      ${l.note && !isOpeningStockLot(l) ? "" : ""}
+      <div class="progress" style="margin-top:11px"><i style="width:${soldPct}%"></i></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:7px">${soldPct}% used${n(l.loanUsedBdt)>0.004 ? ` (sold + loan paid)` : ""}</div>
+      ${full ? `<div class="card-actions"><button class="mini-btn" data-action="lot-set-rate" data-id="${l.id}">✎ Give it a real cost rate</button></div>
+      <p style="font-size:11.5px;color:var(--muted);margin:8px 2px 0">Know the rate this money was bought at? Give it a cost rate and RateX starts counting real profit for it. It follows the account's opening balance automatically, so it can't be edited or deleted by hand.</p>` : ""}
+    </div>
+  </article>`;
+}
 function lotCard(l, full=true){
+  if(isOpeningStockLot(l)) return openingLotCard(l, full);
   const soldPct = n(l.total_bdt) ? Math.min(100, Math.round((l.consumedBdt ?? l.usedBdt) / n(l.total_bdt) * 100)) : 0;
   const open = ui.expandedLots?.has(l.id);
   return `<article class="card neu lot-summary-card${open ? " open" : ""}">
@@ -1750,6 +2456,9 @@ function renderDashboard(){
   $("#dLotCount").textContent = D.lots.filter(l=>l.remainingBdt>0.005).length;
   $("#dAvgCost").textContent = fmtRate(t.avgCostRate);
   $("#dBought").textContent = fmt0(t.bdtBought);
+  const openStock = t.openingStockLeft ?? 0;
+  $("#dOpenStock").textContent = fmt0(openStock);
+  if($("#dOpenStockWrap")) $("#dOpenStockWrap").style.display = openStock > 0.005 ? "" : "none";
   if(t.hasAccounts){
     $("#dSarBalance").textContent = fmt(t.sarAccountsBalance);
     $("#dSarBalance").parentElement.className = "vl " + signedCls(t.sarAccountsBalance);
@@ -1795,6 +2504,15 @@ function renderDashboard(){
     ? `Stock taken out <b>${fmt(t.loanLotBdt)} BDT</b>${t.loanOpeningUsedBdt > 0.004 ? ` · opening/free ${fmt(t.loanOpeningUsedBdt)} BDT` : ""}`
     : (t.loanOpeningUsedBdt > 0.004 ? `From opening/free <b>${fmt(t.loanOpeningUsedBdt)} BDT</b>` : "");
 
+  // This month card — income / expenses / profit restart every 1st (nothing is deleted)
+  const monFrom = stmtFirstOfMonth(todayStr()), monTo = stmtLastOfMonth(monthKey(todayStr()));
+  const mon = statementData(monFrom, monTo);
+  $("#dMonthIncome").textContent = fmt(mon.collected);
+  $("#dMonthExpense").textContent = fmt(mon.expense);
+  $("#dMonthProfit").textContent = fmt(mon.netProfit);
+  $("#dMonthProfit").className = signedCls(mon.netProfit);
+  $("#dMonthNote").innerHTML = `${stmtMonthName(monthKey(todayStr()))} · ${mon.paymentCount} payment(s), ${mon.tradeCount} trade(s) · all older transactions stay saved.`;
+
   $("#dashAccounts").innerHTML = renderBankSection("SAR") + renderBankSection("BDT");
 
   $("#dashLots").innerHTML = D.lots.length
@@ -1808,7 +2526,9 @@ function renderDashboard(){
 
   const acts = [
     ...D.trades.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇄","#d97706", `Sold ${fmt0(x.bdt_amount)} BDT to ${esc(x.customer?.name||"customer")}`, `${fmt(x.sar_due)} SAR @ ${fmtRate(x.sell_rate)}`, x.status)})),
-    ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html:activityRow("⇩","var(--blue2)", `${esc(lotDisplayNo(x))} · Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
+    ...D.lots.map(x=>({date:x.txn_date, sort:(x.created_at||x.txn_date), html: isOpeningStockLot(x)
+        ? activityRow("🏦","var(--green)", `${esc(lotDisplayNo(x))} · Opening balance stock ${fmt0(x.total_bdt)} BDT`, `${esc(accountName(x.bdt_account_id))} · no profit`, dFmt(x.txn_date))
+        : activityRow("⇩","var(--blue2)", `${esc(lotDisplayNo(x))} · Stock in ${fmt0(x.total_bdt)} BDT`, `${fmt0(x.sar_amount)} SAR @ eff. ${fmtRate(x.effective_rate)}`, dFmt(x.txn_date))})),
     ...S.pays.map(p=>{ const tr=D.tradeMap.get(p.trade_id); const disc=isDiscountPay(p); return {date:p.txn_date, sort:(p.created_at||p.txn_date), html:activityRow(disc ? "−" : "✓", disc ? "var(--amber)" : "var(--green)", disc ? `Waived ${fmt(p.sar_amount)} SAR discount${tr? " for "+esc(tr.customer?.name||"customer"):""}` : `Received ${fmt(p.sar_amount)} SAR${tr? " from "+esc(tr.customer?.name||"customer"):""}`, disc ? "Written off — not collected" : esc(p.method) + (p.account_id ? " → "+esc(accountName(p.account_id)) : ""), dFmt(p.txn_date))}; }),
     ...D.transfers.map(tf=>{
       const add = isSarBalanceAddition(tf), sp = isSpendlyTransfer(tf), loan = isLoanPayment(tf);
@@ -2036,15 +2756,19 @@ function renderAnalytics(){
     const allocs = D.allocByLot.get(l.id)||[];
     let lprofit = 0;
     allocs.forEach(a=>{ const tr=D.tradeMap.get(a.trade_id); if(tr && tr.totalOutBdt>0) lprofit += n(tr.netReceivableSar ?? tr.sar_due)*(n(a.bdt_allocated)/tr.totalOutBdt) - n(a.cost_sar); });
-    return `<tr><td><b>${esc(lotDisplayNo(l))}</b><br><small>${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR${l.source?" · "+esc(l.source):""}${l.bdt_account_id?" · "+esc(accountName(l.bdt_account_id)):""}${n(l.loanUsedBdt)>0.004?` · Loan paid ${fmt0(l.loanUsedBdt)} BDT`:""}</small></td>
-      <td>${fmtRate(l.effective_rate)}</td><td>${fmt0(l.total_bdt)}</td><td>${fmt0(l.usedBdt)}</td><td>${fmt0(l.remainingBdt)}</td>
-      <td class="${signedCls(lprofit)}">${signedFmt(lprofit)}</td></tr>`;
+    const opening = isOpeningStockLot(l);
+    const sub = opening
+      ? `${dFmt(l.txn_date)} · Opening balance · no profit${l.bdt_account_id?" · "+esc(accountName(l.bdt_account_id)):""}`
+      : `${dFmt(l.txn_date)} · ${fmt0(l.sar_amount)} SAR${l.source?" · "+esc(l.source):""}${l.bdt_account_id?" · "+esc(accountName(l.bdt_account_id)):""}${n(l.loanUsedBdt)>0.004?` · Loan paid ${fmt0(l.loanUsedBdt)} BDT`:""}`;
+    return `<tr><td><b>${esc(lotDisplayNo(l))}</b><br><small>${sub}</small></td>
+      <td>${opening ? "—" : fmtRate(l.effective_rate)}</td><td>${fmt0(l.total_bdt)}</td><td>${fmt0(l.usedBdt)}</td><td>${fmt0(l.remainingBdt)}</td>
+      <td class="${signedCls(lprofit)}">${opening ? "0.00" : signedFmt(lprofit)}</td></tr>`;
   }).join("") : `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No stock lots yet.</td></tr>`;
 
   // monthly rate trend (all data)
   const mk2 = new Map();
   const bucket = k => { if(!mk2.has(k)) mk2.set(k,{buyBdt:0,buySar:0,sellBdt:0,sellSar:0,profit:0}); return mk2.get(k); };
-  D.lots.forEach(l=>{ const b=bucket(monthKey(l.txn_date)); b.buyBdt+=n(l.total_bdt); b.buySar+=l.sarCost; });
+  D.lots.filter(l=>!l.isOpeningStock).forEach(l=>{ const b=bucket(monthKey(l.txn_date)); b.buyBdt+=n(l.total_bdt); b.buySar+=l.sarCost; });
   D.trades.forEach(t=>{ const b=bucket(monthKey(t.txn_date)); b.sellBdt+=n(t.bdt_amount); b.sellSar+=n(t.sar_due); b.profit+=t.profitSar; });
   const rows = [...mk2.entries()].sort((a,b)=>b[0].localeCompare(a[0])).slice(0,12);
   $("#aRateTrend").innerHTML = rows.length ? rows.map(([k,b])=>{
@@ -2072,7 +2796,7 @@ $("#trCustName").addEventListener("change", e=>{
 
 /* ================= ACCOUNTS & TRANSFERS ================= */
 function accountUsed(id){
-  return S.lots.some(l=>l.sar_account_id===id||l.bdt_account_id===id)
+  return S.lots.some(l=>!isOpeningStockLot(l) && (l.sar_account_id===id||l.bdt_account_id===id))
       || S.trades.some(t=>t.source_account_id===id)
       || S.pays.some(p=>p.account_id===id)
       || S.transfers.some(tf=>tf.from_account_id===id||tf.to_account_id===id);
@@ -2145,8 +2869,8 @@ function refreshAccountFormForCurrency(){
   $("#accName").placeholder = cur === "SAR" ? "e.g. Al Rajhi Bank / SNB AlAhli / Cash in Hand"
                                              : "e.g. Dutch-Bangla Bank / Islami Bank / bKash";
   $("#accSub").textContent = cur === "SAR"
-    ? "Saudi Arabia section · post bank/wallet name + opening balance in SAR."
-    : "Bangladesh section · post bank/wallet name + opening balance in BDT.";
+    ? "Saudi Arabia section · bank/wallet name required, opening balance optional (SAR)."
+    : "Bangladesh section · bank/wallet name required, opening balance optional (BDT).";
 }
 function openAccount(account=null, preset={}){
   formErr("accErr","");
@@ -2178,7 +2902,7 @@ $("#accountForm").addEventListener("submit", e=>{
   const bank = $("#accName").value.trim();
   const label = $("#accLabel").value.trim();
   if(!bank) return formErr("accErr","Bank / wallet name is required — post the actual bank name (or Cash in Hand).");
-  if($("#accOpening").value === "") return formErr("accErr","Opening balance is required. Enter 0 only if the account truly starts empty.");
+  // Opening balance is optional — an account can be posted with just its bank/wallet name.
   const name = label ? `${bank} — ${label}` : bank;
   const id = $("#accId").value;
   const currency = $("#accCurrency").value;
@@ -2190,7 +2914,7 @@ $("#accountForm").addEventListener("submit", e=>{
   if(id) payload.id = id;
   const saved = saveLocalRow("accounts", "ratex_accounts", payload);
   closeSheet("accountOverlay");
-  toast(id ? "Account updated ✅" : `${saved.currency==="SAR" ? "Saudi" : "Bangladesh"} account posted with opening balance ✅`, "success");
+  toast(id ? "Account updated ✅" : `${saved.currency==="SAR" ? "Saudi" : "Bangladesh"} account posted ✅`, "success");
   afterLocalChange(); populateAccountSelects();
   // if another form is open underneath, preselect the new account there
   if($("#stockOverlay").classList.contains("open")){ if(saved.currency==="SAR") $("#stSarAcc").value = saved.id; else $("#stBdtAcc").value = saved.id; stockCalc(false); }
@@ -2385,7 +3109,7 @@ function readLoanAllocations(excludeTransferId=""){
     if(bdt > avail + 0.005) hasOver = true;
     if(lot && bdt > 0){
       const rate = n(lot.effective_rate);
-      const costSar = rate > 0 ? r2(bdt / rate) : 0;
+      const costSar = isOpeningStockLot(lot) ? 0 : (rate > 0 ? r2(bdt / rate) : 0);
       allocs.push({ lot:lot.id, bdt, rate, costSar });
       total += bdt; cost += costSar;
     }
@@ -2404,7 +3128,7 @@ function renderLoanLotRows(){
   const lots = loanLotsForAccount(from.id, editingId);
   box.innerHTML = lots.length ? lots.map(l=>{
     const old = prev.get(l.id) || saved.get(l.id) || { value:0, manual:false };
-    return `<div class="loan-lot-row"><div><div class="ll-t">${esc(lotDisplayNo(l))}${l.kind==="opening" ? " · Historical" : ""}</div><div class="ll-s">${dFmt(l.txn_date)} · Eff. ${fmtRate(l.effective_rate)} · Available ${fmt(l.loanAvail)} BDT</div></div><input type="number" min="0" step="any" inputmode="decimal" data-loan-lot="${l.id}" data-manual="${old.manual ? "1" : "0"}" value="${old.value ?? 0}" aria-label="BDT to use from ${esc(lotDisplayNo(l))}"></div>`;
+    return `<div class="loan-lot-row"><div><div class="ll-t">${esc(lotDisplayNo(l))}${isOpeningStockLot(l) ? " · Opening balance" : (l.kind==="opening" ? " · Historical" : "")}</div><div class="ll-s">${dFmt(l.txn_date)} · ${isOpeningStockLot(l) ? "no cost basis" : "Eff. "+fmtRate(l.effective_rate)} · Available ${fmt(l.loanAvail)} BDT</div></div><input type="number" min="0" step="any" inputmode="decimal" data-loan-lot="${l.id}" data-manual="${old.manual ? "1" : "0"}" value="${old.value ?? 0}" aria-label="BDT to use from ${esc(lotDisplayNo(l))}"></div>`;
   }).join("") : `<div class="loan-lot-row"><div class="ll-s">No unsold stock lots are linked to this BD account. The payment can use opening/free balance only.</div></div>`;
   const openingEl = $("#tfLoanOpeningUsed");
   if(openingEl && editingLoanMeta && openingEl.dataset.applied !== "1"){
@@ -2889,6 +3613,144 @@ function tradeAmounts(){
 ["trBdt","trRate","trSarDue","trCharge"].forEach(id=> $("#"+id).addEventListener("input", tradeAmounts));
 
 function tradeNeeded(){ return r2(n($("#trBdt").value) + n($("#trCharge").value)); }
+/* ---------- opening-balance stock lot ----------
+   A BDT account's opening balance is real, sellable money that has no
+   remittance behind it. RateX mirrors it as ONE auto-generated lot per
+   account (marked "Opening balance · no profit"): selling it only returns
+   your own capital, so no trading profit is counted for that part.
+   The row is a real ratex_stock_lots row with kind="opening" so it never
+   posts to the account twice and it can be allocated by trade_lots. */
+const OPENING_STOCK_MARKER = "[[OPENING_STOCK]]";
+function isOpeningStockLot(l){ return !!l && String(l.note || "").startsWith(OPENING_STOCK_MARKER); }
+function openingStockMeta(l){
+  if(!isOpeningStockLot(l)) return {};
+  try{ return JSON.parse(String(l.note).slice(OPENING_STOCK_MARKER.length)) || {}; }catch(e){ return {}; }
+}
+function openingStockAccountId(l){ return openingStockMeta(l).accountId || l?.bdt_account_id || ""; }
+/* rate used to value an allocation: opening-balance lots are valued at the
+   trade's own sell rate, so profit on them is exactly zero. */
+function lotCostRate(lot, sellRate=0){
+  const r = n(lot?.effective_rate);
+  if(isOpeningStockLot(lot)) return n(sellRate) > 0 ? n(sellRate) : (r > 0 ? r : 0);
+  return r;
+}
+function lotCostSar(lot, bdt, sellRate=0){
+  const r = lotCostRate(lot, sellRate);
+  return r > 0 ? r2(n(bdt) / r) : 0;
+}
+function openingStockLotFor(accountId){
+  return S.lots.find(l => isOpeningStockLot(l) && openingStockAccountId(l) === accountId) || null;
+}
+/* Opening balance still not represented by the user's own Historical Lots. */
+function openingStockFreeFor(accountId){
+  const acct = S.accounts.find(a => a.id === accountId) || accountById(accountId);
+  if(!acct || acct.currency !== "BDT") return 0;
+  const hist = S.lots.filter(l => l.bdt_account_id === accountId && (l.kind || "remittance") === "opening" && !isOpeningStockLot(l))
+    .reduce((sm, l) => sm + n(l.total_bdt), 0);
+  return r2(Math.max(0, n(acct.opening_balance) - hist));
+}
+function openingStockRemitNo(acct){
+  const parts = splitAccountName(acct?.name || "");
+  const tag = String(parts.bank || acct?.name || "BD").replace(/[^A-Za-z0-9]/g, "").slice(0, 6).toUpperCase() || "BD";
+  const base = `OPEN-${tag}`;
+  const mine = openingStockLotFor(acct.id)?.id || "";
+  let no = base, i = 2;
+  while(S.lots.some(l => l.id !== mine && String(l.remit_no || "").toUpperCase() === no)) no = `${base}-${i++}`;
+  return no;
+}
+/* Turn the still-unsold part of an opening-balance lot into a normal
+   Historical Lot with a real cost rate, so profit is counted from then on.
+   The already-sold part keeps its "no profit" history untouched. */
+function setOpeningLotRate(lotId){
+  const lot = D?.lotMap.get(lotId) || S.lots.find(l => l.id === lotId);
+  if(!lot || !isOpeningStockLot(lot)) return;
+  const remaining = r2(n(lot.remainingBdt));
+  if(remaining <= 0.005) return toast("Nothing is left in this opening-balance lot to price.", "error");
+  const acct = accountName(lot.bdt_account_id);
+  const ans = prompt(`Give this opening-balance stock a real cost rate\n\n${fmt(remaining)} BDT is still unsold in ${acct}.\nHow many SAR did that BDT originally cost you in total?\n\nLeave it blank and tap OK to keep "no profit".`, "");
+  if(ans === null) return;
+  const sarCost = r2(n(ans));
+  if(!(sarCost > 0)) return toast("Kept as opening balance · no profit counted.", "");
+  if(sarCost > remaining) return toast("That SAR amount is larger than the BDT itself — nothing changed.", "error");
+  const rate = Math.round((remaining / sarCost) * 1e6) / 1e6;
+  const base = `HIST-${String(lot.txn_date || todayStr()).replaceAll("-", "")}`;
+  let remitNo = base, i = 2;
+  while(S.lots.some(l => String(l.remit_no || "").toUpperCase() === remitNo)) remitNo = `${base}-${i++}`;
+  saveLocalRow("lots", "ratex_stock_lots", {
+    user_id: S.user.id, txn_date: lot.txn_date || todayStr(),
+    sar_amount: sarCost, fee_sar: 0, base_rate: rate, incentive_pct: 0,
+    total_bdt: remaining, effective_rate: rate,
+    source: "Historical", note: "",
+    remit_no: remitNo, kind: "opening",
+    sar_account_id: null, bdt_account_id: lot.bdt_account_id || null
+  });
+  toast(`Done — ${fmt(remaining)} BDT now has a cost rate of ${fmtRate(rate)} BDT/SAR, so profit will be counted on it ✅`, "success");
+  afterLocalChange();
+}
+/* Same account ⇒ same lot id on every device, so offline editing on two
+   phones can never duplicate an opening-balance lot. */
+function openingLotIdFor(accountId){
+  const hex = String(accountId || "").replace(/[^0-9a-fA-F]/g, "").toLowerCase().padEnd(32, "0").slice(0, 32);
+  const mask = "9e3779b97f4a7c15f39cc0605cedc835";
+  let out = "";
+  for(let i = 0; i < 32; i++) out += ((parseInt(hex[i], 16) ^ parseInt(mask[i], 16)) & 0xf).toString(16);
+  out = out.slice(0, 12) + "4" + out.slice(13, 16) + "8" + out.slice(17);
+  return `${out.slice(0,8)}-${out.slice(8,12)}-${out.slice(12,16)}-${out.slice(16,20)}-${out.slice(20)}`;
+}
+let openingSyncBusy = false;
+const openingSyncWarned = new Set();
+/* Keep one opening-balance lot per BDT account in step with the account.
+   Called after every local change and after a server pull. Writes only
+   when something actually changed, and never shrinks below what is used. */
+function syncOpeningStockLots(){
+  if(openingSyncBusy || !S.user || !D) return;
+  openingSyncBusy = true;
+  try{
+    const accts = S.accounts.filter(a => a.currency === "BDT");
+    const live = new Set(accts.map(a => a.id));
+    accts.forEach(a => {
+      const free = openingStockFreeFor(a.id);
+      const existing = openingStockLotFor(a.id);
+      const consumed = existing ? r2(n(existing.total_bdt) - n(D?.lotMap?.get(existing.id)?.remainingBdt ?? existing.total_bdt)) : 0;
+      if(!existing){
+        if(free > 0.005){
+          saveLocalRow("lots", "ratex_stock_lots", {
+            id: openingLotIdFor(a.id),
+            user_id: S.user.id,
+            txn_date: a.opening_date || todayStr(),
+            sar_amount: 0.01, fee_sar: 0, base_rate: 1, incentive_pct: 0,
+            total_bdt: free, effective_rate: 1,
+            source: "Opening Balance",
+            note: OPENING_STOCK_MARKER + JSON.stringify({ v:1, accountId: a.id }),
+            remit_no: openingStockRemitNo(a), kind: "opening",
+            sar_account_id: null, bdt_account_id: a.id
+          });
+        }
+        return;
+      }
+      const target = r2(Math.max(free, consumed));
+      if(target <= 0.005){
+        if(consumed <= 0.005) deleteLocalRow("lots", "ratex_stock_lots", existing.id);
+        return;
+      }
+      if(Math.abs(n(existing.total_bdt) - target) > 0.005){
+        if(consumed > free + 0.005 && !openingSyncWarned.has(a.id)){
+          openingSyncWarned.add(a.id);
+          toast(`⚠ ${a.name}: its opening balance is smaller than the BDT already sold/paid from it — the opening lot keeps ${fmt(consumed)} BDT so past trades stay valid.`, "error");
+        }
+        saveLocalRow("lots", "ratex_stock_lots", {
+          ...existing, total_bdt: target, txn_date: a.opening_date || existing.txn_date
+        });
+      }
+    });
+    // drop auto lots whose account is gone (only when nothing was used from them)
+    S.lots.filter(isOpeningStockLot).forEach(l => {
+      if(live.has(openingStockAccountId(l))) return;
+      const consumed = r2(n(l.total_bdt) - n(D?.lotMap?.get(l.id)?.remainingBdt ?? l.total_bdt));
+      if(consumed <= 0.005) deleteLocalRow("lots", "ratex_stock_lots", l.id);
+    });
+  } finally { openingSyncBusy = false; }
+}
 function lotAvailable(lotId, editingTradeId=""){
   const lot = D?.lotMap.get(lotId); if(!lot) return 0;
   const soldByOthers = S.allocs.filter(a=>a.lot_id===lotId && a.trade_id!==editingTradeId).reduce((s,a)=>s+n(a.bdt_allocated),0);
@@ -2909,8 +3771,9 @@ function allocRowHtml(selectedId="", amount="", auto=true){
 
 let activeAllocRow = null;
 function lotSearchText(l, avail=""){
-  return [lotDisplayNo(l), l.txn_date, dFmt(l.txn_date), l.source, l.note, l.sar_amount, l.fee_sar,
-    l.total_bdt, avail, l.base_rate, l.incentive_pct, l.effective_rate,
+  const openingTag = isOpeningStockLot(l) ? "opening balance no profit capital" : "";
+  return [lotDisplayNo(l), l.txn_date, dFmt(l.txn_date), l.source, isOpeningStockLot(l) ? "" : l.note, l.sar_amount, l.fee_sar,
+    l.total_bdt, avail, l.base_rate, l.incentive_pct, l.effective_rate, openingTag,
     accountName(l.sar_account_id), accountName(l.bdt_account_id)].join(" ").toLowerCase();
 }
 function renderLotPicker(){
@@ -2951,13 +3814,17 @@ function renderLotPicker(){
     return `<div class="lot-choice${l.id===selectedId ? " selected" : ""}${disabled ? " is-disabled" : ""}${detailsOpen ? " details-open" : ""}">
       <button type="button" class="lot-select" data-lot-id="${l.id}" ${disabled ? "disabled" : ""}>
         <span class="lot-choice-head"><span><span class="rt">${esc(lotDisplayNo(l))}</span><span class="rs" style="display:block">${dFmt(l.txn_date)}${l.source ? " · "+esc(l.source) : ""}${l.bdt_account_id ? " · "+esc(accountName(l.bdt_account_id)) : ""}</span></span>${badge}</span>
-        <span class="lot-essentials"><span>Available <b>${fmt(avail)} BDT</b></span><span>Eff. rate <b>${fmtRate(l.effective_rate)}</b></span><span>Sent <b>${fmt(l.sar_amount)} SAR</b></span></span>
+        <span class="lot-essentials"><span>Available <b>${fmt(avail)} BDT</b></span>${
+          isOpeningStockLot(l)
+            ? `<span>Profit <b>none · own capital</b></span><span>Type <b>Opening balance</b></span>`
+            : `<span>Eff. rate <b>${fmtRate(l.effective_rate)}</b></span><span>Sent <b>${fmt(l.sar_amount)} SAR</b></span>`
+        }</span>
       </button>
       <button type="button" class="lot-more-btn" data-lot-more="${l.id}" aria-expanded="${detailsOpen ? "true" : "false"}">${detailsOpen ? "Hide details ⌃" : "Details ⌄"}</button>
       <div class="lot-more-body">
         ${lotInfoGridHtml(detailItems)}
         <div class="progress"><i style="width:${usedPct}%"></i></div>
-        <div class="lot-choice-note">${usedPct}% already used (sold + loan paid)${l.note ? ` · 📝 ${esc(l.note)}` : ""}</div>
+        <div class="lot-choice-note">${usedPct}% already used (sold + loan paid)${l.note && !isOpeningStockLot(l) ? ` · 📝 ${esc(l.note)}` : ""}</div>
       </div>
     </div>`;
   }).join("") : `<div class="bank-empty neu-in" style="margin-top:12px">${showSoldOut ? "No stock lot matches your search." : "No available lot matches. Tick “Show sold-out lots” to see everything."}</div>`;
@@ -3064,8 +3931,13 @@ function tradePreview(){
   const needed = tradeNeeded(), sarDue = n($("#trSarDue").value);
   const allocs = readAllocations();
   const allocated = r2(allocs.reduce((s,a)=>s+a.bdt,0));
-  let cost = 0;
-  allocs.forEach(a=>{ const l=D?.lotMap.get(a.lot_id); if(l && n(l.effective_rate)) cost += a.bdt / n(l.effective_rate); });
+  const sellRateNow = n($("#trRate").value);
+  let cost = 0, openingBdt = 0;
+  allocs.forEach(a=>{
+    const l = D?.lotMap.get(a.lot_id); if(!l) return;
+    if(isOpeningStockLot(l)) openingBdt += a.bdt;
+    cost += lotCostSar(l, a.bdt, sellRateNow);
+  });
   cost = r2(cost);
   const profit = r2(sarDue - cost);
   const left = r2(needed - allocated);
@@ -3078,6 +3950,7 @@ function tradePreview(){
     <div class="row"><span>Stock going out (delivered + charge)</span><b>${fmt(needed)} BDT</b></div>
     <div class="row"><span>Allocated from lots</span><b class="${Math.abs(left)<=0.009 && needed>0 ? "pos":"neg"}">${fmt(allocated)} BDT ${needed>0 ? (Math.abs(left)<=0.009 ? "✓" : `· ${left>0? fmt(left)+" left" : fmt(-left)+" extra"}`) : ""}</b></div>
     <div class="row"><span>BD account ${srcAcc? "("+esc(srcAcc.name)+")" : ""} balance → after</span><b class="${srcEnough?"":"neg"}">${srcAcc? fmt(srcAvail)+" → "+fmt(srcAvail-needed)+" BDT" + (srcEnough?"":" ⚠ not enough") : "not selected"}</b></div>
+    ${openingBdt > 0.005 ? `<div class="row"><span>From opening balance · <b>no profit counted</b> (returns your own capital)</span><b>${fmt(openingBdt)} BDT</b></div>` : ""}
     <div class="row"><span>Your cost of ${allocationReady ? "this BDT" : "allocated BDT"} (at lot rates)</span><b>${fmt(cost)} SAR</b></div>
     <div class="row"><span>Customer pays you</span><b>${fmt(sarDue)} SAR</b></div>
     <div class="row total"><span>${allocationReady ? `Estimated trade profit (${margin}%) — after remit cost + delivery charge` : `Estimated trade profit — allocate exactly ${fmt(needed)} BDT first`}</span><span class="${allocationReady ? signedCls(profit) : ""}">${allocationReady && sarDue>0 ? signedFmt(profit)+" SAR" : "—"}</span></div>`;
@@ -3171,10 +4044,11 @@ $("#tradeForm").addEventListener("submit", async e=>{
     S.allocs = S.allocs.filter(a => a.trade_id !== tradeId);
     enqueue("clear_allocs", "ratex_trade_lots", { trade_id: tradeId });
     pv.allocs.forEach(a => {
-      const lot = D.lotMap.get(a.lot_id), cr = n(lot.effective_rate);
+      const lot = D.lotMap.get(a.lot_id);
+      const cr = lotCostRate(lot, rate);            // opening-balance lots use the sell rate → 0 profit
       saveLocalRow("allocs", "ratex_trade_lots", {
         user_id:S.user.id, trade_id:tradeId, lot_id:a.lot_id, bdt_allocated:a.bdt,
-        cost_rate:cr, cost_sar: Math.round((a.bdt/cr)*10000)/10000 });
+        cost_rate:cr > 0 ? cr : 1, cost_sar: cr > 0 ? Math.round((a.bdt/cr)*10000)/10000 : 0 });
     });
 
     if(initPay > 0){
@@ -3323,7 +4197,13 @@ document.addEventListener("click", async e=>{
   }
   if(action==="pay") openPay(id);
   if(action==="edit-trade"){ const t=D.tradeMap.get(id); if(t) openTrade(t); }
-  if(action==="edit-lot"){ const l=D.lotMap.get(id); if(l) openStock(l); }
+  if(action==="edit-lot"){ const l=D.lotMap.get(id); if(!l) return; if(isOpeningStockLot(l)) return setOpeningLotRate(l.id); openStock(l); }
+  if(action==="lot-set-rate"){ setOpeningLotRate(id); }
+  if(action==="acct-opening-rate"){
+    const lot = openingStockLotFor(id);
+    if(lot) setOpeningLotRate(lot.id);
+    else toast("This account's opening balance is already covered by Historical Lots.", "");
+  }
   if(action==="edit-pay"){ const p=S.pays.find(x=>x.id===id); if(p) openPay(p.trade_id, p); }
   if(action==="edit-account"){ const a=S.accounts.find(x=>x.id===id); if(a) openAccount(a); }
   if(action==="edit-sar-add"){ const tf=S.transfers.find(x=>x.id===id); if(tf) openSarAdd(tf); }
@@ -3346,6 +4226,7 @@ document.addEventListener("click", async e=>{
   }
   if(action==="del-lot"){
     const l=D.lotMap.get(id); if(!l) return;
+    if(isOpeningStockLot(l)) return toast("This is the account's opening-balance lot — it is created and removed automatically with the account, so it can't be deleted by hand. To stop selling it, archive the account or edit its opening balance.", "error");
     if((l.consumedBdt ?? l.usedBdt) > 0.005) return toast(`This lot already supplied ${fmt(l.consumedBdt ?? l.usedBdt)} BDT (sold + loan paid) — delete/edit those records first.`, "error");
     if(await deleteConfirm("⚠ Delete this remittance lot?",
       "The lot and its account postings will be reversed permanently:",
@@ -3520,6 +4401,7 @@ function onSignedIn(user){
   const name = user.user_metadata?.full_name || user.email || "Trader";
   $("#userName").textContent = name;
   $("#userAvatar").textContent = initials(name);
+  requestAnimationFrame(()=> setTimeout(moveNavGlow, 60)); // place the glow once the app is visible
   loadData();
 }
 function onSignedOut(){
